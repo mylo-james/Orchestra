@@ -23,7 +23,7 @@ graph TB
     CLI[Command Line Interface] --> Orch[Orchestrator Agent]
 
     subgraph "Local Agent Orchestration"
-        Orch --> |GRAB/UPSERT| VectorDB[(Vector Database)]
+        Orch --> |GRAB/UPSERT| QdrantLocal[(Qdrant Vector DB)]
         Orch --> |Temporal Workflow| Dev[Developer Agent]
         Orch --> |Temporal Workflow| Rel[Release Agent]
         Dev --> |Handback| Orch
@@ -40,8 +40,12 @@ graph TB
     subgraph "External Services"
         GitHub[GitHub API]
         OpenAI[OpenAI API]
-        Temporal[Temporal Cloud]
-        Pinecone[Pinecone Vector DB]
+    end
+
+    subgraph "Local Infrastructure"
+        TemporalLocal[Temporal Server]
+        QdrantLocal[Qdrant Vector DB]
+        PostgreSQL[PostgreSQL]
     end
 
     CLI --> InputVal
@@ -53,8 +57,9 @@ graph TB
     Rel --> OutputScan
     OutputScan --> GitHub
 
-    Orch --> Temporal
-    Orch --> Pinecone
+    Orch --> TemporalLocal
+    Orch --> QdrantLocal
+    TemporalLocal --> PostgreSQL
 ```
 
 ## Architectural Patterns

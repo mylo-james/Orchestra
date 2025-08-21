@@ -38,10 +38,10 @@ CREATE TABLE agent_executions (
     completed_at TIMESTAMP
 );
 
--- Knowledge base metadata (vectors stored in Pinecone)
+-- Knowledge base metadata (vectors stored in Qdrant)
 CREATE TABLE knowledge_metadata (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    pinecone_id VARCHAR(255) UNIQUE NOT NULL,
+    qdrant_id VARCHAR(255) UNIQUE NOT NULL,
     type VARCHAR(50) NOT NULL,
     title VARCHAR(255) NOT NULL,
     confidence_score DECIMAL(3,2) DEFAULT 0.5,

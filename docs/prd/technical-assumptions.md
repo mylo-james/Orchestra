@@ -32,12 +32,17 @@ The AI Dev Team Orchestrator will be developed as a monorepo with clear separati
 
 - **OpenAI Agents SDK** provides production-ready multi-agent framework with handoffs, guardrails, and observability
 - **GPT-4o model** will be used as primary language model for all agents
-- **Temporal Cloud** will provide workflow orchestration and durability for agent sequences
+- **Hybrid Infrastructure Approach** combining local and cloud services for cost optimization:
+  - **Local Infrastructure:** Temporal Server, PostgreSQL, Vector Database (Qdrant), Orchestra application
+  - **Cloud Services:** OpenAI Agents SDK, GPT-4o API calls for complex reasoning
+  - **Hardware:** Gaming laptop serves as local server infrastructure
 - **GitHub API** rate limits will accommodate expected usage patterns without significant delays
 - **Development team** has expertise in Python/TypeScript for OpenAI SDK and Temporal integration
-- **Cloud infrastructure** supports auto-scaling for Temporal workers and OpenAI API calls
-- **Container orchestration** (Docker/Kubernetes) for production deployment of Temporal workers
-- **Vector Database** (Pinecone, Weaviate, or Qdrant) with dynamic upsert capabilities and versioning
+- **Local infrastructure** supports development and light production workloads on gaming laptop hardware
+- **Container orchestration** (Docker/Docker Compose) for local deployment of Temporal workers and supporting services
+- **Vector Database** (Qdrant self-hosted) with dynamic upsert capabilities and versioning
+- **Cost Target:** Reduce infrastructure costs from ~$175/month to ~$25/month through local hosting
+- **Migration Strategy:** Gradual transition with cloud fallback capabilities for critical components
 - **Embedding Model** (OpenAI text-embedding-3-large) for real-time vectorization and knowledge evolution
 - **Knowledge Versioning System** for concurrent agent updates and conflict resolution
 - **Real-time Knowledge Synchronization** ensuring agents see latest knowledge updates

@@ -32,13 +32,13 @@
 
 **Integration Notes:** Implemented as OpenAI SDK tools within Release Agent
 
-## Temporal Cloud API
+## Temporal Server (Self-hosted)
 
 - **Purpose:** Workflow orchestration, state management, and durability
 - **Documentation:** <https://docs.temporal.io/>
-- **Base URL(s):** Customer-specific Temporal Cloud endpoint
-- **Authentication:** mTLS certificates or API keys
-- **Rate Limits:** Based on Temporal Cloud plan
+- **Base URL(s):** localhost:7233 (local deployment)
+- **Authentication:** Local deployment (no external auth required)
+- **Rate Limits:** Hardware-limited (gaming laptop resources)
 
 **Key Endpoints Used:**
 
@@ -46,19 +46,20 @@
 - Workflow monitoring and signals
 - Activity retry and failure handling
 
-**Integration Notes:** Primary orchestration layer wrapping all agent handoffs
+**Integration Notes:** Local orchestration layer wrapping all agent handoffs, deployed via Docker
 
-## Pinecone API
+## Qdrant Vector Database (Self-hosted)
 
 - **Purpose:** Vector database for semantic search and knowledge management
-- **Documentation:** <https://docs.pinecone.io/>
-- **Base URL(s):** <https://controller.{region}.pinecone.io>
-- **Authentication:** API key
-- **Rate Limits:** Based on Pinecone plan
+- **Documentation:** <https://qdrant.tech/documentation/>
+- **Base URL(s):** localhost:6333 (local deployment)
+- **Authentication:** Local deployment (no external auth required)
+- **Rate Limits:** Hardware-limited (gaming laptop resources)
 
 **Key Endpoints Used:**
 
-- `POST /query` - Semantic search for knowledge retrieval
+- `POST /collections/{collection}/points/search` - Semantic search for knowledge retrieval
+- `PUT /collections/{collection}/points` - Upsert vector points for knowledge storage
 - `POST /upsert` - Knowledge storage and updates
 - `POST /delete` - Knowledge cleanup
 
