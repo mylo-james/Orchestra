@@ -107,7 +107,7 @@ security: bandit safety
 
 bandit:
 	@echo "🔒 Running Bandit security scan..."
-	poetry run bandit -r src/ -c bandit.yaml
+	poetry run bandit -r src/ -c bandit.yaml -f json -o bandit-report.json
 
 safety:
 	@echo "🛡️  Running Safety dependency check..."

@@ -188,7 +188,19 @@ def run_security_checks() -> Dict[str, bool]:
 
     # Bandit security scan
     checks["bandit"] = run_command(
-        ["poetry", "run", "bandit", "-r", "src/", "-c", "bandit.yaml"],
+        [
+            "poetry",
+            "run",
+            "bandit",
+            "-r",
+            "src/",
+            "-c",
+            "bandit.yaml",
+            "-f",
+            "json",
+            "-o",
+            "bandit-report.json",
+        ],
         "Bandit security scan",
         allow_failure=True,
     )[0]
