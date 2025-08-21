@@ -1,0 +1,167 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
+env:
+  PYTHON_VERSION: "3.12"
+  POETRY_VERSION: "1.7.1"
+
+jobs:
+  # Test Suite - The Most Important Thing
+  test:
+    name: Test Suite
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_USER: test_user
+          POSTGRES_DB: test_orchestra
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: ${{ env.POETRY_VERSION }}
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+        
+    - name: Load cached venv
+      id: cached-poetry-dependencies
+      uses: actions/cache@v4
+      with:
+        path: .venv
+        key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+        
+    - name: Install dependencies
+      if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+      run: poetry install --no-interaction --no-root
+      
+    - name: Install project
+      run: poetry install --no-interaction
+      
+    - name: Set up test environment
+      run: |
+        cp .env.example .env
+        echo "ENVIRONMENT=test" >> .env
+        echo "DEBUG=true" >> .env
+        echo "OPENAI_API_KEY=sk-test-key-for-ci-testing-only" >> .env
+        echo "PINECONE_API_KEY=test-pinecone-key" >> .env
+        echo "PINECONE_ENVIRONMENT=test-environment" >> .env
+        echo "POSTGRES_HOST=localhost" >> .env
+        echo "POSTGRES_PORT=5432" >> .env
+        echo "POSTGRES_DB=test_orchestra" >> .env
+        echo "POSTGRES_USER=test_user" >> .env
+        echo "POSTGRES_PASSWORD=test_password" >> .env
+        
+    - name: Run all tests
+      run: |
+        poetry run pytest tests/ \
+          --cov=src \
+          --cov-report=xml \
+          --cov-report=html \
+          --cov-report=term-missing \
+          --junit-xml=junit.xml \
+          -v
+          
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        fail_ci_if_error: false
+        
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: |
+          junit.xml
+          htmlcov/
+          coverage.xml
+
+  # Basic Code Quality (Non-blocking)
+  quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    needs: test  # Only run if tests pass
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: ${{ env.POETRY_VERSION }}
+        
+    - name: Install dependencies
+      run: poetry install --no-interaction
+      
+    - name: Format check (informational)
+      run: |
+        poetry run black --check src/ tests/ || echo "⚠️ Code formatting issues found"
+        poetry run isort --check-only src/ tests/ || echo "⚠️ Import sorting issues found"
+      continue-on-error: true
+      
+    - name: Basic linting (informational)
+      run: |
+        poetry run ruff check src/ tests/ || echo "⚠️ Linting issues found"
+      continue-on-error: true
+
+  # Docker Build (Essential)
+  docker:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: Build Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: false
+        tags: orchestra:test
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        
+    - name: Test Docker image
+      run: |
+        docker run --rm orchestra:test python -c "import src; print('✅ Orchestra Docker image works!')"

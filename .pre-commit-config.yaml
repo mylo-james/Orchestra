@@ -1,0 +1,22 @@
+# Minimal pre-commit configuration - just the essentials
+repos:
+  # Basic file cleanup
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+
+  # Python formatting
+  - repo: https://github.com/psf/black
+    rev: 23.12.1
+    hooks:
+      - id: black
+        args: ['--line-length=88']
+
+# Simple configuration
+default_language_version:
+  python: python3
+fail_fast: false

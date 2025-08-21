@@ -1,0 +1,45 @@
+# YAML linting configuration for Orchestra
+extends: default
+
+rules:
+  # Line length - more permissive
+  line-length:
+    max: 200
+    level: warning
+
+  # Indentation - allow both 2 and 4 spaces
+  indentation:
+    spaces: consistent
+    indent-sequences: true
+    check-multi-line-strings: false
+
+  # Comments - more permissive
+  comments:
+    min-spaces-from-content: 1
+    require-starting-space: false
+
+  # Document start/end - disabled
+  document-start: disable
+  document-end: disable
+
+  # Truthy values - more permissive
+  truthy:
+    allowed-values: ['true', 'false', 'yes', 'no', 'True', 'False', 'on', 'off']
+    check-keys: false
+
+  # Brackets - allow both styles
+  brackets:
+    max-spaces-inside: 1
+    max-spaces-inside-empty: 0
+
+  # Braces - allow both styles
+  braces:
+    max-spaces-inside: 1
+    max-spaces-inside-empty: 0
+
+# Ignore certain files
+ignore: |
+  .git/
+  .venv/
+  __pycache__/
+  *.pyc

@@ -1,0 +1,68 @@
+[tool.poetry]
+name = "orchestra"
+version = "0.1.0"
+description = "AI Agent System for Development Team Orchestration"
+authors = ["Orchestra Development Team"]
+readme = "README.md"
+packages = [{include = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.12.0"
+# CLI Framework
+typer = "^0.9.0"
+rich = "^13.7.0"
+# Agent Framework
+openai = "^1.0.0"
+# Input Validation and Data Models
+pydantic = "^2.5.0"
+pydantic-settings = "^2.1.0"
+# HTTP Client
+httpx = "^0.26.0"
+# Configuration and Logging
+structlog = "^23.2.0"
+# Security Framework
+cryptography = "^43.0.0"
+# Database
+aiosqlite = "^0.19.0"
+
+[tool.poetry.group.dev.dependencies]
+# Testing
+pytest = "^7.4.0"
+pytest-asyncio = "^0.23.0"
+pytest-cov = "^4.1.0"
+# Code Quality
+black = "^23.12.0"
+isort = "^5.13.0"
+ruff = "^0.1.9"
+
+[tool.poetry.scripts]
+orchestra = "src.cli.main:app"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+# Black configuration
+[tool.black]
+line-length = 88
+target-version = ['py312']
+
+# isort configuration
+[tool.isort]
+profile = "black"
+line_length = 88
+
+# Ruff configuration - minimal
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+select = ["E", "W", "F"]  # Just errors, warnings, and pyflakes
+ignore = ["E501"]  # line too long, handled by black
+
+# Pytest configuration
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q --cov=src --cov-report=term-missing"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+asyncio_mode = "auto"

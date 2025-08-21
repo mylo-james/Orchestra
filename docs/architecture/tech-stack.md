@@ -19,7 +19,7 @@
 | **Git Integration**        | GitPython               | 3.1.40         | Local repository operations                          | Secure local Git operations with validation and safety checks                        |
 | **HTTP Client**            | httpx                   | 0.26.0         | Async HTTP client for API calls                      | Modern async client with excellent security and retry capabilities                   |
 | **Testing Framework**      | pytest + pytest-asyncio | 7.4.4 + 0.23.0 | Comprehensive testing with async support             | Robust testing for agent workflows and security validation                           |
-| **Security Framework**     | python-security         | 1.7.1          | Security utilities and validators                    | Comprehensive security validation toolkit for AI applications                        |
+| **Security Framework**     | cryptography            | 41.0.0+        | Security utilities and cryptographic functions      | Industry-standard cryptographic library for secure operations                       |
 | **Configuration**          | pydantic-settings       | 2.1.0          | Secure configuration management                      | Type-safe config with secrets protection and validation                              |
 | **Logging**                | structlog               | 23.2.0         | Structured logging with correlation IDs              | Security-focused logging with audit trails and correlation                           |
 | **Dependency Management**  | Poetry                  | 1.7.1          | Python dependency and virtual environment management | Secure dependency resolution and lock file management                                |

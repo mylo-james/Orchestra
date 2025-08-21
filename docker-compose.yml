@@ -1,0 +1,107 @@
+version: '3.8'
+
+services:
+  # Temporal Server
+  temporal:
+    image: temporalio/auto-setup:1.24.0
+    container_name: orchestra-temporal
+    environment:
+      - DB=postgresql
+      - DB_PORT=5432
+      - POSTGRES_USER=temporal
+      - POSTGRES_PWD=temporal
+      - POSTGRES_SEEDS=postgresql
+      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml
+    ports:
+      - "7233:7233"   # Temporal gRPC
+      - "8233:8233"   # Temporal Web UI
+    depends_on:
+      - postgresql
+    networks:
+      - orchestra-network
+    volumes:
+      - ./scripts/temporal-config:/etc/temporal/config/dynamicconfig
+    healthcheck:
+      test: ["CMD", "tctl", "--address", "temporal:7233", "cluster", "health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # PostgreSQL for Temporal
+  postgresql:
+    image: postgres:15-alpine
+    container_name: orchestra-postgresql
+    environment:
+      POSTGRES_DB: temporal
+      POSTGRES_USER: temporal
+      POSTGRES_PASSWORD: temporal
+    ports:
+      - "5432:5432"
+    networks:
+      - orchestra-network
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U temporal"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Orchestra Application
+  orchestra:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: orchestra-app
+    environment:
+      - TEMPORAL_HOST=temporal
+      - TEMPORAL_PORT=7233
+      - POSTGRES_HOST=postgresql
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=temporal
+      - POSTGRES_USER=temporal
+      - POSTGRES_PASSWORD=temporal
+      - PYTHONPATH=/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      temporal:
+        condition: service_healthy
+      postgresql:
+        condition: service_healthy
+    networks:
+      - orchestra-network
+    volumes:
+      - .:/app
+      - /app/.venv  # Exclude virtual environment from bind mount
+    command: ["python", "-m", "src.cli.main", "serve"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import src; print('Orchestra is healthy')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Development Tools Container
+  dev-tools:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: orchestra-dev-tools
+    environment:
+      - PYTHONPATH=/app
+    networks:
+      - orchestra-network
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: ["sleep", "infinity"]
+    profiles:
+      - dev
+
+networks:
+  orchestra-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local

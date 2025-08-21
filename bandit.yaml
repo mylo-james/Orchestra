@@ -1,0 +1,11 @@
+# Simple Bandit configuration
+exclude_dirs:
+  - tests
+  - scripts
+  - .venv
+  - __pycache__
+
+# Basic settings
+severity: MEDIUM
+confidence: MEDIUM
+format: txt
