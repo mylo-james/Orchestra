@@ -30,6 +30,7 @@ aiosqlite = "^0.20.0"
 # temporalio = "^1.7.0"
 # Vector Database
 pinecone-client = "^2.2.4"
+openai-agents = "^0.2.8"
 
 [tool.poetry.group.dev.dependencies]
 # Testing
