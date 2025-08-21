@@ -1,3 +1,503 @@
+# Orchestra AI Agent System - Comprehensive .gitignore
+# Professional-grade gitignore with security and AI-specific patterns
+
+# ============================================================================
+# EXISTING PATTERNS (preserved from original)
+# ============================================================================
 .bmad-core/
 .bmad-infrastructure-devops/
 .cursor/
+
+# ============================================================================
+# PYTHON
+# ============================================================================
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+pytest-report.xml
+integration-report.xml
+e2e-report.xml
+ai-security-report.xml
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# PEP 582
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# ============================================================================
+# NODE.JS / FRONTEND
+# ============================================================================
+
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Grunt intermediate storage
+.grunt
+
+# Bower dependency directory
+bower_components
+
+# node-waf configuration
+.lock-wscript
+
+# Compiled binary addons
+build/Release
+
+# Dependency directories
+jspm_packages/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# parcel-bundler cache
+.cache
+.parcel-cache
+
+# Next.js build output
+.next
+out
+
+# Nuxt.js build / generate output
+.nuxt
+dist
+
+# Gatsby files
+.cache/
+public
+
+# Storybook build outputs
+.out
+.storybook-out
+
+# Temporary folders
+tmp/
+temp/
+
+# ============================================================================
+# SECURITY & SECRETS
+# ============================================================================
+
+# Environment files with secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# API Keys and tokens
+*.key
+*.pem
+*.p12
+*.pfx
+*.crt
+*.cer
+*.der
+
+# Security scan results
+bandit-report.json
+bandit-results.json
+bandit-results.sarif
+safety-report.json
+safety-results.json
+security-baseline.json
+current-vulns.json
+current-bandit.json
+
+# Secrets detection
+.secrets.baseline.tmp
+
+# ============================================================================
+# AI & ML SPECIFIC
+# ============================================================================
+
+# Model files
+*.model
+*.pkl
+*.pickle
+*.joblib
+*.h5
+*.hdf5
+*.onnx
+*.pb
+
+# Vector database files
+*.index
+*.faiss
+*.annoy
+
+# Training data and logs
+training_data/
+model_outputs/
+experiment_logs/
+wandb/
+mlruns/
+.mlflow/
+
+# Jupyter notebook checkpoints
+.ipynb_checkpoints/
+
+# AI agent conversation logs
+agent_conversations/
+conversation_history/
+agent_logs/
+
+# Prompt templates with secrets
+*.prompt.local
+*.template.local
+
+# ============================================================================
+# DEVELOPMENT TOOLS
+# ============================================================================
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ============================================================================
+# CI/CD & DEPLOYMENT
+# ============================================================================
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Kubernetes
+*.kubeconfig
+
+# Deployment artifacts
+deployment/
+releases/
+artifacts/
+
+# CI/CD temporary files
+ci-temp/
+.github-actions-cache/
+
+# ============================================================================
+# MONITORING & LOGGING
+# ============================================================================
+
+# Log files
+*.log
+logs/
+log/
+
+# Monitoring data
+metrics/
+traces/
+monitoring-data/
+
+# Performance reports
+benchmark-results.json
+performance-reports/
+
+# ============================================================================
+# TESTING & QUALITY ASSURANCE
+# ============================================================================
+
+# Test outputs
+test-results/
+test-reports/
+allure-results/
+allure-reports/
+
+# Coverage reports
+htmlcov/
+.coverage
+coverage.xml
+coverage.json
+
+# Mutation testing
+.mutmut-cache
+
+# Load testing
+load-test-results/
+
+# ============================================================================
+# DATABASES & DATA
+# ============================================================================
+
+# SQLite
+*.db
+*.sqlite
+*.sqlite3
+
+# Database dumps
+*.sql
+*.dump
+
+# Data files
+data/
+datasets/
+*.csv
+*.json.backup
+
+# ============================================================================
+# TEMPORARY & CACHE FILES
+# ============================================================================
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+*.backup
+*.swp
+*.swo
+
+# Cache directories
+.cache/
+cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ============================================================================
+# DOCUMENTATION
+# ============================================================================
+
+# Generated documentation
+docs/_build/
+docs/build/
+site/
+
+# Documentation temporary files
+*.md.backup
+*.md.tmp
+
+# ============================================================================
+# LICENSES & COMPLIANCE
+# ============================================================================
+
+# License reports
+licenses.json
+license-report.html
+dependency-licenses/
+
+# Compliance reports
+compliance-reports/
+audit-reports/
+
+# ============================================================================
+# AI SAFETY & SECURITY PATTERNS
+# ============================================================================
+
+# Never commit these patterns that could contain secrets or sensitive AI data
+*secret*
+*password*
+*token*
+*key*
+*credential*
+*auth*
+
+# AI model artifacts that shouldn't be in git
+*.safetensors
+*.bin
+*.weights
+*.checkpoint
+
+# Conversation transcripts (may contain sensitive data)
+conversations/
+chat_logs/
+interaction_logs/
+
+# Agent training data (may contain proprietary information)
+training/
+fine_tuning/
+agent_training/
+
+# ============================================================================
+# CUSTOM APPLICATION PATTERNS
+# ============================================================================
+
+# Orchestra AI specific
+orchestra-data/
+agent-outputs/
+workflow-state/
+knowledge-base-backup/
+
+# Development databases
+dev.db
+test.db
+local.db
+
+# Local configuration overrides
+config.local.yaml
+settings.local.json
+
+# User-specific development files
+.user-config
+.dev-settings

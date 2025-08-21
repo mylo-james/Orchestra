@@ -1,0 +1,207 @@
+name: 🔍 PR Validation - AI Safety & Quality Gates
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main, develop]
+
+env:
+  PYTHON_VERSION: "3.12"
+  NODE_VERSION: "20"
+
+jobs:
+  # ============================================================================
+  # PR Metadata & Safety Checks
+  # ============================================================================
+  pr-validation:
+    name: 📋 PR Safety & Metadata
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: 🔍 Validate PR title
+        run: |
+          title="${{ github.event.pull_request.title }}"
+          
+          # Check for conventional commit format
+          if ! echo "$title" | grep -E '^(feat|fix|docs|style|refactor|test|chore|security|ai)(\(.+\))?: .+'; then
+            echo "❌ PR title must follow conventional commit format"
+            echo "Examples: feat: add new agent, fix(security): patch vulnerability"
+            exit 1
+          fi
+          
+          # Check for AI-related changes
+          if echo "$title" | grep -iE '(agent|ai|openai|gpt|llm|prompt)'; then
+            echo "🤖 AI-related changes detected - enabling enhanced security checks"
+            echo "ai_changes=true" >> $GITHUB_ENV
+          fi
+          
+      - name: 🔍 Check for sensitive files
+        run: |
+          # Check for accidentally committed secrets or sensitive files
+          sensitive_files=$(git diff --name-only origin/main...HEAD | grep -E '\.(env|key|pem|p12|pfx)$' || true)
+          if [ -n "$sensitive_files" ]; then
+            echo "❌ Sensitive files detected in PR:"
+            echo "$sensitive_files"
+            exit 1
+          fi
+          
+      - name: 🔍 Validate commit messages
+        run: |
+          # Check all commits in PR for conventional format
+          git log --format="%s" origin/main..HEAD | while read -r commit_msg; do
+            if ! echo "$commit_msg" | grep -E '^(feat|fix|docs|style|refactor|test|chore|security|ai)(\(.+\))?: .+'; then
+              echo "❌ Commit message doesn't follow conventional format: $commit_msg"
+              exit 1
+            fi
+          done
+          
+      - name: 📊 Calculate change impact
+        run: |
+          # Analyze the scope of changes
+          files_changed=$(git diff --name-only origin/main...HEAD | wc -l)
+          lines_changed=$(git diff --stat origin/main...HEAD | tail -1 | grep -o '[0-9]\+ insertions\|[0-9]\+ deletions' | grep -o '[0-9]\+' | paste -sd+ | bc)
+          
+          echo "📊 Change Impact:"
+          echo "Files changed: $files_changed"
+          echo "Lines changed: $lines_changed"
+          
+          # Set environment variables for downstream jobs
+          echo "files_changed=$files_changed" >> $GITHUB_ENV
+          echo "lines_changed=$lines_changed" >> $GITHUB_ENV
+          
+          # Require additional review for large changes
+          if [ "$files_changed" -gt 20 ] || [ "$lines_changed" -gt 500 ]; then
+            echo "⚠️ Large change detected - additional review required"
+            echo "large_change=true" >> $GITHUB_ENV
+          fi
+
+  # ============================================================================
+  # AI Agent Code Review
+  # ============================================================================
+  ai-code-review:
+    name: 🤖 AI Code Review
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [pr-validation]
+    if: contains(github.event.pull_request.title, 'agent') || contains(github.event.pull_request.title, 'ai')
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          
+      - name: 📦 Install Poetry
+        uses: snok/install-poetry@v1
+        
+      - name: 🔧 Install dependencies
+        run: |
+          poetry install --with dev,test,security
+          
+      - name: 🤖 Analyze agent code changes
+        run: |
+          # Get changed Python files in agent directories
+          changed_agent_files=$(git diff --name-only origin/main...HEAD | grep -E 'src/agents/.*\.py$' || true)
+          
+          if [ -n "$changed_agent_files" ]; then
+            echo "🤖 Agent code changes detected:"
+            echo "$changed_agent_files"
+            
+            # Run specialized AI agent validation
+            for file in $changed_agent_files; do
+              echo "🔍 Analyzing $file..."
+              poetry run python scripts/validate_agent_code.py "$file"
+            done
+          fi
+          
+      - name: 🔍 Check for prompt templates
+        run: |
+          # Validate any new prompt templates for safety
+          changed_prompts=$(git diff --name-only origin/main...HEAD | grep -E '\.(prompt|template)$' || true)
+          if [ -n "$changed_prompts" ]; then
+            echo "📝 Prompt template changes detected - running safety validation"
+            poetry run python scripts/validate_prompts.py $changed_prompts
+          fi
+
+  # ============================================================================
+  # Dependency & License Checks
+  # ============================================================================
+  dependency-check:
+    name: 📦 Dependency & License Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          
+      - name: 📦 Install Poetry
+        uses: snok/install-poetry@v1
+        
+      - name: 🔧 Check for dependency changes
+        run: |
+          # Check if pyproject.toml or poetry.lock changed
+          if git diff --name-only origin/main...HEAD | grep -E '(pyproject\.toml|poetry\.lock)'; then
+            echo "📦 Dependency changes detected"
+            poetry install --with dev,test,security
+            
+            # Check for new dependencies
+            poetry run pip-licenses --format=json --output-file=licenses.json
+            
+            # Validate licenses (add your approved licenses here)
+            poetry run python scripts/validate_licenses.py licenses.json
+            
+            # Check for vulnerabilities in new dependencies
+            poetry run safety check --json --output safety-deps.json
+            poetry run safety check
+          fi
+          
+      - name: 📋 Upload dependency reports
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: dependency-reports
+          path: |
+            licenses.json
+            safety-deps.json
+
+  # ============================================================================
+  # Final PR Status Check
+  # ============================================================================
+  pr-status:
+    name: ✅ PR Status Summary
+    runs-on: ubuntu-latest
+    needs: [pr-validation, ai-code-review, dependency-check]
+    if: always()
+    
+    steps:
+      - name: 📊 Summarize PR status
+        run: |
+          echo "📊 PR Validation Summary:"
+          echo "✅ PR metadata validation: ${{ needs.pr-validation.result }}"
+          echo "🤖 AI code review: ${{ needs.ai-code-review.result }}"
+          echo "📦 Dependency check: ${{ needs.dependency-check.result }}"
+          
+          # Check if any critical jobs failed
+          if [ "${{ needs.pr-validation.result }}" != "success" ]; then
+            echo "❌ PR validation failed - cannot merge"
+            exit 1
+          fi
+          
+          echo "✅ All PR validation checks passed!"

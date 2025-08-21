@@ -1,0 +1,118 @@
+name: 🐛 Bug Report
+description: Report a bug in the Orchestra AI Agent System
+title: "[BUG] "
+labels: ["bug", "needs-triage"]
+assignees: ["orchestra-ai-team"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 🐛 Bug Report for Orchestra AI Agent System
+        
+        Thank you for reporting a bug! Please provide as much detail as possible to help us investigate and fix the issue.
+
+  - type: checkboxes
+    id: bug-type
+    attributes:
+      label: Bug Category
+      description: What type of bug is this?
+      options:
+        - label: 🤖 AI Agent behavior issue
+        - label: 🔒 Security vulnerability
+        - label: 🔗 Integration/API issue
+        - label: 🧪 Testing issue
+        - label: 🚀 CI/CD pipeline issue
+        - label: 📚 Documentation issue
+        - label: 🎨 UI/UX issue
+        - label: ⚡ Performance issue
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 📝 Bug Description
+      description: A clear and concise description of what the bug is.
+      placeholder: Describe what happened and what you expected to happen...
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: 🔄 Steps to Reproduce
+      description: Detailed steps to reproduce the behavior
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. Run command '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: ✅ Expected Behavior
+      description: What should have happened?
+      placeholder: Describe the expected behavior...
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: ❌ Actual Behavior
+      description: What actually happened?
+      placeholder: Describe what actually happened...
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: 🌍 Environment
+      description: Your environment details
+      value: |
+        - OS: [e.g., Ubuntu 22.04, macOS 13.0, Windows 11]
+        - Python version: [e.g., 3.12.0]
+        - Poetry version: [e.g., 1.7.1]
+        - Orchestra AI version: [e.g., 0.1.0]
+        - OpenAI SDK version: [e.g., 1.0.0]
+        - Temporal SDK version: [e.g., 1.24.0]
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 📋 Logs and Error Messages
+      description: Any relevant log output or error messages
+      placeholder: |
+        Paste any relevant logs, error messages, or stack traces here.
+        Please remove any sensitive information like API keys or tokens.
+      render: shell
+
+  - type: textarea
+    id: security-impact
+    attributes:
+      label: 🔒 Security Impact
+      description: If this is a security issue, describe the potential impact
+      placeholder: |
+        - Does this expose sensitive data?
+        - Could this be exploited by malicious actors?
+        - Does this affect AI agent behavior in unexpected ways?
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: ✅ Pre-submission Checklist
+      description: Please confirm you have completed these steps
+      options:
+        - label: I have searched existing issues to avoid duplicates
+          required: true
+        - label: I have removed any sensitive information from logs/screenshots
+          required: true
+        - label: I have tested this on the latest version
+          required: true
+        - label: I have included all relevant environment details
+          required: true

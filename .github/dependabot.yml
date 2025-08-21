@@ -1,0 +1,118 @@
+# Orchestra AI Agent System - Dependabot Configuration
+# Automated dependency updates with security focus
+
+version: 2
+
+updates:
+  # ============================================================================
+  # Python Dependencies (Poetry)
+  # ============================================================================
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "orchestra-ai-team"
+    assignees:
+      - "orchestra-ai-team"
+    commit-message:
+      prefix: "deps"
+      prefix-development: "deps-dev"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "python"
+    # Security updates are prioritized
+    allow:
+      - dependency-type: "all"
+    # Group non-security updates
+    groups:
+      ai-frameworks:
+        patterns:
+          - "openai*"
+          - "temporal*"
+          - "pinecone*"
+      dev-tools:
+        patterns:
+          - "black"
+          - "isort" 
+          - "flake8*"
+          - "mypy"
+          - "pytest*"
+      security-tools:
+        patterns:
+          - "bandit"
+          - "safety"
+          - "detect-secrets"
+
+  # ============================================================================
+  # Frontend Dependencies (if applicable)
+  # ============================================================================
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "orchestra-ai-team"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "javascript"
+    groups:
+      react-ecosystem:
+        patterns:
+          - "react*"
+          - "next*"
+          - "@types/react*"
+      dev-tools:
+        patterns:
+          - "eslint*"
+          - "prettier"
+          - "typescript"
+
+  # ============================================================================
+  # GitHub Actions
+  # ============================================================================
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "wednesday" 
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "orchestra-ai-team"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "ci-cd"
+
+  # ============================================================================
+  # Docker Dependencies
+  # ============================================================================
+  - package-ecosystem: "docker"
+    directory: "/.cursor"
+    schedule:
+      interval: "weekly"
+      day: "thursday"
+      time: "09:00"
+    open-pull-requests-limit: 3
+    reviewers:
+      - "orchestra-ai-team"
+    commit-message:
+      prefix: "docker"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "docker"

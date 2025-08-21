@@ -1,0 +1,75 @@
+# Orchestra AI Agent System - Code Owners
+# Defines who must review changes to critical parts of the system
+
+# ============================================================================
+# GLOBAL OWNERS
+# ============================================================================
+# Default owners for everything in the repository
+* @orchestra-ai-team
+
+# ============================================================================
+# CRITICAL SECURITY & AI COMPONENTS
+# ============================================================================
+# AI Agent code requires specialized review
+src/agents/ @orchestra-ai-team @ai-security-team
+src/security/ @orchestra-ai-team @security-team
+src/workflows/ @orchestra-ai-team @temporal-experts
+
+# Security configuration files
+.github/workflows/ @orchestra-ai-team @devops-team
+.pre-commit-config.yaml @orchestra-ai-team @security-team
+bandit.yaml @security-team
+.secrets.baseline @security-team
+
+# Dependency management
+pyproject.toml @orchestra-ai-team @security-team
+poetry.lock @orchestra-ai-team
+
+# ============================================================================
+# INFRASTRUCTURE & DEPLOYMENT
+# ============================================================================
+# Docker and deployment configurations
+.cursor/Dockerfile @devops-team @security-team
+docker-compose*.yml @devops-team
+scripts/ @devops-team @orchestra-ai-team
+
+# CI/CD pipeline configurations
+.github/ @devops-team @orchestra-ai-team
+
+# ============================================================================
+# DOCUMENTATION & ARCHITECTURE
+# ============================================================================
+# Architecture documentation requires technical review
+docs/architecture/ @orchestra-ai-team @architects
+docs/prd/ @product-team @orchestra-ai-team
+
+# Security and compliance documentation
+docs/architecture/security*.md @security-team @orchestra-ai-team
+docs/architecture/ai-safety*.md @ai-security-team @orchestra-ai-team
+
+# ============================================================================
+# SPECIAL REVIEW REQUIREMENTS
+# ============================================================================
+# Files that require multiple approvals
+
+# Root configuration files (2 approvals required)
+/.gitignore @orchestra-ai-team @devops-team
+/README.md @orchestra-ai-team @docs-team
+/.env.example @security-team @devops-team
+
+# License and legal files (legal review required)
+/LICENSE @legal-team @orchestra-ai-team
+/SECURITY.md @security-team @legal-team
+
+# ============================================================================
+# TEAM DEFINITIONS
+# ============================================================================
+# @orchestra-ai-team - Core development team
+# @ai-security-team - AI safety and security specialists  
+# @security-team - General security and compliance team
+# @devops-team - Infrastructure and deployment team
+# @temporal-experts - Temporal workflow specialists
+# @product-team - Product management team
+# @architects - System architecture team
+# @docs-team - Documentation team
+# @legal-team - Legal and compliance team

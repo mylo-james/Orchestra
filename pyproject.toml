@@ -1,0 +1,221 @@
+[tool.poetry]
+name = "orchestra-ai-agent-system"
+version = "0.1.0"
+description = "Professional AI Agent System with Multi-Agent Orchestration"
+authors = ["Orchestra AI Team <team@orchestra.ai>"]
+readme = "README.md"
+packages = [{include = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+# Core AI & Agent Framework
+openai = "^1.0.0"
+pydantic = "^2.5.0"
+typing-extensions = "^4.8.0"
+
+# Workflow Orchestration
+temporalio = "^1.24.0"
+
+# Vector Database & Embeddings
+pinecone-client = "^2.2.4"
+
+# CLI Framework
+typer = "^0.9.0"
+rich = "^13.7.0"
+click = "^8.1.0"
+
+# Web Framework (for API)
+fastapi = "^0.104.0"
+uvicorn = "^0.24.0"
+starlette = "^0.27.0"
+
+# Security & Validation
+cryptography = "^41.0.0"
+python-jose = "^3.3.0"
+passlib = "^1.7.4"
+
+# Utilities
+python-dotenv = "^1.0.0"
+pyyaml = "^6.0.1"
+requests = "^2.31.0"
+aiohttp = "^3.9.0"
+httpx = "^0.25.0"
+
+[tool.poetry.group.dev.dependencies]
+# Code Quality
+black = "^23.12.1"
+isort = "^5.13.2"
+flake8 = "^7.0.0"
+flake8-docstrings = "^1.7.0"
+flake8-type-checking = "^2.7.0"
+flake8-bugbear = "^23.12.2"
+flake8-comprehensions = "^3.14.0"
+flake8-simplify = "^0.21.0"
+mypy = "^1.8.0"
+
+# Pre-commit
+pre-commit = "^3.6.0"
+
+# Development Tools
+ipython = "^8.18.0"
+jupyter = "^1.0.0"
+
+[tool.poetry.group.test.dependencies]
+# Testing Framework
+pytest = "^7.4.0"
+pytest-cov = "^4.1.0"
+pytest-mock = "^3.12.0"
+pytest-asyncio = "^0.21.0"
+pytest-xdist = "^3.5.0"
+pytest-benchmark = "^4.0.0"
+
+# Test Data & Mocking
+factory-boy = "^3.3.0"
+responses = "^0.24.0"
+httpx-mock = "^0.10.0"
+
+# Test Containers for Integration Tests
+testcontainers = "^3.7.0"
+
+# E2E Testing
+playwright = "^1.40.0"
+
+[tool.poetry.group.security.dependencies]
+# Security Scanning
+bandit = "^1.7.5"
+safety = "^2.3.0"
+semgrep = "^1.45.0"
+
+# Secrets Detection
+detect-secrets = "^1.4.0"
+
+# License Checking
+pip-licenses = "^4.3.0"
+
+[tool.poetry.scripts]
+orchestra = "src.cli.main:app"
+orchestra-dev = "src.cli.main:dev_app"
+
+# ============================================================================
+# TOOL CONFIGURATIONS
+# ============================================================================
+
+[tool.black]
+line-length = 88
+target-version = ['py312']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+  | migrations
+)/
+'''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+known_first_party = ["src"]
+known_third_party = ["openai", "temporal", "pinecone", "fastapi", "pydantic"]
+sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[[tool.mypy.overrides]]
+module = [
+    "openai.*",
+    "temporal.*",
+    "pinecone.*",
+    "testcontainers.*"
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = [
+    "-ra",
+    "--strict-markers", 
+    "--strict-config",
+    "--cov=src",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-report=xml",
+    "--cov-fail-under=80"
+]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests", 
+    "e2e: End-to-end tests",
+    "security: Security tests",
+    "performance: Performance tests",
+    "slow: Slow running tests",
+    "ai_agent: AI agent specific tests"
+]
+filterwarnings = [
+    "error",
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning"
+]
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__init__.py",
+    "*/migrations/*",
+    "*/venv/*",
+    "*/.venv/*"
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod"
+]
+
+[tool.bandit]
+exclude_dirs = ["tests", "migrations", ".venv", "venv"]
+skips = ["B101", "B601"]  # Skip assert_used and shell=True in tests
+
+[tool.bandit.assert_used]
+skips = ["*_test.py", "test_*.py"]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
