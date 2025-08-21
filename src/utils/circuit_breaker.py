@@ -93,7 +93,9 @@ class CircuitBreaker:
         self._lock = asyncio.Lock()
 
         logger.info(
-            f"Circuit breaker '{name}' initialized", config=self.config.__dict__
+            "Circuit breaker '%s' initialized with config: %s",
+            name,
+            self.config.__dict__,
         )
 
     def __call__(self, func: F) -> F:
@@ -298,13 +300,13 @@ class CircuitBreaker:
     ) -> None:
         """Log circuit breaker state changes."""
         logger.info(
-            "Circuit breaker state change",
-            circuit_name=self.name,
-            old_state=old_state.value,
-            new_state=new_state.value,
-            consecutive_failures=self.consecutive_failures,
-            consecutive_successes=self.consecutive_successes,
-            stats=self.stats.__dict__,
+            "Circuit breaker state change for %s: %s -> %s (failures=%d, successes=%d, stats=%s)",
+            self.name,
+            old_state.value,
+            new_state.value,
+            self.consecutive_failures,
+            self.consecutive_successes,
+            self.stats.__dict__,
         )
 
     def get_stats(self) -> Dict[str, Any]:
