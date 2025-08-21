@@ -1,5 +1,7 @@
 """Basic command structure for Orchestra CLI - placeholder implementations."""
 
+from typing import Optional
+
 import typer
 from rich.console import Console
 
@@ -32,9 +34,7 @@ agent_cmd = create_basic_command_group("agent", "👥 Agent management commands"
 workflow_cmd = create_basic_command_group(
     "workflow", "🔄 Workflow orchestration commands"
 )
-config_cmd = create_basic_command_group(
-    "config", "⚙️ Configuration management commands"
-)
+config_cmd = create_basic_command_group("config", "⚙️ Configuration management commands")
 dev_cmd = create_basic_command_group("dev", "🛠️ Development and debugging commands")
 
 
@@ -82,8 +82,9 @@ def validate_config() -> None:
 
 @config_cmd.command("show")
 def show_config(
-    section: str
-    | None = typer.Option(None, "--section", "-s", help="Show specific section")
+    section: Optional[str] = typer.Option(
+        None, "--section", "-s", help="Show specific section"
+    )
 ) -> None:
     """Show configuration."""
     console = Console()

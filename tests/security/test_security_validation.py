@@ -1,11 +1,9 @@
 """Security-focused tests for Orchestra system."""
 
 import re
-from unittest.mock import Mock, patch
 
 import pytest
 
-from src.config.settings import Settings
 from src.utils.logging import SecurityAuditLogger
 
 

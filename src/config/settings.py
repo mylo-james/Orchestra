@@ -1,6 +1,5 @@
 """Secure configuration management with environment variable validation."""
 
-
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 

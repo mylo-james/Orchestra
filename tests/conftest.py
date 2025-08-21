@@ -1,17 +1,15 @@
 """Pytest configuration and shared fixtures for Orchestra tests."""
 
-import asyncio
 import os
 import tempfile
 from pathlib import Path
-from typing import Any, AsyncGenerator, Dict, Generator
+from typing import Any, Dict, Generator
 from unittest.mock import AsyncMock, Mock
 
 import pytest
 import structlog
-from pydantic import BaseModel
 
-from src.config.settings import Settings, get_settings
+from src.config.settings import Settings
 from src.utils.logging import clear_context, configure_logging
 
 # Configure test logging

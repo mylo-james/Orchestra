@@ -1,10 +1,8 @@
 """Integration tests for system components."""
 
-from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from src.config.settings import get_settings
 from src.utils.logging import get_logger, set_correlation_id
 
 

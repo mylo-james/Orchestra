@@ -254,3 +254,9 @@ datasets/
 
 # Pre-commit
 .pre-commit-config.yaml.backup
+
+# Orchestra Infrastructure - Backup and Security Logs
+backups/
+logs/security/
+bandit-report.json
+safety-report.json

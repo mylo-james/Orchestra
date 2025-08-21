@@ -2,14 +2,16 @@
 
 import asyncio
 import sys
-from typing import Any
+from typing import Any, Optional
 
 import typer
 from rich.console import Console
 from rich.traceback import install
 
+from src.cli.circuit_breaker_commands import cb_app
 from src.cli.commands import agent_cmd, config_cmd, dev_cmd, workflow_cmd
 from src.cli.output import display_banner, display_error, display_success
+from src.cli.security_commands import security_app, security_health_check
 from src.config.settings import get_settings
 from src.utils.logging import configure_logging, get_logger, set_correlation_id
 
@@ -33,6 +35,12 @@ app.add_typer(agent_cmd, name="agent", help="👥 Agent management commands")
 app.add_typer(workflow_cmd, name="workflow", help="🔄 Workflow orchestration commands")
 app.add_typer(config_cmd, name="config", help="⚙️ Configuration management commands")
 app.add_typer(dev_cmd, name="dev", help="🛠️ Development and debugging commands")
+app.add_typer(
+    security_app, name="security", help="🔒 AI Agent security monitoring commands"
+)
+app.add_typer(
+    cb_app, name="circuit-breakers", help="⚡ External service circuit breaker commands"
+)
 
 # Global logger
 logger = get_logger(__name__)
@@ -50,8 +58,7 @@ def main(
     json_logs: bool = typer.Option(
         False, "--json-logs", help="Output logs in JSON format"
     ),
-    correlation_id: str
-    | None = typer.Option(
+    correlation_id: Optional[str] = typer.Option(
         None, "--correlation-id", help="Set correlation ID for request tracing"
     ),
 ) -> None:
@@ -183,6 +190,27 @@ def health() -> None:
         # Check Python version
         python_version = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
         console.print(f"✅ Python version: {python_version}")
+
+        # Check security monitoring system
+        if security_health_check():
+            console.print("✅ AI Agent security monitoring is operational")
+        else:
+            console.print("⚠️ AI Agent security monitoring may have issues")
+
+        # Check circuit breaker system
+        from src.utils.circuit_breaker import circuit_breaker_health_check
+
+        cb_health = circuit_breaker_health_check()
+        if cb_health["healthy"]:
+            console.print(
+                f"✅ External service circuit breakers operational - {cb_health['summary']}"
+            )
+        else:
+            console.print(
+                f"⚠️ External service issues detected - {cb_health['summary']}"
+            )
+            if cb_health["failing_services"]:
+                console.print(f"   Failing: {', '.join(cb_health['failing_services'])}")
 
         display_success(console, "All health checks passed!")
         logger.info("Health check completed successfully")

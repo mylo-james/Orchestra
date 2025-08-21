@@ -64,7 +64,9 @@ def display_agent_status(console: Console, agents: list[dict[str, Any]]) -> None
 
 def display_workflow_status(console: Console, workflows: list[dict[str, Any]]) -> None:
     """Display workflow status in a formatted table."""
-    table = Table(title="🔄 Workflow Status", show_header=True, header_style="bold blue")
+    table = Table(
+        title="🔄 Workflow Status", show_header=True, header_style="bold blue"
+    )
 
     table.add_column("Workflow ID", style="cyan", no_wrap=True)
     table.add_column("Status", style="magenta")

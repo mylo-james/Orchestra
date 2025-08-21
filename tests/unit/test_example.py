@@ -1,7 +1,6 @@
 """Example unit tests to demonstrate testing structure and patterns."""
 
 import asyncio
-from unittest.mock import Mock, patch
 
 import pytest
 
