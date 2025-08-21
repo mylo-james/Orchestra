@@ -1,35 +1,18 @@
-"""Agent factory and registry."""
+"""Persona-based agent factory."""
 
 from __future__ import annotations
 
-from typing import Callable, Dict
+from typing import List
 
-from src.agents.base.secure_agent import SecureAgent
-from src.agents.developer.agent import DeveloperAgent
-from src.agents.orchestrator.agent import OrchestratorAgent
-from src.agents.release.agent import ReleaseAgent
-
-AgentCtor = Callable[[], SecureAgent]
+from src.agents.universal_agent import UniversalAgent
+from src.personas.loader import list_personas as _list_personas
 
 
-class AgentRegistry:
-    """Simple registry mapping agent names to constructors."""
-
-    def __init__(self) -> None:
-        self._registry: Dict[str, AgentCtor] = {}
-
-    def register(self, name: str, constructor: AgentCtor) -> None:
-        self._registry[name] = constructor
-
-    def create(self, name: str) -> SecureAgent:
-        if name not in self._registry:
-            raise KeyError(f"Unknown agent: {name}")
-        return self._registry[name]()
+def create_persona_agent(persona_id: str) -> UniversalAgent:
+    """Create a UniversalAgent for the given persona id."""
+    return UniversalAgent(persona_id=persona_id)
 
 
-def default_registry() -> AgentRegistry:
-    registry = AgentRegistry()
-    registry.register("orchestrator", OrchestratorAgent)
-    registry.register("developer", DeveloperAgent)
-    registry.register("release", ReleaseAgent)
-    return registry
+def list_personas() -> List[str]:
+    """List available persona ids."""
+    return _list_personas()
