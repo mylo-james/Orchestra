@@ -4,7 +4,8 @@
 
 The AI Dev Team Orchestrator will be developed as a monorepo with clear separation between:
 
-- Agent logic and behaviors
+- **Universal agent system with persona specifications** (src/agents/personas/\*.yaml)
+- **Persona-driven agent logic and behaviors**
 - Workflow orchestration layer
 - Integration adapters (GitHub, communication platforms)
 - Vector database and knowledge management layer
@@ -12,26 +13,31 @@ The AI Dev Team Orchestrator will be developed as a monorepo with clear separati
 
 ## Service Architecture
 
-**CRITICAL DECISION:** The system will use OpenAI's Agents SDK for multi-agent orchestration within Temporal workflows, combining the benefits of both frameworks:
+**CRITICAL DECISION:** The system will use OpenAI's Agents SDK with **universal persona system** for multi-agent orchestration within Temporal workflows, combining the benefits of both frameworks:
 
 - **OpenAI Agents SDK:** Handles agent definition, handoffs, guardrails, and tracing
+- **Universal Persona System:** Enables YAML-driven agent behavior configuration without code changes
 - **Temporal Workflows:** Provides durability, fault tolerance, and long-running process management
-- **Architecture Pattern:** Temporal workflows orchestrate OpenAI agent handoff sequences
-- **Deployment:** Agents run within Temporal activities for maximum reliability
+- **Architecture Pattern:** Temporal workflows orchestrate persona-aware OpenAI agent handoff sequences
+- **Deployment:** Universal agents with loaded personas run within Temporal activities for maximum reliability
 
 ## Testing Requirements
 
 **CRITICAL DECISION:** The system requires a full testing pyramid including:
 
+- Unit tests for **persona loading, validation, and universal agent behavior**
 - Unit tests for agent logic and utility functions
-- Integration tests for agent-to-agent handoffs and external API interactions
-- End-to-end tests for complete workflow scenarios
-- Manual testing procedures for validating generated code quality
+- Integration tests for **persona-aware agent handoffs** and external API interactions
+- End-to-end tests for complete workflow scenarios with **specialized personas**
+- Manual testing procedures for validating generated code quality across different personas
 
 ## Additional Technical Assumptions and Requests
 
 - **OpenAI Agents SDK** provides production-ready multi-agent framework with handoffs, guardrails, and observability
-- **GPT-4o model** will be used as primary language model for all agents
+- **Universal Persona System** enables flexible agent behavior configuration through YAML specifications
+- **GPT-4o model** will be used as primary language model for all persona-driven agents
+- **YAML Persona Specifications** define agent identity, behavior, commands, and resource dependencies
+- **Persona Override System** allows src/agents/personas/ to override .bmad-core/ specifications
 - **Hybrid Infrastructure Approach** combining local and cloud services for cost optimization:
   - **Local Infrastructure:** Temporal Server, PostgreSQL, Vector Database (Qdrant), Orchestra application
   - **Cloud Services:** OpenAI Agents SDK, GPT-4o API calls for complex reasoning

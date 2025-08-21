@@ -1,6 +1,6 @@
 # Epic 1: Foundation & OpenAI Agents SDK
 
-**Epic Goal:** Establish the foundational infrastructure integrating OpenAI Agents SDK with Temporal workflows and dynamic knowledge management, enabling reliable agent creation, handoffs, knowledge evolution, and observability while providing a solid development environment for iterative enhancement.
+**Epic Goal:** Establish the foundational infrastructure integrating OpenAI Agents SDK with **universal persona system** and Temporal workflows, enabling **flexible persona-driven agent creation**, handoffs, knowledge evolution, and observability while providing a solid development environment for iterative enhancement.
 
 ## Story 1.1: Development Environment Setup
 
@@ -31,6 +31,10 @@ so that specialized agents can be implemented using the official framework.
 4. OpenAI SDK tracing and observability configured
 5. Tool integration framework established for GitHub API access
 6. Unit tests for OpenAI SDK integration and agent creation
+7. **Universal agent architecture implemented** supporting YAML persona specifications
+8. **Persona loading system** with override precedence (src/agents/personas/ > .bmad-core/)
+9. **Agent factory updated** to create persona-based agents
+10. **Backward compatibility maintained** with existing agent creation patterns
 
 ## Story 1.3: Temporal-OpenAI Integration Framework
 
@@ -46,6 +50,22 @@ so that multi-agent sequences are durable and fault-tolerant.
 4. Error handling integrating Temporal retries with OpenAI SDK guardrails
 5. Workflow observability combining Temporal UI with OpenAI tracing
 6. Integration tests for Temporal-orchestrated agent handoffs
+
+## Story 1.6: Universal Agent Persona System
+
+As a system architect,
+I want a universal agent system that loads persona specifications from YAML files,
+so that agent behaviors can be configured without code changes and new personas can be created through configuration rather than development.
+
+### Story 1.6 Acceptance Criteria
+
+1. `UniversalAgent` class implemented extending `SecureAgent` that can embody any persona
+2. YAML persona specification format defined with identity, behavioral_contract, command_interface, resource_dependencies, and knowledge_context sections
+3. Persona loader with override precedence (src/agents/personas/ > .bmad-core/)
+4. Initial persona specifications created (dev.yaml, orchestrator.yaml with Brendan, release.yaml)
+5. Agent factory updated to support persona-based agent creation with backward compatibility
+6. CLI commands updated to accept persona parameters (--persona flag)
+7. Comprehensive tests for persona loading, agent behavior consistency, and error handling
 
 ## Story 1.4: Dynamic Knowledge Base Infrastructure
 

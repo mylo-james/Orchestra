@@ -1,6 +1,6 @@
 # Epic 2: Orchestrator Implementation
 
-**Epic Goal:** Create a sophisticated Orchestrator using OpenAI Agents SDK that serves dual roles: (1) working agent that analyzes requests and evolves planning knowledge, and (2) workflow manager that coordinates Temporal workflows and agent handoffs.
+**Epic Goal:** Create a sophisticated Orchestrator (Brendan) using **universal persona system** that serves dual roles: (1) working agent that analyzes requests and evolves planning knowledge, and (2) workflow manager that coordinates Temporal workflows and **persona-aware agent handoffs**.
 
 ## Story 2.1: Natural Language Request Processing
 
@@ -10,7 +10,7 @@ so that I can describe what I need without technical implementation details.
 
 ### Story 2.1 Acceptance Criteria
 
-1. Orchestrator created using OpenAI Agents SDK with GPT-4o model for dual role
+1. Orchestrator (Brendan) created using **universal persona system** with orchestrator.yaml specification for dual role
 2. Agent instructions optimized for request interpretation AND workflow coordination
 3. Request parsing handles common feature request patterns (CRUD, UI changes, integrations)
 4. OpenAI SDK guardrails configured to validate and sanitize user inputs
@@ -61,6 +61,8 @@ so that I can both contribute knowledge and coordinate the development process.
 4. **Progress Tracking:** Orchestrator monitors Developer and Release agent progress
 5. **Status Updates:** Orchestrator provides real-time updates to user during workflow execution
 6. **Completion Handling:** Orchestrator receives final results and communicates outcomes to user
+7. **Persona-Aware Handoffs:** Brendan selects appropriate personas for Developer and Release agents based on task requirements
+8. **Dynamic Persona Selection:** Brendan can choose specialized personas (security-focused-dev, frontend-specialist) based on context
 
 ## Story 2.5: Orchestrator as Knowledge Coordination Hub
 
