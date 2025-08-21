@@ -9,13 +9,14 @@ from typing import List, Tuple
 
 class Colors:
     """ANSI color codes for terminal output."""
-    RED = '\033[91m'
-    GREEN = '\033[92m'
-    YELLOW = '\033[93m'
-    BLUE = '\033[94m'
-    CYAN = '\033[96m'
-    BOLD = '\033[1m'
-    END = '\033[0m'
+
+    RED = "\033[91m"
+    GREEN = "\033[92m"
+    YELLOW = "\033[93m"
+    BLUE = "\033[94m"
+    CYAN = "\033[96m"
+    BOLD = "\033[1m"
+    END = "\033[0m"
 
 
 def print_header(text: str) -> None:
@@ -46,12 +47,7 @@ def run_command(command: List[str], description: str) -> Tuple[bool, str]:
     print(f"{Colors.CYAN}Command: {' '.join(command)}{Colors.END}")
 
     try:
-        result = subprocess.run(
-            command,
-            capture_output=True,
-            text=True,
-            cwd=Path.cwd()
-        )
+        result = subprocess.run(command, capture_output=True, text=True, cwd=Path.cwd())
 
         if result.returncode == 0:
             print_success(f"{description} completed")
@@ -78,15 +74,13 @@ def fix_formatting() -> bool:
 
     # Run Black to fix formatting
     black_success, _ = run_command(
-        ["poetry", "run", "black", "src/", "tests/"],
-        "Black code formatting"
+        ["poetry", "run", "black", "src/", "tests/"], "Black code formatting"
     )
     success = success and black_success
 
     # Run isort to fix import sorting
     isort_success, _ = run_command(
-        ["poetry", "run", "isort", "src/", "tests/"],
-        "isort import sorting"
+        ["poetry", "run", "isort", "src/", "tests/"], "isort import sorting"
     )
     success = success and isort_success
 
@@ -99,8 +93,7 @@ def fix_linting() -> bool:
 
     # Run Ruff with --fix to auto-fix issues
     success, _ = run_command(
-        ["poetry", "run", "ruff", "check", "--fix", "src/", "tests/"],
-        "Ruff auto-fix"
+        ["poetry", "run", "ruff", "check", "--fix", "src/", "tests/"], "Ruff auto-fix"
     )
 
     return success
@@ -114,15 +107,14 @@ def update_pre_commit() -> bool:
 
     # Update pre-commit hooks
     update_success, _ = run_command(
-        ["poetry", "run", "pre-commit", "autoupdate"],
-        "Update pre-commit hooks"
+        ["poetry", "run", "pre-commit", "autoupdate"], "Update pre-commit hooks"
     )
     success = success and update_success
 
     # Run pre-commit on all files
     run_success, _ = run_command(
         ["poetry", "run", "pre-commit", "run", "--all-files"],
-        "Run pre-commit on all files"
+        "Run pre-commit on all files",
     )
     # Don't fail if pre-commit finds issues, we'll fix them iteratively
 
@@ -138,31 +130,28 @@ def check_remaining_issues() -> Tuple[bool, List[str]]:
     # Check Black formatting
     black_success, black_output = run_command(
         ["poetry", "run", "black", "--check", "src/", "tests/"],
-        "Check Black formatting"
+        "Check Black formatting",
     )
     if not black_success:
         issues.append("Black formatting issues remain")
 
     # Check isort
     isort_success, isort_output = run_command(
-        ["poetry", "run", "isort", "--check-only", "src/", "tests/"],
-        "Check isort"
+        ["poetry", "run", "isort", "--check-only", "src/", "tests/"], "Check isort"
     )
     if not isort_success:
         issues.append("Import sorting issues remain")
 
     # Check Ruff
     ruff_success, ruff_output = run_command(
-        ["poetry", "run", "ruff", "check", "src/", "tests/"],
-        "Check Ruff linting"
+        ["poetry", "run", "ruff", "check", "src/", "tests/"], "Check Ruff linting"
     )
     if not ruff_success:
         issues.append("Ruff linting issues remain")
 
     # Check MyPy (informational only)
     mypy_success, mypy_output = run_command(
-        ["poetry", "run", "mypy", "src/"],
-        "Check MyPy type hints"
+        ["poetry", "run", "mypy", "src/"], "Check MyPy type hints"
     )
     if not mypy_success:
         issues.append("MyPy type checking issues (may require manual fixes)")
@@ -211,7 +200,9 @@ def main():
     print("1. Review the changes with: git diff")
     print("2. Run tests: poetry run pytest")
     print("3. Run full CI check: python scripts/run_ci_locally.py")
-    print("4. Commit your changes: git add . && git commit -m 'Fix code quality issues'")
+    print(
+        "4. Commit your changes: git add . && git commit -m 'Fix code quality issues'"
+    )
 
     sys.exit(0 if all_fixed else 1)
 

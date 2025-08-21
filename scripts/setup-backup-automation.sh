@@ -34,27 +34,27 @@ main() {
     echo -e "${BLUE}🔄 Orchestra Backup Automation Setup${NC}"
     echo "====================================="
     echo
-    
+
     # Verify backup scripts exist
     if [[ ! -x "$DB_BACKUP_SCRIPT" ]]; then
         error "Database backup script not found or not executable: $DB_BACKUP_SCRIPT"
         exit 1
     fi
     success "Database backup script found: $DB_BACKUP_SCRIPT"
-    
+
     if [[ ! -x "$CONFIG_BACKUP_SCRIPT" ]]; then
         error "Configuration backup script not found or not executable: $CONFIG_BACKUP_SCRIPT"
         exit 1
     fi
     success "Configuration backup script found: $CONFIG_BACKUP_SCRIPT"
-    
+
     # Create backup directories
     info "Creating backup directories..."
     mkdir -p "$PROJECT_DIR/backups/orchestra"
     mkdir -p "$PROJECT_DIR/backups/config"
     mkdir -p "$PROJECT_DIR/data"
     success "Backup directories created"
-    
+
     # Test backup scripts
     info "Testing database backup script..."
     if "$DB_BACKUP_SCRIPT" --health-check; then
@@ -62,19 +62,19 @@ main() {
     else
         warning "Database backup script health check failed (expected if no database exists yet)"
     fi
-    
+
     info "Testing configuration backup script..."
     if "$CONFIG_BACKUP_SCRIPT" --health-check; then
         success "Configuration backup script health check passed"
     else
         warning "Configuration backup script health check failed"
     fi
-    
+
     # Check if cron jobs already exist
     info "Checking existing cron jobs..."
     EXISTING_DB_CRON=$(crontab -l 2>/dev/null | grep -F "$DB_BACKUP_SCRIPT" || echo "")
     EXISTING_CONFIG_CRON=$(crontab -l 2>/dev/null | grep -F "$CONFIG_BACKUP_SCRIPT" || echo "")
-    
+
     if [[ -n "$EXISTING_DB_CRON" || -n "$EXISTING_CONFIG_CRON" ]]; then
         warning "Some backup cron jobs already exist"
         echo
@@ -82,7 +82,7 @@ main() {
         [[ -n "$EXISTING_DB_CRON" ]] && echo "  Database: $EXISTING_DB_CRON"
         [[ -n "$EXISTING_CONFIG_CRON" ]] && echo "  Config: $EXISTING_CONFIG_CRON"
         echo
-        
+
         read -p "Do you want to update the existing cron jobs? (y/n): " update_cron
         if [[ "$update_cron" != "y" && "$update_cron" != "Y" ]]; then
             info "Skipping cron job setup"
@@ -90,27 +90,27 @@ main() {
             show_manual_setup
             exit 0
         fi
-        
+
         # Remove existing cron jobs
         info "Removing existing backup cron jobs..."
         (crontab -l 2>/dev/null | grep -v -F "$DB_BACKUP_SCRIPT" | grep -v -F "$CONFIG_BACKUP_SCRIPT") | crontab -
     fi
-    
+
     # Add new cron jobs
     info "Adding backup cron jobs..."
     (
         crontab -l 2>/dev/null
         echo "$DB_CRON_COMMENT"
         echo "$DB_CRON_JOB"
-        echo "$CONFIG_CRON_COMMENT"  
+        echo "$CONFIG_CRON_COMMENT"
         echo "$CONFIG_CRON_JOB"
     ) | crontab -
     success "Backup cron jobs added"
-    
+
     # Verify cron jobs were added
     echo
     info "Verifying cron job installation..."
-    if crontab -l 2>/dev/null | grep -F "$DB_BACKUP_SCRIPT" > /dev/null && 
+    if crontab -l 2>/dev/null | grep -F "$DB_BACKUP_SCRIPT" > /dev/null &&
        crontab -l 2>/dev/null | grep -F "$CONFIG_BACKUP_SCRIPT" > /dev/null; then
         success "Cron jobs successfully installed"
         echo
@@ -120,7 +120,7 @@ main() {
         error "Failed to install cron jobs"
         exit 1
     fi
-    
+
     # Show summary
     echo
     echo -e "${GREEN}🎉 Backup automation setup complete!${NC}"
@@ -143,7 +143,7 @@ main() {
     echo "    - Check health:      $CONFIG_BACKUP_SCRIPT --health-check"
     echo "    - List backups:      $CONFIG_BACKUP_SCRIPT --list"
     echo
-    
+
     # Run initial backups
     read -p "Run initial backups now? (y/n): " run_backup
     if [[ "$run_backup" == "y" || "$run_backup" == "Y" ]]; then
@@ -154,7 +154,7 @@ main() {
         else
             warning "Initial database backup failed (normal if no database exists yet)"
         fi
-        
+
         echo
         info "Running initial configuration backup..."
         if "$CONFIG_BACKUP_SCRIPT"; then
@@ -163,7 +163,7 @@ main() {
             warning "Initial configuration backup failed"
         fi
     fi
-    
+
     echo
     success "Backup automation is now active!"
 }
@@ -215,7 +215,7 @@ Usage:
 
 The script will:
 1. Verify backup scripts are available
-2. Create necessary directories  
+2. Create necessary directories
 3. Test the backup system
 4. Add a cron job for daily backups at 2:00 AM
 5. Run an optional initial backup

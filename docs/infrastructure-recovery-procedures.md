@@ -1,8 +1,8 @@
 # Orchestra Infrastructure Recovery Procedures
 
-**Document Version:** 1.0  
-**Created:** December 2024  
-**Author:** Alex (DevOps Infrastructure Specialist)  
+**Document Version:** 1.0
+**Created:** December 2024
+**Author:** Alex (DevOps Infrastructure Specialist)
 **Status:** CRITICAL - Immediate Implementation Required
 
 ---
@@ -20,7 +20,7 @@ Based on comprehensive infrastructure assessment, Orchestra AI Agent System curr
 ### 1. No Database Backup
 
 **Current State:** SQLite database has no backup procedures
-**Risk:** Local database corruption = complete data loss  
+**Risk:** Local database corruption = complete data loss
 **Recovery Time:** Unknown, potentially permanent loss
 
 ### 2. No External Service Recovery
@@ -182,7 +182,7 @@ def backup_temporal_workflows():
    make health
    ```
 
-**Total Recovery Time:** 40 minutes  
+**Total Recovery Time:** 40 minutes
 **Data Loss:** Last backup to failure time
 
 ---
@@ -227,7 +227,7 @@ def backup_temporal_workflows():
    python scripts/resume_workflows.py
    ```
 
-**Recovery Strategy:** Graceful degradation with local workflow execution  
+**Recovery Strategy:** Graceful degradation with local workflow execution
 **Data Loss:** In-flight workflow state only
 
 ---
@@ -267,7 +267,7 @@ def backup_temporal_workflows():
    - Coordinate with external service providers
    - Prepare for service restoration testing
 
-**Recovery Strategy:** Wait for external services, no local fallback available  
+**Recovery Strategy:** Wait for external services, no local fallback available
 **Impact:** Complete system unavailability
 
 ---
@@ -329,7 +329,7 @@ def backup_temporal_workflows():
    make test-ai-agents
    ```
 
-**Total Recovery Time:** 46 minutes  
+**Total Recovery Time:** 46 minutes
 **Data Loss:** Back to last known good backup
 
 ---

@@ -5,20 +5,21 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import List, Tuple, Dict, Any
+from typing import Dict, List, Tuple
 
 
 class Colors:
     """ANSI color codes for terminal output."""
-    RED = '\033[91m'
-    GREEN = '\033[92m'
-    YELLOW = '\033[93m'
-    BLUE = '\033[94m'
-    MAGENTA = '\033[95m'
-    CYAN = '\033[96m'
-    WHITE = '\033[97m'
-    BOLD = '\033[1m'
-    END = '\033[0m'
+
+    RED = "\033[91m"
+    GREEN = "\033[92m"
+    YELLOW = "\033[93m"
+    BLUE = "\033[94m"
+    MAGENTA = "\033[95m"
+    CYAN = "\033[96m"
+    WHITE = "\033[97m"
+    BOLD = "\033[1m"
+    END = "\033[0m"
 
 
 def print_header(text: str) -> None:
@@ -48,7 +49,9 @@ def print_info(text: str) -> None:
     print(f"{Colors.CYAN}ℹ️  {text}{Colors.END}")
 
 
-def run_command(command: List[str], description: str, allow_failure: bool = False) -> Tuple[bool, str]:
+def run_command(
+    command: List[str], description: str, allow_failure: bool = False
+) -> Tuple[bool, str]:
     """Run a command and return success status and output."""
     print_info(f"Running: {description}")
     print(f"{Colors.CYAN}Command: {' '.join(command)}{Colors.END}")
@@ -56,12 +59,7 @@ def run_command(command: List[str], description: str, allow_failure: bool = Fals
     start_time = time.time()
 
     try:
-        result = subprocess.run(
-            command,
-            capture_output=True,
-            text=True,
-            cwd=Path.cwd()
-        )
+        result = subprocess.run(command, capture_output=True, text=True, cwd=Path.cwd())
 
         duration = time.time() - start_time
 
@@ -135,10 +133,7 @@ def setup_environment() -> bool:
         print_success("Created .env with test values")
 
     # Install dependencies
-    success, _ = run_command(
-        ["poetry", "install"],
-        "Install dependencies"
-    )
+    success, _ = run_command(["poetry", "install"], "Install dependencies")
 
     return success
 
@@ -153,35 +148,33 @@ def run_code_quality_checks() -> Dict[str, bool]:
     checks["black"] = run_command(
         ["poetry", "run", "black", "--check", "src/", "tests/"],
         "Black formatting check",
-        allow_failure=True
+        allow_failure=True,
     )[0]
 
     # isort import sorting check
     checks["isort"] = run_command(
         ["poetry", "run", "isort", "--check-only", "src/", "tests/"],
         "isort import sorting check",
-        allow_failure=True
+        allow_failure=True,
     )[0]
 
     # Ruff linting
     checks["ruff"] = run_command(
         ["poetry", "run", "ruff", "check", "src/", "tests/"],
         "Ruff linting",
-        allow_failure=True
+        allow_failure=True,
     )[0]
 
     # MyPy type checking
     checks["mypy"] = run_command(
-        ["poetry", "run", "mypy", "src/"],
-        "MyPy type checking",
-        allow_failure=True
+        ["poetry", "run", "mypy", "src/"], "MyPy type checking", allow_failure=True
     )[0]
 
     # Pre-commit hooks
     checks["pre-commit"] = run_command(
         ["poetry", "run", "pre-commit", "run", "--all-files"],
         "Pre-commit hooks",
-        allow_failure=True
+        allow_failure=True,
     )[0]
 
     return checks
@@ -197,14 +190,14 @@ def run_security_checks() -> Dict[str, bool]:
     checks["bandit"] = run_command(
         ["poetry", "run", "bandit", "-r", "src/", "-c", "bandit.yaml"],
         "Bandit security scan",
-        allow_failure=True
+        allow_failure=True,
     )[0]
 
     # Safety dependency check
     checks["safety"] = run_command(
         ["poetry", "run", "safety", "check"],
         "Safety dependency check",
-        allow_failure=True
+        allow_failure=True,
     )[0]
 
     return checks
@@ -220,28 +213,36 @@ def run_tests() -> Dict[str, bool]:
     tests["unit"] = run_command(
         ["poetry", "run", "pytest", "tests/unit/", "-v", "--tb=short"],
         "Unit tests",
-        allow_failure=True
+        allow_failure=True,
     )[0]
 
     # Integration tests
     tests["integration"] = run_command(
         ["poetry", "run", "pytest", "tests/integration/", "-v", "--tb=short"],
         "Integration tests",
-        allow_failure=True
+        allow_failure=True,
     )[0]
 
     # Security tests
     tests["security"] = run_command(
         ["poetry", "run", "pytest", "tests/security/", "-v", "--tb=short"],
         "Security tests",
-        allow_failure=True
+        allow_failure=True,
     )[0]
 
     # Coverage report
     tests["coverage"] = run_command(
-        ["poetry", "run", "pytest", "tests/", "--cov=src", "--cov-report=term-missing", "--cov-report=html"],
+        [
+            "poetry",
+            "run",
+            "pytest",
+            "tests/",
+            "--cov=src",
+            "--cov-report=term-missing",
+            "--cov-report=html",
+        ],
         "Coverage report",
-        allow_failure=True
+        allow_failure=True,
     )[0]
 
     return tests
@@ -255,9 +256,7 @@ def run_docker_checks() -> Dict[str, bool]:
 
     # Check if Docker is available
     docker_available, _ = run_command(
-        ["docker", "--version"],
-        "Check Docker availability",
-        allow_failure=True
+        ["docker", "--version"], "Check Docker availability", allow_failure=True
     )
 
     if not docker_available:
@@ -268,15 +267,23 @@ def run_docker_checks() -> Dict[str, bool]:
     checks["build"] = run_command(
         ["docker", "build", "-t", "orchestra:local-ci", "."],
         "Build Docker image",
-        allow_failure=True
+        allow_failure=True,
     )[0]
 
     if checks["build"]:
         # Test Docker image
         checks["test"] = run_command(
-            ["docker", "run", "--rm", "orchestra:local-ci", "python", "-c", "import src; print('Docker image works!')"],
+            [
+                "docker",
+                "run",
+                "--rm",
+                "orchestra:local-ci",
+                "python",
+                "-c",
+                "import src; print('Docker image works!')",
+            ],
             "Test Docker image",
-            allow_failure=True
+            allow_failure=True,
         )[0]
     else:
         checks["test"] = False
@@ -313,7 +320,7 @@ def print_summary(results: Dict[str, Dict[str, bool]]) -> bool:
     if all_passed:
         print_success("All checks passed! ✨")
     else:
-        print_error(f"Some checks failed. Please fix issues before pushing.")
+        print_error("Some checks failed. Please fix issues before pushing.")
 
     return all_passed
 
@@ -352,7 +359,9 @@ def main():
     print(f"\n{Colors.BOLD}Total time: {total_time:.2f}s{Colors.END}")
 
     if success:
-        print(f"\n{Colors.GREEN}{Colors.BOLD}🎉 Ready to push! All checks passed.{Colors.END}")
+        print(
+            f"\n{Colors.GREEN}{Colors.BOLD}🎉 Ready to push! All checks passed.{Colors.END}"
+        )
         sys.exit(0)
     else:
         print(f"\n{Colors.RED}{Colors.BOLD}💥 Fix issues before pushing.{Colors.END}")

@@ -48,20 +48,20 @@ check_auth() {
 get_repo_info() {
     REPO_OWNER=$(gh repo view --json owner --jq .owner.login 2>/dev/null || echo "")
     REPO_NAME=$(gh repo view --json name --jq .name 2>/dev/null || echo "")
-    
+
     if [[ -z "$REPO_OWNER" || -z "$REPO_NAME" ]]; then
         error "Could not determine repository information"
         echo "Make sure you're in a Git repository connected to GitHub"
         exit 1
     fi
-    
+
     info "Repository: $REPO_OWNER/$REPO_NAME"
 }
 
 # Setup branch protection for main branch (single developer mode)
 setup_main_protection() {
     info "Setting up branch protection for 'main' branch (single developer mode)..."
-    
+
     # Main branch protection - NO required reviews for single developer
     if gh api repos/$REPO_OWNER/$REPO_NAME/branches/main/protection \
         --method PUT \
@@ -95,7 +95,7 @@ EOF
 # Setup branch protection for develop branch (single developer mode)
 setup_develop_protection() {
     info "Setting up branch protection for 'develop' branch (single developer mode)..."
-    
+
     # Develop branch protection - NO required reviews for single developer
     if gh api repos/$REPO_OWNER/$REPO_NAME/branches/develop/protection \
         --method PUT \
@@ -130,12 +130,12 @@ show_protection_status() {
     echo
     info "Current branch protection status:"
     echo
-    
+
     # Check main branch
     echo "Main branch:"
     if gh api repos/$REPO_OWNER/$REPO_NAME/branches/main/protection &>/dev/null; then
         success "  Protection enabled"
-        
+
         # Show required status checks
         CHECKS=$(gh api repos/$REPO_OWNER/$REPO_NAME/branches/main/protection/required_status_checks --jq '.checks[].context' 2>/dev/null || echo "")
         if [[ -n "$CHECKS" ]]; then
@@ -145,14 +145,14 @@ show_protection_status() {
     else
         warning "  No protection configured"
     fi
-    
+
     echo
-    
+
     # Check develop branch
     echo "Develop branch:"
     if gh api repos/$REPO_OWNER/$REPO_NAME/branches/develop/protection &>/dev/null; then
         success "  Protection enabled"
-        
+
         # Show required status checks
         CHECKS=$(gh api repos/$REPO_OWNER/$REPO_NAME/branches/develop/protection/required_status_checks --jq '.checks[].context' 2>/dev/null || echo "")
         if [[ -n "$CHECKS" ]]; then
@@ -168,39 +168,39 @@ main() {
     echo -e "${BLUE}🛡️  GitHub Branch Protection Setup${NC}"
     echo "=================================="
     echo
-    
+
     check_gh_cli
     check_auth
     get_repo_info
     echo
-    
+
     # Show current status first
     show_protection_status
     echo
-    
+
     read -p "Set up branch protection rules? (y/n): " confirm
     if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
         info "Branch protection setup cancelled"
         exit 0
     fi
-    
+
     echo
     setup_main_protection
     setup_develop_protection
-    
+
     echo
     success "Branch protection setup complete!"
     echo
-    
+
     # Show final status
     show_protection_status
-    
+
     echo
     echo -e "${GREEN}🎉 AI agents can no longer bypass security controls!${NC}"
     echo
     echo "Single Developer Protection Enabled:"
     echo "  ✅ Status checks REQUIRED before merge (security scans must pass)"
-    echo "  ✅ All commits must pass: Test Suite, Security Gates, Docker Security"  
+    echo "  ✅ All commits must pass: Test Suite, Security Gates, Docker Security"
     echo "  ✅ No direct pushes to protected branches"
     echo "  ⚠️  No PR reviews required (single developer mode)"
     echo

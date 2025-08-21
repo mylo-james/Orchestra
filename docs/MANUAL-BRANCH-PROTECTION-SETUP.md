@@ -175,16 +175,16 @@ make ci
 
 ## ❓ FAQ
 
-**Q: Can I still push directly in emergencies?**  
+**Q: Can I still push directly in emergencies?**
 A: No, and that's the point! This prevents AI agents (and accidents) from bypassing security. Use PRs for all changes.
 
-**Q: What if CI is broken?**  
+**Q: What if CI is broken?**
 A: You can temporarily disable branch protection, fix CI, then re-enable protection. But this should be rare.
 
-**Q: Can I approve my own PRs?**  
+**Q: Can I approve my own PRs?**
 A: Yes! No reviews are required. You just need the status checks to pass.
 
-**Q: What about hotfixes?**  
+**Q: What about hotfixes?**
 A: Create a hotfix branch, ensure it passes security scans, then merge via PR. Security scans are non-negotiable.
 
 ---

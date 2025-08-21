@@ -22,7 +22,4 @@ system.advancedVisibilityWritingMode:
   - value: "on"
     constraints: {}
 
-# Development logging
-system.enableLoggerRateLimiting:
-  - value: false
-    constraints: {}
+# Development logging (duplicate removed)

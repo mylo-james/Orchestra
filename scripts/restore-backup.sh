@@ -54,14 +54,14 @@ list_backups() {
         echo "No backup directory found: $BACKUP_DIR"
         return 1
     fi
-    
+
     local backups=($(find "$BACKUP_DIR" -name "orchestra_backup_*.db" -type f | sort -r))
-    
+
     if [[ ${#backups[@]} -eq 0 ]]; then
         echo "No backups found in $BACKUP_DIR"
         return 1
     fi
-    
+
     echo
     for i in "${!backups[@]}"; do
         local backup="${backups[$i]}"
@@ -77,63 +77,63 @@ list_backups() {
 restore_backup() {
     local backup_file="$1"
     local create_backup_of_current="${2:-true}"
-    
+
     log "=== Orchestra Database Restore Started ==="
-    
+
     # Verify backup file exists and is readable
     if [[ ! -f "$backup_file" ]]; then
         error_exit "Backup file not found: $backup_file"
     fi
-    
+
     if [[ ! -r "$backup_file" ]]; then
         error_exit "Backup file not readable: $backup_file"
     fi
-    
+
     # Verify backup integrity
     info "Verifying backup integrity..."
     if ! sqlite3 "$backup_file" "PRAGMA integrity_check;" > /dev/null 2>&1; then
         error_exit "Backup integrity check failed: $backup_file"
     fi
     success "Backup integrity verified"
-    
+
     # Create data directory if it doesn't exist
     mkdir -p "$(dirname "$DB_PATH")"
-    
+
     # Backup current database if it exists
     if [[ -f "$DB_PATH" && "$create_backup_of_current" == "true" ]]; then
         local current_backup="$BACKUP_DIR/pre_restore_backup_$(date +%Y%m%d_%H%M%S).db"
         info "Creating backup of current database: $current_backup"
-        
+
         if sqlite3 "$DB_PATH" ".backup $current_backup"; then
             success "Current database backed up to: $current_backup"
         else
             warning "Failed to backup current database - continuing with restore"
         fi
     fi
-    
+
     # Perform restore
     info "Restoring database from: $backup_file"
     if ! cp "$backup_file" "$DB_PATH"; then
         error_exit "Failed to restore database"
     fi
-    
+
     # Verify restored database
     info "Verifying restored database..."
     if ! sqlite3 "$DB_PATH" "PRAGMA integrity_check;" > /dev/null 2>&1; then
         error_exit "Restored database integrity check failed"
     fi
     success "Restored database integrity verified"
-    
+
     # Get restored database info
     local table_count=$(sqlite3 "$DB_PATH" "SELECT COUNT(*) FROM sqlite_master WHERE type='table';" 2>/dev/null || echo "0")
     local db_size=$(du -h "$DB_PATH" | cut -f1)
-    
+
     success "Database restore completed successfully!"
     info "Restored database info:"
     info "  - File: $DB_PATH"
     info "  - Size: $db_size"
     info "  - Tables: $table_count"
-    
+
     log "=== Orchestra Database Restore Completed ==="
 }
 
@@ -142,49 +142,49 @@ interactive_restore() {
     echo -e "${BLUE}🔄 Orchestra Database Restore${NC}"
     echo "=================================="
     echo
-    
+
     list_backups || exit 1
-    
+
     echo -e "${YELLOW}Select a backup to restore (or 'q' to quit):${NC}"
     read -p "Enter backup number: " selection
-    
+
     if [[ "$selection" == "q" || "$selection" == "Q" ]]; then
         echo "Restore cancelled"
         exit 0
     fi
-    
+
     # Validate selection
     if ! [[ "$selection" =~ ^[0-9]+$ ]]; then
         error_exit "Invalid selection: $selection"
     fi
-    
+
     local backups=($(find "$BACKUP_DIR" -name "orchestra_backup_*.db" -type f | sort -r))
     local backup_index=$((selection - 1))
-    
+
     if [[ $backup_index -lt 0 || $backup_index -ge ${#backups[@]} ]]; then
         error_exit "Invalid backup selection: $selection"
     fi
-    
+
     local selected_backup="${backups[$backup_index]}"
-    
+
     # Confirmation
     echo
     echo -e "${YELLOW}⚠️  This will replace the current database with:${NC}"
     echo "   $(basename "$selected_backup")"
     echo
-    
+
     if [[ -f "$DB_PATH" ]]; then
         echo -e "${YELLOW}⚠️  Current database will be backed up before restore${NC}"
         echo
     fi
-    
+
     read -p "Are you sure you want to proceed? (yes/no): " confirmation
-    
+
     if [[ "$confirmation" != "yes" ]]; then
         echo "Restore cancelled"
         exit 0
     fi
-    
+
     restore_backup "$selected_backup"
 }
 
@@ -270,12 +270,12 @@ case $MODE in
         if [[ -z "$BACKUP_FILE" ]]; then
             error_exit "No backup file specified"
         fi
-        
+
         # Handle relative paths
         if [[ "$BACKUP_FILE" != /* && "$BACKUP_FILE" != "$BACKUP_DIR"/* ]]; then
             BACKUP_FILE="$BACKUP_DIR/$BACKUP_FILE"
         fi
-        
+
         restore_backup "$BACKUP_FILE" "$CREATE_BACKUP_OF_CURRENT"
         ;;
     *)

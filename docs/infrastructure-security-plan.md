@@ -1,8 +1,8 @@
 # Orchestra Infrastructure Security Plan
 
-**Document Version:** 1.0  
-**Created:** December 2024  
-**Author:** Alex (DevOps Infrastructure Specialist)  
+**Document Version:** 1.0
+**Created:** December 2024
+**Author:** Alex (DevOps Infrastructure Specialist)
 **Status:** CRITICAL - Immediate Implementation Required
 
 ---

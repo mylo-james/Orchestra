@@ -1,4 +1,4 @@
-# Minimal pre-commit configuration - just the essentials
+# Pre-commit configuration aligned with coding standards
 repos:
   # Basic file cleanup
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -8,15 +8,38 @@ repos:
       - id: end-of-file-fixer
       - id: check-yaml
       - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
 
-  # Python formatting
+  # Python formatting and linting
   - repo: https://github.com/psf/black
-    rev: 23.12.1
+    rev: 24.10.0
     hooks:
       - id: black
         args: ['--line-length=88']
 
-# Simple configuration
+  # Import sorting
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: ['--profile', 'black', '--line-length=88']
+
+  # Fast Python linting
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.0
+    hooks:
+      - id: ruff
+        args: ['--fix']
+
+  # Security scanning
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.8.0
+    hooks:
+      - id: bandit
+        args: ['-c', 'bandit.yaml']
+
+# Configuration
 default_language_version:
-  python: python3
+  python: python3.12
 fail_fast: false

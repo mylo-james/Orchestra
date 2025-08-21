@@ -9,8 +9,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from src.config.settings import get_settings
-from src.utils.logging import get_logger, configure_logging
-
+from src.utils.logging import configure_logging, get_logger
 
 logger = get_logger(__name__)
 
@@ -23,15 +22,13 @@ async def init_database():
         settings = get_settings()
 
         # Configure logging
-        configure_logging(
-            log_level="INFO",
-            json_logs=False,
-            enable_audit=True
-        )
+        configure_logging(log_level="INFO", json_logs=False, enable_audit=True)
 
-        logger.info("Starting database initialization",
-                   database=settings.database.name,
-                   host=settings.database.host)
+        logger.info(
+            "Starting database initialization",
+            database=settings.database.name,
+            host=settings.database.host,
+        )
 
         # In a real implementation, this would:
         # 1. Connect to PostgreSQL

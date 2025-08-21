@@ -190,7 +190,7 @@ python scripts/fix_code_quality.py
 
 ### Dependabot Configuration
 - **Python**: Weekly updates on Monday
-- **Docker**: Weekly updates on Tuesday  
+- **Docker**: Weekly updates on Tuesday
 - **GitHub Actions**: Weekly updates on Wednesday
 - Target branch: `develop`
 - Automatic labeling and assignment

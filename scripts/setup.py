@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Setup script for Orchestra development environment."""
 
-import os
 import subprocess
 import sys
 from pathlib import Path
@@ -30,7 +29,7 @@ def check_prerequisites():
         "python3": "Python 3.12+",
         "poetry": "Poetry 1.7.1+",
         "docker": "Docker",
-        "docker-compose": "Docker Compose"
+        "docker-compose": "Docker Compose",
     }
 
     missing_tools = []
@@ -90,7 +89,9 @@ def setup_docker():
     # Check if Docker is running
     result = run_command("docker info", check=False)
     if result.returncode != 0:
-        print("❌ Docker is not running. Please start Docker and run this script again.")
+        print(
+            "❌ Docker is not running. Please start Docker and run this script again."
+        )
         return False
 
     # Build Docker images
@@ -104,6 +105,7 @@ def setup_docker():
     # Wait for services to be ready
     print("⏳ Waiting for services to be ready...")
     import time
+
     time.sleep(10)
 
     # Check service status

@@ -45,12 +45,12 @@ warning() {
 
 main() {
     log "=== Orchestra Database Backup Started ==="
-    
+
     # Create backup directory
     if ! mkdir -p "$BACKUP_DIR"; then
         error_exit "Failed to create backup directory: $BACKUP_DIR"
     fi
-    
+
     # Check if database exists
     if [[ ! -f "$DB_PATH" ]]; then
         warning "Database file not found: $DB_PATH"
@@ -58,20 +58,20 @@ main() {
         success "Backup directory prepared (no database to backup yet)"
         exit 0
     fi
-    
+
     # Check database integrity before backup
     log "Checking source database integrity..."
     if ! sqlite3 "$DB_PATH" "PRAGMA integrity_check;" > /dev/null 2>&1; then
         error_exit "Source database integrity check failed: $DB_PATH"
     fi
     success "Source database integrity verified"
-    
+
     # Perform backup using SQLite backup command
     log "Creating backup: $BACKUP_FILE"
     if ! sqlite3 "$DB_PATH" ".backup $BACKUP_FILE"; then
         error_exit "Database backup failed"
     fi
-    
+
     # Verify backup integrity
     log "Verifying backup integrity..."
     if ! sqlite3 "$BACKUP_FILE" "PRAGMA integrity_check;" > /dev/null 2>&1; then
@@ -80,11 +80,11 @@ main() {
         error_exit "Backup integrity check failed - backup deleted"
     fi
     success "Backup integrity verified"
-    
+
     # Get backup file size
     BACKUP_SIZE=$(du -h "$BACKUP_FILE" | cut -f1)
     success "Database backup completed: $BACKUP_FILE ($BACKUP_SIZE)"
-    
+
     # Clean up old backups
     log "Cleaning up backups older than $RETENTION_DAYS days..."
     DELETED_COUNT=$(find "$BACKUP_DIR" -name "orchestra_backup_*.db" -mtime +$RETENTION_DAYS -delete -print | wc -l)
@@ -93,7 +93,7 @@ main() {
     else
         log "No old backups to clean up"
     fi
-    
+
     # Create latest symlink for easy access
     LATEST_LINK="$BACKUP_DIR/orchestra_backup_LATEST.db"
     if ln -sf "$BACKUP_FILE" "$LATEST_LINK" 2>/dev/null; then
@@ -101,16 +101,16 @@ main() {
     else
         warning "Failed to create latest backup symlink"
     fi
-    
+
     # Backup statistics
     TOTAL_BACKUPS=$(find "$BACKUP_DIR" -name "orchestra_backup_*.db" | wc -l)
     TOTAL_SIZE=$(du -sh "$BACKUP_DIR" | cut -f1)
-    
+
     log "Backup Statistics:"
     log "  - Total backups: $TOTAL_BACKUPS"
     log "  - Total backup size: $TOTAL_SIZE"
     log "  - Latest backup: $BACKUP_FILE ($BACKUP_SIZE)"
-    
+
     success "Daily backup completed successfully!"
     log "=== Orchestra Database Backup Completed ==="
 }
@@ -122,16 +122,16 @@ if [[ "${1:-}" == "--health-check" ]]; then
         echo "❌ Backup directory does not exist: $BACKUP_DIR"
         exit 1
     fi
-    
+
     LATEST_BACKUP=$(find "$BACKUP_DIR" -name "orchestra_backup_*.db" -type f -printf '%T@ %p\n' 2>/dev/null | sort -n | tail -1 | cut -d' ' -f2-)
-    
+
     if [[ -z "$LATEST_BACKUP" ]]; then
         echo "⚠️  No backups found"
         exit 0
     fi
-    
+
     BACKUP_AGE_HOURS=$(( ($(date +%s) - $(stat -c %Y "$LATEST_BACKUP")) / 3600 ))
-    
+
     if [[ $BACKUP_AGE_HOURS -gt 25 ]]; then
         echo "❌ Latest backup is $BACKUP_AGE_HOURS hours old (too old)"
         exit 1
