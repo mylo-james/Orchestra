@@ -1,8 +1,8 @@
 import pytest
 
+from src.agents.developer.agent import DeveloperAgent
 from src.agents.factory import default_registry
 from src.agents.orchestrator.agent import OrchestratorAgent
-from src.agents.developer.agent import DeveloperAgent
 from src.agents.release.agent import ReleaseAgent
 
 
@@ -22,4 +22,3 @@ def test_unknown_agent_raises():
     registry = default_registry()
     with pytest.raises(KeyError):
         registry.create("unknown")
-

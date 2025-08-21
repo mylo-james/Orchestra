@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Callable, Dict, Type
+from typing import Callable, Dict
 
 from src.agents.base.secure_agent import SecureAgent
 from src.agents.developer.agent import DeveloperAgent
 from src.agents.orchestrator.agent import OrchestratorAgent
 from src.agents.release.agent import ReleaseAgent
-
 
 AgentCtor = Callable[[], SecureAgent]
 
@@ -34,4 +33,3 @@ def default_registry() -> AgentRegistry:
     registry.register("developer", DeveloperAgent)
     registry.register("release", ReleaseAgent)
     return registry
-

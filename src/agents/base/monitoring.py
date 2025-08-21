@@ -15,7 +15,6 @@ from typing import AsyncIterator, Optional
 
 from src.utils.logging import get_logger
 
-
 logger = get_logger(__name__)
 
 
@@ -47,16 +46,25 @@ class AgentMonitor:
         )
 
     @asynccontextmanager
-    async def time(self, name: str, details: Optional[dict] = None) -> AsyncIterator[None]:
+    async def time(
+        self, name: str, details: Optional[dict] = None
+    ) -> AsyncIterator[None]:
         """Async context manager to record duration and success for a block."""
         start = time.perf_counter()
         try:
             yield
         except Exception:
             duration_ms = (time.perf_counter() - start) * 1000.0
-            self.emit(AgentMetric(name=name, duration_ms=duration_ms, success=False, details=details))
+            self.emit(
+                AgentMetric(
+                    name=name, duration_ms=duration_ms, success=False, details=details
+                )
+            )
             raise
         else:
             duration_ms = (time.perf_counter() - start) * 1000.0
-            self.emit(AgentMetric(name=name, duration_ms=duration_ms, success=True, details=details))
-
+            self.emit(
+                AgentMetric(
+                    name=name, duration_ms=duration_ms, success=True, details=details
+                )
+            )

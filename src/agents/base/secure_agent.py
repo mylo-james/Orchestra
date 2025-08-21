@@ -8,15 +8,14 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Dict, Optional
 
-import openai
 from openai import AsyncOpenAI
 
 from src.config.settings import get_settings
 from src.utils.logging import get_logger, set_agent_context
-from .monitoring import AgentMonitor
 
+from .monitoring import AgentMonitor
 
 logger = get_logger(__name__)
 
@@ -35,14 +34,24 @@ class OpenAIClient:
         self._client = AsyncOpenAI(api_key=api_key)
         self._model_cfg = model_cfg
 
-    async def chat(self, messages: list[dict[str, str]], *, model: Optional[str] = None,
-                   temperature: Optional[float] = None, max_tokens: Optional[int] = None,
-                   retries: int = 2) -> str:
+    async def chat(
+        self,
+        messages: list[dict[str, str]],
+        *,
+        model: Optional[str] = None,
+        temperature: Optional[float] = None,
+        max_tokens: Optional[int] = None,
+        retries: int = 2,
+    ) -> str:
         attempt = 0
         last_error: Optional[Exception] = None
         selected_model = model or self._model_cfg.model
-        selected_temp = temperature if temperature is not None else self._model_cfg.temperature
-        selected_max = max_tokens if max_tokens is not None else self._model_cfg.max_tokens
+        selected_temp = (
+            temperature if temperature is not None else self._model_cfg.temperature
+        )
+        selected_max = (
+            max_tokens if max_tokens is not None else self._model_cfg.max_tokens
+        )
 
         while attempt <= retries:
             try:
@@ -56,12 +65,14 @@ class OpenAIClient:
                 if asyncio.iscoroutine(resp):
                     resp = await resp  # type: ignore[assignment]
                 content = resp.choices[0].message.content or ""
-                logger.info("openai_chat_success", model=selected_model, tokens=selected_max)
+                logger.info(
+                    "openai_chat_success", model=selected_model, tokens=selected_max
+                )
                 return content
             except Exception as e:  # noqa: BLE001
                 last_error = e
                 logger.warning("openai_chat_retry", attempt=attempt, error=str(e))
-                await asyncio.sleep(min(0.5 * (2 ** attempt), 2.0))
+                await asyncio.sleep(min(0.5 * (2**attempt), 2.0))
                 attempt += 1
 
         logger.error("openai_chat_failure", error=str(last_error))
@@ -83,7 +94,9 @@ class SecureAgent:
             temperature=self.settings.openai.temperature,
             max_tokens=self.settings.openai.max_tokens,
         )
-        self.openai = OpenAIClient(api_key=self.settings.openai.api_key, model_cfg=model_cfg or default_cfg)
+        self.openai = OpenAIClient(
+            api_key=self.settings.openai.api_key, model_cfg=model_cfg or default_cfg
+        )
 
     async def start(self) -> None:
         logger.info("agent_started", agent=self.agent_name)
@@ -100,4 +113,3 @@ class SecureAgent:
 
         async with self.monitor.time("openai_chat", {"length": len(user_message)}):
             return await self.openai.chat(messages)
-

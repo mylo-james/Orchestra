@@ -11,4 +11,3 @@ class ReleaseAgent(SecureAgent):
     async def draft_notes(self, changes_summary: str) -> str:
         system = "You are a release manager. Draft clear, accurate release notes."
         return await self.ask(changes_summary, system)
-

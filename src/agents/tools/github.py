@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 
 from src.config.settings import get_settings
 from src.services.external_service_client import ExternalServiceClient
+
 from .base import ToolDefinition
 
 
@@ -36,4 +37,3 @@ create_pr_tool = ToolDefinition(
     input_model=CreatePRInput,
     func=create_pr,
 )
-

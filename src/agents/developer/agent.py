@@ -11,4 +11,3 @@ class DeveloperAgent(SecureAgent):
     async def implement(self, task: str) -> str:
         system = "You are a senior Python engineer. Produce robust, secure code."
         return await self.ask(task, system)
-

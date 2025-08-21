@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Awaitable, Callable, Dict, Optional, Type
+from typing import Any, Awaitable, Callable, Dict, Type
 
 from pydantic import BaseModel, ValidationError
-
 
 ToolFunc = Callable[[BaseModel], Awaitable[Dict[str, Any]]]
 
@@ -40,4 +39,3 @@ class ToolRegistry:
         except ValidationError as exc:  # noqa: PERF203
             raise ValueError(f"Invalid input for tool '{name}': {exc}") from exc
         return await tool.func(parsed)
-

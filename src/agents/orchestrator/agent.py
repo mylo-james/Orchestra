@@ -13,4 +13,3 @@ class OrchestratorAgent(SecureAgent):
             "You are the Orchestrator. Create concise, actionable multi-agent plans."
         )
         return await self.ask(goal, system)
-

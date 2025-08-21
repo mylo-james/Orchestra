@@ -3,4 +3,4 @@
 Exports base classes and useful types.
 """
 
-from .base.secure_agent import SecureAgent, ModelConfig  # noqa: F401
+from .base.secure_agent import ModelConfig, SecureAgent  # noqa: F401

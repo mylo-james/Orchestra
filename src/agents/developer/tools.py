@@ -10,4 +10,3 @@ def developer_tool_registry() -> ToolRegistry:
     registry = ToolRegistry()
     registry.register(create_pr_tool)
     return registry
-
