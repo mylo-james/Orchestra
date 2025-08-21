@@ -1,6 +1,5 @@
 """Integration tests for system components."""
 
-
 import pytest
 
 from src.utils.logging import get_logger, set_correlation_id
