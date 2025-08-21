@@ -1,0 +1,206 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., v1.0.0)'
+        required: true
+        type: string
+
+env:
+  PYTHON_VERSION: "3.12"
+  POETRY_VERSION: "1.7.1"
+
+jobs:
+  # Validate release
+  validate:
+    name: Validate Release
+    runs-on: ubuntu-latest
+
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Get version
+      id: version
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+        else
+          echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Validate version format
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+        if [[ ! $VERSION =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+)?$ ]]; then
+          echo "Invalid version format: $VERSION"
+          echo "Expected format: v1.0.0 or v1.0.0-beta"
+          exit 1
+        fi
+        echo "Valid version: $VERSION"
+
+  # Run full test suite
+  test:
+    name: Full Test Suite
+    uses: ./.github/workflows/ci.yml
+    needs: validate
+
+  # Build and publish Docker image
+  docker-release:
+    name: Build & Publish Docker Image
+    runs-on: ubuntu-latest
+    needs: [validate, test]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: orchestra/orchestra
+        tags: |
+          type=ref,event=tag
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=semver,pattern={{major}}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  # Build Python package
+  python-release:
+    name: Build & Publish Python Package
+    runs-on: ubuntu-latest
+    needs: [validate, test]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: ${{ env.POETRY_VERSION }}
+
+    - name: Update version in pyproject.toml
+      run: |
+        VERSION="${{ needs.validate.outputs.version }}"
+        # Remove 'v' prefix for Python version
+        PYTHON_VERSION=${VERSION#v}
+        poetry version $PYTHON_VERSION
+
+    - name: Build package
+      run: poetry build
+
+    - name: Publish to PyPI
+      env:
+        POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
+      run: poetry publish --no-interaction
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: python-package-${{ needs.validate.outputs.version }}
+        path: dist/
+
+  # Create GitHub release
+  github-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [validate, test, docker-release, python-release]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Generate changelog
+      id: changelog
+      run: |
+        VERSION="${{ needs.validate.outputs.version }}"
+        echo "Generating changelog for $VERSION"
+
+        # In a real implementation, you'd generate a proper changelog
+        cat > CHANGELOG.md << EOF
+        # Release $VERSION
+
+        ## What's New
+        - Orchestra AI Agent System release
+        - Multi-agent coordination capabilities
+        - Temporal workflow integration
+        - Security-first design
+        - Comprehensive testing and CI/CD
+
+        ## Installation
+        \`\`\`bash
+        pip install orchestra==${VERSION#v}
+        \`\`\`
+
+        ## Docker
+        \`\`\`bash
+        docker pull orchestra/orchestra:$VERSION
+        \`\`\`
+
+        ## Documentation
+        See README.md for complete setup and usage instructions.
+        EOF
+
+        echo "changelog<<EOF" >> $GITHUB_OUTPUT
+        cat CHANGELOG.md >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ needs.validate.outputs.version }}
+        release_name: Orchestra ${{ needs.validate.outputs.version }}
+        body: ${{ steps.changelog.outputs.changelog }}
+        draft: false
+        prerelease: ${{ contains(needs.validate.outputs.version, '-') }}
+
+  # Post-release notifications
+  notify-release:
+    name: Post-release Notifications
+    runs-on: ubuntu-latest
+    needs: [validate, github-release]
+    if: success()
+
+    steps:
+    - name: Notify success
+      run: |
+        echo "🎉 Orchestra ${{ needs.validate.outputs.version }} released successfully!"
+        echo "Docker image: orchestra/orchestra:${{ needs.validate.outputs.version }}"
+        echo "PyPI package: orchestra==${{ needs.validate.outputs.version #v }}"
+        # In a real setup, send notifications to Slack, Discord, etc.

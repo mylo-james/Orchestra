@@ -1,0 +1,28 @@
+# Temporal Development Configuration
+system.forceSearchAttributesCacheRefreshOnRead:
+  - value: true
+    constraints: {}
+
+system.enableLoggerRateLimiting:
+  - value: false
+    constraints: {}
+
+# Enable development features
+frontend.enableUpdateWorkflowExecution:
+  - value: true
+    constraints: {}
+
+# Increase limits for development
+limit.maxIDLength:
+  - value: 1000
+    constraints: {}
+
+# Enable advanced visibility for development
+system.advancedVisibilityWritingMode:
+  - value: "on"
+    constraints: {}
+
+# Development logging
+system.enableLoggerRateLimiting:
+  - value: false
+    constraints: {}

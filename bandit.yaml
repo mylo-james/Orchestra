@@ -1,0 +1,24 @@
+# Bandit security scanning configuration
+exclude_dirs:
+  - .git
+  - .venv
+  - __pycache__
+  - .pytest_cache
+  - .mypy_cache
+  - build
+  - dist
+  - tests
+
+# Skip specific tests
+skips:
+  - B101  # assert_used - Skip in test files
+
+# Severity and confidence
+severity: MEDIUM
+confidence: MEDIUM
+
+# Output format
+format: txt
+include_line_numbers: true
+include_confidence: true
+include_severity: true

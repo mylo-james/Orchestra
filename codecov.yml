@@ -1,0 +1,103 @@
+# Codecov configuration for Orchestra
+# See: https://docs.codecov.io/docs/codecov-yaml
+
+coverage:
+  # Coverage precision (number of decimal places)
+  precision: 2
+
+  # Coverage range for color coding
+  range: "70...95"
+
+  # Round coverage to nearest integer
+  round: down
+
+  # Coverage status checks
+  status:
+    # Overall project coverage
+    project:
+      default:
+        target: 80%           # Target coverage percentage
+        threshold: 2%         # Allow 2% drop from target
+        base: auto            # Compare against base branch
+        branches:
+          - main
+          - develop
+        if_not_found: success # Don't fail if no coverage found
+        only_pulls: false     # Check coverage on all commits
+
+    # Coverage on changed lines in PR
+    patch:
+      default:
+        target: 85%           # Higher target for new code
+        threshold: 5%         # Allow 5% drop for patches
+        base: auto
+        branches:
+          - main
+          - develop
+        if_not_found: success
+        only_pulls: true      # Only check patches in PRs
+
+  # Ignore paths for coverage
+  ignore:
+    - "tests/"              # Don't include test files in coverage
+    - "scripts/"            # Don't include setup scripts
+    - "docs/"               # Don't include documentation
+    - "**/__init__.py"      # Don't require coverage for __init__ files
+    - "**/conftest.py"      # Don't require coverage for pytest config
+    - "src/cli/output.py"   # CLI output formatting (hard to test)
+
+# Comment configuration for pull requests
+comment:
+  layout: "reach,diff,flags,tree,reach"
+  behavior: default
+  require_changes: false
+  require_base: false
+  require_head: true
+  branches:
+    - main
+    - develop
+
+# Pull request comment layout
+layout:
+  reach:
+    target: 80%
+  diff:
+    target: 85%
+
+# GitHub integration
+github_checks:
+  annotations: true
+
+# Flags for different types of tests
+flags:
+  unit:
+    paths:
+      - tests/unit/
+    carryforward: true
+
+  integration:
+    paths:
+      - tests/integration/
+    carryforward: true
+
+  security:
+    paths:
+      - tests/security/
+    carryforward: true
+
+# Notification settings
+notifications:
+  # Disable email notifications
+  email: false
+
+  # Slack notifications (if configured)
+  slack:
+    default:
+      url: "secret:SLACK_WEBHOOK_URL"
+      threshold: 1%
+      message: |
+        Coverage for {{ repo.name }} changed by {{ range delta }}%
+        {{ commit.message }}
+      branches:
+        - main
+      only_pulls: false
