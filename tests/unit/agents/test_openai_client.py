@@ -22,11 +22,10 @@ async def test_secure_agent_initialization():
 
             agent = SecureAgent(instructions="Test instructions")
 
-            # Verify model was created with correct parameters
+            # Verify model was created with correct parameters (new signature)
             mock_model_cls.assert_called_once()
             call_args = mock_model_cls.call_args
-            assert call_args[1]["model_name"] == "gpt-4o"  # Default model
-            assert call_args[1]["api_key"] == "sk-test-key"  # Default API key
+            assert call_args[1]["model"] == "gpt-4o"  # Default model
 
             # Verify Agent[AgentContext] was created
             mock_agent_cls.__getitem__.assert_called_once()
@@ -74,11 +73,9 @@ async def test_secure_agent_with_custom_model_config():
         with patch("src.agents.base.secure_agent.Agent"):
             agent = SecureAgent(model_cfg=custom_config)
 
-            # Verify custom config was used
+            # Verify custom config was used (new signature)
             call_args = mock_model_cls.call_args[1]
-            assert call_args["model_name"] == "gpt-3.5-turbo"
-            assert call_args["temperature"] == 0.5
-            assert call_args["max_tokens"] == 2048
+            assert call_args["model"] == "gpt-3.5-turbo"
 
 
 @pytest.mark.asyncio

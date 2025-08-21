@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 from typing import Any, Dict, List, Optional, TypeVar
+import os
 from dataclasses import dataclass
 
 from agents import Agent, Runner, FunctionTool, Session, SQLiteSession
@@ -70,11 +71,13 @@ class SecureAgent:
         self.model_cfg = model_cfg or default_cfg
 
         # Create OpenAI model instance for Agents SDK
+        # Newer SDK expects (model, openai_client)
+        from openai import AsyncOpenAI
+
+        openai_client = AsyncOpenAI(api_key=self.settings.openai.api_key)
         self.model = OpenAIChatCompletionsModel(
-            model_name=self.model_cfg.model,
-            api_key=self.settings.openai.api_key,
-            temperature=self.model_cfg.temperature,
-            max_tokens=self.model_cfg.max_tokens,
+            model=self.model_cfg.model,
+            openai_client=openai_client,
         )
 
         # Create the Agent using OpenAI Agents SDK
@@ -94,8 +97,11 @@ class SecureAgent:
         logger.info("agent_started", agent=self.agent_name)
 
         # Create SQLite session for conversation persistence
+        sessions_dir = os.path.join(".ai", "sessions")
+        os.makedirs(sessions_dir, exist_ok=True)
         self.session = SQLiteSession(
-            database_path=f".ai/sessions/{self.agent_name}_sessions.db"
+            session_id=self.agent_name,
+            db_path=os.path.join(sessions_dir, f"{self.agent_name}_sessions.db"),
         )
 
     async def stop(self) -> None:

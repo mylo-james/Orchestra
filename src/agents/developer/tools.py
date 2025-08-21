@@ -8,5 +8,5 @@ from src.agents.tools.github import create_pr_tool
 
 def developer_tool_registry() -> ToolRegistry:
     registry = ToolRegistry()
-    registry.register(create_pr_tool)
+    registry.register(create_pr_tool())
     return registry

@@ -9,11 +9,13 @@ from __future__ import annotations
 from typing import Optional
 
 from agents import FunctionTool
+from pydantic import BaseModel, Field
 
 from src.config.settings import get_settings
 from src.services.external_service_client import ExternalServiceClient
 from src.utils.logging import get_logger
 from src.agents.base.secure_agent import AgentContext
+from src.agents.tools.base import ToolDefinition
 
 logger = get_logger(__name__)
 
@@ -99,10 +101,34 @@ def create_github_pr_tool() -> FunctionTool:
             )
             raise RuntimeError(f"Failed to create GitHub PR: {str(e)}")
 
+    async def on_invoke(ctx, args_json: str):  # OpenAI Agents SDK expected signature
+        import json
+        payload = json.loads(args_json or "{}")
+        return await create_pr(
+            context=payload.get("context") or AgentContext(correlation_id="tools"),
+            title=payload.get("title", ""),
+            body=payload.get("body", ""),
+            branch=payload.get("branch", "main"),
+            base=payload.get("base", "main"),
+        )
+
+    params = {
+        "type": "object",
+        "properties": {
+            "title": {"type": "string"},
+            "body": {"type": "string"},
+            "branch": {"type": "string"},
+            "base": {"type": "string"},
+        },
+        "required": ["title", "branch"],
+        "additionalProperties": False,
+    }
+
     return FunctionTool(
         name="create_github_pr",
         description="Create a GitHub pull request from a branch with security validation",
-        function=create_pr,
+        params_json_schema=params,
+        on_invoke_tool=on_invoke,
     )
 
 
@@ -169,10 +195,29 @@ def list_repositories_tool() -> FunctionTool:
             )
             raise RuntimeError(f"Failed to list repositories: {str(e)}")
 
+    async def on_invoke(ctx, args_json: str):
+        import json
+        payload = json.loads(args_json or "{}")
+        return await list_repositories(
+            context=payload.get("context") or AgentContext(correlation_id="tools"),
+            org=payload.get("org"),
+            limit=payload.get("limit", 10),
+        )
+
+    params = {
+        "type": "object",
+        "properties": {
+            "org": {"type": "string"},
+            "limit": {"type": "integer"},
+        },
+        "additionalProperties": False,
+    }
+
     return FunctionTool(
         name="list_github_repositories",
         description="List GitHub repositories with optional organization filtering",
-        function=list_repositories,
+        params_json_schema=params,
+        on_invoke_tool=on_invoke,
     )
 
 
@@ -182,3 +227,34 @@ def get_github_tools() -> list[FunctionTool]:
         create_github_pr_tool(),
         list_repositories_tool(),
     ]
+
+
+# === ToolRegistry-compatible tools (for tests/unit agent tool registry) ===
+
+class CreatePRInput(BaseModel):
+    title: str = Field(min_length=1, max_length=200)
+    body: str = Field(default="", max_length=10000)
+    branch: str = Field(min_length=1, max_length=120)
+
+
+def create_pr_tool() -> ToolDefinition:
+    """Create a ToolRegistry ToolDefinition for GitHub PR creation.
+
+    Name matches tests: "github.create_pr"
+    """
+
+    async def _impl(payload: CreatePRInput) -> dict:
+        # Do not hard-require token for unit tests; rely on client behavior/mocks
+        settings = get_settings()
+        client = ExternalServiceClient(settings)
+        result = await client.create_github_pr(
+            title=payload.title, description=payload.body, branch=payload.branch
+        )
+        return {"result": result}
+
+    return ToolDefinition(
+        name="github.create_pr",
+        description="Create a GitHub PR from a branch",
+        input_model=CreatePRInput,
+        func=_impl,
+    )
