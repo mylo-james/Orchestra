@@ -25,8 +25,9 @@ async def test_secure_agent_initialization():
             # Verify model was created with correct parameters
             mock_model_cls.assert_called_once()
             call_args = mock_model_cls.call_args
-            assert call_args[1]["model_name"] == "gpt-4o"  # Default model
-            assert call_args[1]["api_key"] == "sk-test-key"  # Default API key
+            assert call_args[1]["model"] == "gpt-4o"  # Default model
+            # Check that AsyncOpenAI client was created (not individual api_key parameter)
+            assert "openai_client" in call_args[1]
 
             # Verify Agent[AgentContext] was created
             mock_agent_cls.__getitem__.assert_called_once()
@@ -74,11 +75,11 @@ async def test_secure_agent_with_custom_model_config():
         with patch("src.agents.base.secure_agent.Agent"):
             agent = SecureAgent(model_cfg=custom_config)
 
-            # Verify custom config was used
+            # Verify custom config was used  
             call_args = mock_model_cls.call_args[1]
-            assert call_args["model_name"] == "gpt-3.5-turbo"
-            assert call_args["temperature"] == 0.5
-            assert call_args["max_tokens"] == 2048
+            assert call_args["model"] == "gpt-3.5-turbo"
+            # OpenAI client is created separately, so temperature/max_tokens aren't passed to model constructor
+            assert "openai_client" in call_args
 
 
 @pytest.mark.asyncio

@@ -12,6 +12,7 @@ from dataclasses import dataclass
 
 from agents import Agent, Runner, FunctionTool, Session, SQLiteSession
 from agents.models.openai_chatcompletions import OpenAIChatCompletionsModel
+from openai import AsyncOpenAI
 
 from src.config.settings import get_settings
 from src.utils.logging import get_logger, set_agent_context
@@ -70,11 +71,12 @@ class SecureAgent:
         self.model_cfg = model_cfg or default_cfg
 
         # Create OpenAI model instance for Agents SDK
-        self.model = OpenAIChatCompletionsModel(
-            model_name=self.model_cfg.model,
+        openai_client = AsyncOpenAI(
             api_key=self.settings.openai.api_key,
-            temperature=self.model_cfg.temperature,
-            max_tokens=self.model_cfg.max_tokens,
+        )
+        self.model = OpenAIChatCompletionsModel(
+            model=self.model_cfg.model,
+            openai_client=openai_client,
         )
 
         # Create the Agent using OpenAI Agents SDK
