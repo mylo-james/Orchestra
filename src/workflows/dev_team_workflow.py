@@ -99,7 +99,8 @@ class DevTeamWorkflow:
 
     async def handoff_to_developer(self, task: str) -> str:
         """Handoff to Developer agent for implementation of a task."""
-        assert self.state, "Workflow must be started before handoffs"
+        if not self.state:
+            raise RuntimeError("Workflow must be started before handoffs")
         self.state.current_agent = "developer"
         self.state.handoff_reason = "implement_task"
         context = AgentContext(agent_name="developer", correlation_id=self.state.correlation_id)
@@ -116,7 +117,8 @@ class DevTeamWorkflow:
 
     async def handoff_to_release(self, changes_summary: str) -> str:
         """Handoff to Release agent for creating release notes/PR summary."""
-        assert self.state, "Workflow must be started before handoffs"
+        if not self.state:
+            raise RuntimeError("Workflow must be started before handoffs")
         self.state.current_agent = "release"
         self.state.handoff_reason = "prepare_release"
         context = AgentContext(agent_name="release", correlation_id=self.state.correlation_id)
