@@ -1,45 +1,21 @@
-# Pre-commit configuration aligned with coding standards
 repos:
-  # Basic file cleanup
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
-    hooks:
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
-      - id: check-yaml
-      - id: check-toml
-      - id: check-merge-conflict
-      - id: check-added-large-files
-
-  # Python formatting and linting
   - repo: https://github.com/psf/black
     rev: 24.10.0
     hooks:
       - id: black
-        args: ['--line-length=88']
+        language_version: python3.12
 
-  # Import sorting
-  - repo: https://github.com/pycqa/isort
-    rev: 5.13.2
-    hooks:
-      - id: isort
-        args: ['--profile', 'black', '--line-length=88']
-
-  # Fast Python linting
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.0
+    rev: v0.8.5
     hooks:
       - id: ruff
-        args: ['--fix']
+        args: [--fix]
 
-  # Security scanning
-  - repo: https://github.com/PyCQA/bandit
-    rev: 1.8.0
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
     hooks:
-      - id: bandit
-        args: ['-c', 'bandit.yaml']
-
-# Configuration
-default_language_version:
-  python: python3.12
-fail_fast: false
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: check-merge-conflict

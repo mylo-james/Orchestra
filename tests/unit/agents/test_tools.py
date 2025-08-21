@@ -19,7 +19,7 @@ async def test_github_create_pr_tool_invokes_external_client():
     ):
         with patch("src.agents.tools.github.get_settings") as mock_settings:
             mock_settings.return_value.github.token = "test_token"
-            
+
             result = await registry.call(
                 "github.create_pr",
                 {"title": "T", "body": "B", "branch": "feat/x"},
@@ -31,8 +31,10 @@ def test_tool_validation_errors():
     registry = developer_tool_registry()
     with patch("src.agents.tools.github.get_settings") as mock_settings:
         mock_settings.return_value.github.token = "test_token"
-        
+
         with pytest.raises(ValueError):
             asyncio.run(
-                registry.call("github.create_pr", {"title": "", "body": "", "branch": ""})
+                registry.call(
+                    "github.create_pr", {"title": "", "body": "", "branch": ""}
+                )
             )

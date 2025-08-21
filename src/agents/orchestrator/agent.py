@@ -31,15 +31,14 @@ with Developer and Release agents for implementation tasks."""
             settings=settings,
             model_cfg=model_cfg,
             instructions=instructions,
-            tools=tools
+            tools=tools,
         )
 
     async def plan(self, goal: str, context: AgentContext = None) -> str:
         """Create a multi-agent plan for the given goal."""
         if context is None:
             context = AgentContext(
-                agent_name=self.agent_name,
-                correlation_id=f"plan_{goal[:20]}"
+                agent_name=self.agent_name, correlation_id=f"plan_{goal[:20]}"
             )
 
         planning_prompt = f"""

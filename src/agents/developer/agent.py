@@ -40,15 +40,14 @@ manage branches, and coordinate with other agents."""
             settings=settings,
             model_cfg=model_cfg,
             instructions=instructions,
-            tools=tools
+            tools=tools,
         )
 
     async def implement(self, task: str, context: AgentContext = None) -> str:
         """Implement a development task with best practices."""
         if context is None:
             context = AgentContext(
-                agent_name=self.agent_name,
-                correlation_id=f"impl_{task[:20]}"
+                agent_name=self.agent_name, correlation_id=f"impl_{task[:20]}"
             )
 
         implementation_prompt = f"""

@@ -84,7 +84,7 @@ def validate_config() -> None:
 def show_config(
     section: Optional[str] = typer.Option(
         None, "--section", "-s", help="Show specific section"
-    )
+    ),
 ) -> None:
     """Show configuration."""
     console = Console()

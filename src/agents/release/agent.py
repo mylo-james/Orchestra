@@ -37,15 +37,17 @@ branch management, and release coordination."""
             settings=settings,
             model_cfg=model_cfg,
             instructions=instructions,
-            tools=tools
+            tools=tools,
         )
 
-    async def draft_notes(self, changes_summary: str, context: AgentContext = None) -> str:
+    async def draft_notes(
+        self, changes_summary: str, context: AgentContext = None
+    ) -> str:
         """Draft release notes from a changes summary."""
         if context is None:
             context = AgentContext(
                 agent_name=self.agent_name,
-                correlation_id=f"notes_{changes_summary[:20]}"
+                correlation_id=f"notes_{changes_summary[:20]}",
             )
 
         notes_prompt = f"""

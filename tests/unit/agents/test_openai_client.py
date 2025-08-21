@@ -1,4 +1,4 @@
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 import pytest
 
 from src.agents.base.secure_agent import SecureAgent, ModelConfig, AgentContext
@@ -7,20 +7,22 @@ from src.agents.base.secure_agent import SecureAgent, ModelConfig, AgentContext
 @pytest.mark.asyncio
 async def test_secure_agent_initialization():
     """Test SecureAgent initialization with OpenAI Agents SDK."""
-    with patch("src.agents.base.secure_agent.OpenAIChatCompletionsModel") as mock_model_cls:
+    with patch(
+        "src.agents.base.secure_agent.OpenAIChatCompletionsModel"
+    ) as mock_model_cls:
         with patch("src.agents.base.secure_agent.Agent") as mock_agent_cls:
             mock_model = Mock()
             mock_model_cls.return_value = mock_model
-            
+
             mock_agent = Mock()
             mock_agent.tools = []
-            
+
             # Handle the generic Agent[AgentContext] call
             mock_agent_generic = Mock()
             mock_agent_generic.return_value = mock_agent
             mock_agent_cls.__getitem__ = Mock(return_value=mock_agent_generic)
 
-            agent = SecureAgent(instructions="Test instructions")
+            SecureAgent(instructions="Test instructions")
 
             # Verify model was created with correct parameters
             mock_model_cls.assert_called_once()
@@ -44,7 +46,9 @@ async def test_secure_agent_ask():
     with patch("src.agents.base.secure_agent.OpenAIChatCompletionsModel"):
         with patch("src.agents.base.secure_agent.Agent"):
             with patch("src.agents.base.secure_agent.Runner") as mock_runner_cls:
-                with patch("src.agents.base.secure_agent.SQLiteSession") as mock_session_cls:
+                with patch(
+                    "src.agents.base.secure_agent.SQLiteSession"
+                ) as mock_session_cls:
                     mock_runner = Mock()
                     mock_runner_cls.return_value = mock_runner
 
@@ -65,17 +69,15 @@ async def test_secure_agent_ask():
 @pytest.mark.asyncio
 async def test_secure_agent_with_custom_model_config():
     """Test SecureAgent with custom model configuration."""
-    custom_config = ModelConfig(
-        model="gpt-3.5-turbo",
-        temperature=0.5,
-        max_tokens=2048
-    )
+    custom_config = ModelConfig(model="gpt-3.5-turbo", temperature=0.5, max_tokens=2048)
 
-    with patch("src.agents.base.secure_agent.OpenAIChatCompletionsModel") as mock_model_cls:
+    with patch(
+        "src.agents.base.secure_agent.OpenAIChatCompletionsModel"
+    ) as mock_model_cls:
         with patch("src.agents.base.secure_agent.Agent"):
-            agent = SecureAgent(model_cfg=custom_config)
+            SecureAgent(model_cfg=custom_config)
 
-            # Verify custom config was used  
+            # Verify custom config was used
             call_args = mock_model_cls.call_args[1]
             assert call_args["model"] == "gpt-3.5-turbo"
             # OpenAI client is created separately, so temperature/max_tokens aren't passed to model constructor
@@ -85,10 +87,7 @@ async def test_secure_agent_with_custom_model_config():
 @pytest.mark.asyncio
 async def test_agent_context_creation():
     """Test AgentContext creation and initialization."""
-    context = AgentContext(
-        agent_name="test_agent",
-        correlation_id="test_123"
-    )
+    context = AgentContext(agent_name="test_agent", correlation_id="test_123")
 
     assert context.agent_name == "test_agent"
     assert context.correlation_id == "test_123"

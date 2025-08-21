@@ -7,7 +7,7 @@ security scanning, and token scope validation as required by AC5.
 from __future__ import annotations
 
 import json
-from typing import Optional, Any
+from typing import Any
 
 from agents import FunctionTool
 from agents.tool import ToolContext
@@ -16,7 +16,6 @@ from pydantic import BaseModel, Field
 from src.config.settings import get_settings
 from src.services.external_service_client import ExternalServiceClient
 from src.utils.logging import get_logger
-from src.agents.base.secure_agent import AgentContext
 from src.agents.tools.base import ToolDefinition
 
 logger = get_logger(__name__)
@@ -24,10 +23,25 @@ logger = get_logger(__name__)
 
 class CreatePRInput(BaseModel):
     """Input model for GitHub PR creation."""
-    title: str = Field(..., description="PR title (1-200 characters)", min_length=1, max_length=200)
-    body: str = Field("", description="PR description (max 10000 characters)", max_length=10000)
-    branch: str = Field(..., description="Source branch name (1-120 characters)", min_length=1, max_length=120)
-    base: str = Field("main", description="Target branch name (1-120 characters)", min_length=1, max_length=120)
+
+    title: str = Field(
+        ..., description="PR title (1-200 characters)", min_length=1, max_length=200
+    )
+    body: str = Field(
+        "", description="PR description (max 10000 characters)", max_length=10000
+    )
+    branch: str = Field(
+        ...,
+        description="Source branch name (1-120 characters)",
+        min_length=1,
+        max_length=120,
+    )
+    base: str = Field(
+        "main",
+        description="Target branch name (1-120 characters)",
+        min_length=1,
+        max_length=120,
+    )
 
 
 def create_github_pr_tool() -> FunctionTool:
@@ -70,7 +84,7 @@ def create_github_pr_tool() -> FunctionTool:
             correlation_id=correlation_id,
             title=title,
             branch=branch,
-            base=base
+            base=base,
         )
 
         # Input validation and security scanning
@@ -84,7 +98,7 @@ def create_github_pr_tool() -> FunctionTool:
             raise ValueError("Base branch must be 1-120 characters")
 
         # Security: Basic input sanitization
-        if any(char in title for char in ['<', '>', '&', '"', "'"]):
+        if any(char in title for char in ["<", ">", "&", '"', "'"]):
             raise ValueError("Title contains unsafe characters")
 
         try:
@@ -106,16 +120,16 @@ def create_github_pr_tool() -> FunctionTool:
             logger.info(
                 "github_pr_create_success",
                 correlation_id=correlation_id,
-                pr_url=result.get("html_url", "unknown")
+                pr_url=result.get("html_url", "unknown"),
             )
 
-            return f"Successfully created PR: {result.get('html_url', 'No URL returned')}"
+            return (
+                f"Successfully created PR: {result.get('html_url', 'No URL returned')}"
+            )
 
         except Exception as e:
             logger.error(
-                "github_pr_create_failure",
-                correlation_id=correlation_id,
-                error=str(e)
+                "github_pr_create_failure", correlation_id=correlation_id, error=str(e)
             )
             raise RuntimeError(f"Failed to create GitHub PR: {str(e)}")
 
@@ -125,13 +139,29 @@ def create_github_pr_tool() -> FunctionTool:
         params_json_schema={
             "type": "object",
             "properties": {
-                "context": {"type": "object", "description": "Agent context with correlation ID"},
-                "title": {"type": "string", "description": "PR title (1-200 characters)"},
-                "body": {"type": "string", "description": "PR description (max 10000 characters)"},
-                "branch": {"type": "string", "description": "Source branch name (1-120 characters)"},
-                "base": {"type": "string", "description": "Target branch name", "default": "main"}
+                "context": {
+                    "type": "object",
+                    "description": "Agent context with correlation ID",
+                },
+                "title": {
+                    "type": "string",
+                    "description": "PR title (1-200 characters)",
+                },
+                "body": {
+                    "type": "string",
+                    "description": "PR description (max 10000 characters)",
+                },
+                "branch": {
+                    "type": "string",
+                    "description": "Source branch name (1-120 characters)",
+                },
+                "base": {
+                    "type": "string",
+                    "description": "Target branch name",
+                    "default": "main",
+                },
             },
-            "required": ["context", "title", "branch"]
+            "required": ["context", "title", "branch"],
         },
         on_invoke_tool=create_pr,
     )
@@ -170,7 +200,7 @@ def list_repositories_tool() -> FunctionTool:
             "github_repos_list_start",
             correlation_id=correlation_id,
             org=org,
-            limit=limit
+            limit=limit,
         )
 
         # Input validation
@@ -191,22 +221,20 @@ def list_repositories_tool() -> FunctionTool:
             result = {
                 "repositories": [],
                 "total_count": 0,
-                "message": "Repository listing not yet implemented in ExternalServiceClient"
+                "message": "Repository listing not yet implemented in ExternalServiceClient",
             }
 
             logger.info(
                 "github_repos_list_success",
                 correlation_id=correlation_id,
-                count=result["total_count"]
+                count=result["total_count"],
             )
 
             return f"Found {result['total_count']} repositories (feature pending implementation)"
 
         except Exception as e:
             logger.error(
-                "github_repos_list_failure",
-                correlation_id=correlation_id,
-                error=str(e)
+                "github_repos_list_failure", correlation_id=correlation_id, error=str(e)
             )
             raise RuntimeError(f"Failed to list repositories: {str(e)}")
 
@@ -216,11 +244,21 @@ def list_repositories_tool() -> FunctionTool:
         params_json_schema={
             "type": "object",
             "properties": {
-                "context": {"type": "object", "description": "Agent context with correlation ID"},
-                "org": {"type": "string", "description": "Optional organization name (if None, lists user repos)"},
-                "limit": {"type": "integer", "description": "Maximum number of repositories to return (1-100)", "default": 10}
+                "context": {
+                    "type": "object",
+                    "description": "Agent context with correlation ID",
+                },
+                "org": {
+                    "type": "string",
+                    "description": "Optional organization name (if None, lists user repos)",
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Maximum number of repositories to return (1-100)",
+                    "default": 10,
+                },
             },
-            "required": ["context"]
+            "required": ["context"],
         },
         on_invoke_tool=list_repositories,
     )
@@ -236,18 +274,18 @@ def get_github_tools() -> list[FunctionTool]:
 
 def create_pr_tool() -> ToolDefinition:
     """Create a ToolDefinition for GitHub PR creation for use with internal ToolRegistry."""
-    
+
     async def create_pr_handler(input_data: CreatePRInput) -> dict:
         """Handler function for ToolRegistry PR creation."""
         logger.info(
             "github_pr_create_start_registry",
             title=input_data.title,
             branch=input_data.branch,
-            base=input_data.base
+            base=input_data.base,
         )
 
         # Security: Basic input sanitization
-        if any(char in input_data.title for char in ['<', '>', '&', '"', "'"]):
+        if any(char in input_data.title for char in ["<", ">", "&", '"', "'"]):
             raise ValueError("Title contains unsafe characters")
 
         try:
@@ -268,22 +306,19 @@ def create_pr_tool() -> ToolDefinition:
 
             logger.info(
                 "github_pr_create_success_registry",
-                pr_url=result.get("html_url", "unknown")
+                pr_url=result.get("html_url", "unknown"),
             )
 
             return {
                 "result": {
                     "url": result.get("html_url", "No URL returned"),
                     "number": result.get("number"),
-                    "state": result.get("state", "open")
+                    "state": result.get("state", "open"),
                 }
             }
 
         except Exception as e:
-            logger.error(
-                "github_pr_create_failure_registry",
-                error=str(e)
-            )
+            logger.error("github_pr_create_failure_registry", error=str(e))
             raise RuntimeError(f"Failed to create GitHub PR: {str(e)}")
 
     return ToolDefinition(

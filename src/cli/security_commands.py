@@ -324,7 +324,7 @@ def test_security_monitoring():
 def generate_security_report(
     output_file: Optional[str] = typer.Option(
         None, "--output", "-o", help="Save report to file"
-    )
+    ),
 ):
     """
     Generate comprehensive security report.

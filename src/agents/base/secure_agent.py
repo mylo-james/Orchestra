@@ -56,7 +56,7 @@ class SecureAgent:
         settings=None,
         model_cfg: Optional[ModelConfig] = None,
         instructions: Optional[str] = None,
-        tools: Optional[List[FunctionTool]] = None
+        tools: Optional[List[FunctionTool]] = None,
     ):
         self.settings = settings or get_settings()
         set_agent_context(self.agent_name)
@@ -83,7 +83,8 @@ class SecureAgent:
         self.agent = Agent[AgentContext](
             name=self.agent_name,
             model=self.model,
-            instructions=instructions or f"You are {self.agent_name}, a helpful AI assistant.",
+            instructions=instructions
+            or f"You are {self.agent_name}, a helpful AI assistant.",
             tools=tools or [],
         )
 
@@ -106,7 +107,9 @@ class SecureAgent:
         if self.session:
             await asyncio.get_event_loop().run_in_executor(None, self.session.close)
 
-    async def ask(self, user_message: str, context: Optional[AgentContext] = None) -> str:
+    async def ask(
+        self, user_message: str, context: Optional[AgentContext] = None
+    ) -> str:
         """Run a conversation using the OpenAI Agents SDK."""
         if not self.session:
             await self.start()
@@ -115,10 +118,12 @@ class SecureAgent:
         if context is None:
             context = AgentContext(
                 agent_name=self.agent_name,
-                correlation_id=f"{self.agent_name}_{asyncio.current_task()}"
+                correlation_id=f"{self.agent_name}_{asyncio.current_task()}",
             )
 
-        async with self.monitor.time("agent_run", {"message_length": len(user_message)}):
+        async with self.monitor.time(
+            "agent_run", {"message_length": len(user_message)}
+        ):
             try:
                 # Run the agent with the user message
                 result = await asyncio.get_event_loop().run_in_executor(
@@ -128,15 +133,19 @@ class SecureAgent:
                         messages=[user_message],
                         context=context,
                         session=self.session,
-                    )
+                    ),
                 )
 
                 # Extract the final output from the result
-                if hasattr(result, 'final_output') and result.final_output:
+                if hasattr(result, "final_output") and result.final_output:
                     response = str(result.final_output)
-                elif hasattr(result, 'messages') and result.messages:
+                elif hasattr(result, "messages") and result.messages:
                     # Get the last message from the agent
-                    response = str(result.messages[-1].content) if result.messages[-1].content else ""
+                    response = (
+                        str(result.messages[-1].content)
+                        if result.messages[-1].content
+                        else ""
+                    )
                 else:
                     response = "No response generated"
 
@@ -144,7 +153,7 @@ class SecureAgent:
                     "agent_run_success",
                     agent=self.agent_name,
                     input_length=len(user_message),
-                    output_length=len(response)
+                    output_length=len(response),
                 )
                 return response
 
