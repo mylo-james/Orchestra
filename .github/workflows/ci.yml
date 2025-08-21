@@ -183,13 +183,14 @@ jobs:
         context: .
         push: false
         tags: orchestra:test
+        load: true  # Make image available to local Docker daemon
         cache-from: type=gha
         cache-to: type=gha,mode=max
         
     - name: 🐳 Container Security Scan - Trivy (BLOCKING)
       run: |
         echo "🔍 Scanning Docker image for vulnerabilities..."
-        docker images  # Debug: show available images
+        docker images | grep orchestra  # Show our built image
         docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
           aquasec/trivy image --exit-code 1 orchestra:test
       # NO continue-on-error - this MUST block if container vulnerabilities found!
