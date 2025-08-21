@@ -36,7 +36,7 @@ isort = "^5.13.0"
 ruff = "^0.1.9"
 # Security
 bandit = "^1.7.5"
-safety = "^3.0.0"
+pip-audit = "^2.6.0"
 
 [tool.poetry.scripts]
 orchestra = "src.cli.main:app"

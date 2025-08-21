@@ -139,8 +139,7 @@ jobs:
     - name: 🛡️ Dependency Security - Safety (BLOCKING)
       run: |
         echo "🔍 Checking dependencies for vulnerabilities..."
-        poetry run safety scan --output json --save-json safety-report.json
-        poetry run safety scan --output screen
+        poetry run pip-audit
       # NO continue-on-error - this MUST block deployment if vulnerable deps found!
       
     - name: 📝 Code Quality - Format Check (BLOCKING)
