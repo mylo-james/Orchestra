@@ -202,5 +202,5 @@ jobs:
       run: |
         echo "🎉 Orchestra ${{ needs.validate.outputs.version }} released successfully!"
         echo "Docker image: orchestra/orchestra:${{ needs.validate.outputs.version }}"
-        echo "PyPI package: orchestra==${{ needs.validate.outputs.version #v }}"
+        echo "PyPI package: orchestra==${{ needs.validate.outputs.version }}"
         # In a real setup, send notifications to Slack, Discord, etc.
