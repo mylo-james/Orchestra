@@ -7,7 +7,7 @@ readme = "README.md"
 packages = [{include = "src"}]
 
 [tool.poetry.dependencies]
-python = "^3.11.0"
+python = "^3.13.0"
 # Build tools (security update)
 setuptools = "^78.1.1"
 # CLI Framework
@@ -62,7 +62,7 @@ build-backend = "poetry.core.masonry.api"
 # Black configuration
 [tool.black]
 line-length = 88
-target-version = ['py311']
+target-version = ['py313']
 
 # isort configuration
 [tool.isort]
@@ -71,7 +71,7 @@ line_length = 88
 
 # Ruff configuration - minimal
 [tool.ruff]
-target-version = "py311"
+target-version = "py313"
 line-length = 88
 
 [tool.ruff.lint]
@@ -100,7 +100,7 @@ norecursedirs = [".*", "build", "dist", "CVS", "_darcs", "{arch}", "*.egg"]
 
 # MyPy configuration
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.13"
 warn_return_any = false
 warn_unused_configs = true
 disallow_untyped_defs = false

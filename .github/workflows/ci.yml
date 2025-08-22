@@ -12,7 +12,7 @@ permissions:
   pull-requests: write
 
 env:
-  PYTHON_VERSION: '3.11'
+  PYTHON_VERSION: '3.13'
   POETRY_VERSION: '1.8.3'
 
 jobs:
@@ -58,6 +58,11 @@ jobs:
           poetry run isort --check-only src/ tests/
           echo "🔍 Running linting checks..."
           poetry run ruff check src/ tests/
+
+      - name: 🔒 Pre-commit Validation (BLOCKING)
+        run: |
+          echo "🔒 Verifying pre-commit standards would pass..."
+          poetry run pre-commit run --all-files
 
       - name: 🔒 Security Scan (BLOCKING)
         run: |
