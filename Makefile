@@ -54,7 +54,7 @@ install:
 
 setup:
 	@echo "🚀 Running full development setup..."
-	python scripts/setup.py
+	poetry run python scripts/setup.py
 	@echo "✅ Setup complete!"
 
 # Code Quality
