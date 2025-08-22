@@ -93,13 +93,14 @@ jobs:
             --junit-xml=junit.xml \
             -v 2>/dev/null
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
-        if: ${{ secrets.CODECOV_TOKEN != '' }}
-        with:
-          file: ./coverage.xml
-          fail_ci_if_error: false
-          token: ${{ secrets.CODECOV_TOKEN }}
+      # Codecov upload disabled - coverage tracked locally in htmlcov/
+      # To enable: Add CODECOV_TOKEN secret and uncomment below
+      # - name: Upload coverage to Codecov
+      #   uses: codecov/codecov-action@v3
+      #   with:
+      #     file: ./coverage.xml
+      #     fail_ci_if_error: false
+      #     token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
