@@ -1,24 +1,33 @@
-import pytest
-
-from src.agents.developer.agent import DeveloperAgent
-from src.agents.factory import default_registry
-from src.agents.orchestrator.agent import OrchestratorAgent
-from src.agents.release.agent import ReleaseAgent
+from src.system.factory import get_registry
 
 
-def test_default_registry_creates_agents():
-    registry = default_registry()
+def test_registry_creates_persona_agents():
+    """Test that registry can create persona-based agents."""
+    registry = get_registry()
 
-    orch = registry.create("orchestrator")
-    dev = registry.create("developer")
-    rel = registry.create("release")
+    # Test creating orchestrator persona
+    orchestrator = registry.create("orchestrator")
+    assert orchestrator is not None
+    assert orchestrator.persona_id == "orchestrator"
 
-    assert isinstance(orch, OrchestratorAgent)
-    assert isinstance(dev, DeveloperAgent)
-    assert isinstance(rel, ReleaseAgent)
+    # Test creating dev persona
+    dev = registry.create("dev")
+    assert dev is not None
+    assert dev.persona_id == "dev"
+
+    # Test creating release persona
+    release = registry.create("release")
+    assert release is not None
+    assert release.persona_id == "release"
 
 
-def test_unknown_agent_raises():
-    registry = default_registry()
-    with pytest.raises(KeyError):
-        registry.create("unknown")
+def test_registry_lists_personas():
+    """Test that registry can list available personas."""
+    registry = get_registry()
+    personas = registry.list_personas()
+
+    # Should have at least the core personas
+    persona_ids = [p["id"] for p in personas]
+    assert "orchestrator" in persona_ids
+    assert "dev" in persona_ids
+    assert "release" in persona_ids

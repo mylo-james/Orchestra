@@ -3,10 +3,10 @@
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-
 from agents import FunctionTool
-from src.agents.base.secure_agent import AgentContext
-from src.agents.tools.github import (
+
+from src.system.base import AgentContext
+from src.system.tools import (
     create_github_pr_tool,
     get_github_tools,
     list_repositories_tool,

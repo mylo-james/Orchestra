@@ -156,8 +156,9 @@ async def _execute_planning(
     agent: Any, agent_context: AgentContext, context: Dict[str, Any]
 ) -> Dict[str, Any]:
     """Execute planning operation with orchestrator agent."""
-    request = context.get("working_memory", {}).get("request", "")
-    project_context = context.get("working_memory", {}).get("project_context", {})
+    # Get values for potential future use
+    _ = context.get("working_memory", {}).get("request", "")
+    _ = context.get("working_memory", {}).get("project_context", {})
 
     # Simulate agent planning (would call actual agent.plan() method)
     # In real implementation, this would use the OpenAI SDK through the agent
@@ -194,7 +195,7 @@ async def _execute_implementation(
     agent: Any, agent_context: AgentContext, context: Dict[str, Any]
 ) -> Dict[str, Any]:
     """Execute implementation operation with developer agent."""
-    plan = context.get("working_memory", {}).get("plan", {})
+    _ = context.get("working_memory", {}).get("plan", {})
 
     # Simulate agent implementation (would call actual agent.implement() method)
     await asyncio.sleep(1.0)  # Simulate code generation
@@ -228,7 +229,7 @@ async def _execute_release(
     agent: Any, agent_context: AgentContext, context: Dict[str, Any]
 ) -> Dict[str, Any]:
     """Execute release operation with release agent."""
-    implementation = context.get("working_memory", {}).get("implementation", {})
+    _ = context.get("working_memory", {}).get("implementation", {})
 
     # Simulate release operations
     await asyncio.sleep(0.5)  # Simulate release process
@@ -330,7 +331,7 @@ async def create_github_pr_activity(params: Dict[str, Any]) -> Dict[str, Any]:
         PR creation result with URL
     """
     title = params["title"]
-    body = params["body"]
+    _ = params["body"]  # Will be used in actual implementation
     branch = params["branch"]
     context = params["context"]
 

@@ -27,7 +27,7 @@ cryptography = "^44.0.0"
 # Database
 aiosqlite = "^0.20.0"
 # Temporal SDK (placeholder - actual SDK TBD)
-# temporalio = "^1.7.0"
+temporalio = "^1.7.0"
 # Vector Database
 qdrant-client = "^1.7.0"
 pip-audit = "^2.7.0"

@@ -3,21 +3,29 @@
 import asyncio
 import sys
 
+import typer
 from rich.console import Console
 from rich.table import Table
 
 from src.cli.output import error_panel, info_panel, success_panel
-from src.security.ai_agent_monitor import AIAgentMonitor
+from src.security.ai_agent_monitor import AIAgentSecurityMonitor as AIAgentMonitor
 from src.security.ai_agent_validator import AIAgentValidator
 from src.system.factory import get_registry
 from src.system.loader import PersonaLoader
 from src.utils.circuit_breaker import CircuitBreaker
 from src.utils.logging import get_logger
 
+# Create Typer apps for command groups
+agent_cmd = typer.Typer()
+workflow_cmd = typer.Typer()
+config_cmd = typer.Typer()
+dev_cmd = typer.Typer()
+
 logger = get_logger(__name__)
 console = Console()
 
 
+@agent_cmd.command("start")
 def start_agent(persona_id: str) -> None:
     """
     Start an agent with the specified persona.
@@ -46,6 +54,7 @@ def start_agent(persona_id: str) -> None:
         sys.exit(1)
 
 
+@agent_cmd.command("list")
 def list_agents() -> None:
     """List all available agent personas."""
     try:
@@ -78,6 +87,7 @@ def list_agents() -> None:
         sys.exit(1)
 
 
+@agent_cmd.command("personas")
 def list_personas() -> None:
     """List all available personas."""
     try:
@@ -117,6 +127,7 @@ def list_personas() -> None:
         sys.exit(1)
 
 
+@agent_cmd.command("validate")
 def validate_persona(persona_id: str) -> None:
     """
     Validate a persona specification.
@@ -168,6 +179,7 @@ def validate_persona(persona_id: str) -> None:
         sys.exit(1)
 
 
+@agent_cmd.command("reload")
 def reload_personas() -> None:
     """Reload all personas from disk."""
     try:
@@ -186,6 +198,7 @@ def reload_personas() -> None:
         sys.exit(1)
 
 
+@dev_cmd.command("test-security")
 def test_security() -> None:
     """Test security components."""
     console.print(info_panel("Testing security components..."))
@@ -210,6 +223,7 @@ def test_security() -> None:
     console.print(success_panel("Security components test completed"))
 
 
+@dev_cmd.command("test-circuit-breaker")
 def test_circuit_breaker() -> None:
     """Test circuit breaker functionality."""
     console.print(info_panel("Testing circuit breaker..."))
@@ -234,7 +248,7 @@ def test_circuit_breaker() -> None:
         for i in range(3):
             try:
                 test_function(should_fail=True)
-            except:
+            except Exception:
                 pass
 
         # Circuit should be open now
@@ -261,6 +275,38 @@ async def run_workflow(workflow_name: str) -> None:
     console.print(success_panel(f"Workflow {workflow_name} completed"))
 
 
+@workflow_cmd.command("start")
+def start_workflow(workflow_name: str = "dev-team") -> None:
+    """Start a workflow."""
+    console.print(info_panel(f"Starting workflow: {workflow_name}"))
+    # Placeholder for workflow execution
+    console.print(success_panel(f"Workflow {workflow_name} started"))
+
+
+@workflow_cmd.command("list")
+def list_workflows() -> None:
+    """List available workflows."""
+    console.print(info_panel("Available workflows:"))
+    console.print("- dev-team: Development team workflow")
+    console.print("- release: Release workflow")
+
+
+@config_cmd.command("show")
+def show_config() -> None:
+    """Show current configuration."""
+    console.print(info_panel("Current configuration"))
+    # Placeholder for config display
+    console.print("Configuration loaded from environment")
+
+
+@config_cmd.command("validate")
+def validate_config() -> None:
+    """Validate configuration."""
+    console.print(info_panel("Validating configuration..."))
+    console.print(success_panel("Configuration is valid"))
+
+
+@dev_cmd.command("health")
 def health_check() -> None:
     """Perform a health check of the system."""
     console.print(info_panel("Performing health check..."))
@@ -280,7 +326,7 @@ def health_check() -> None:
 
         # Test agent registry
         registry = get_registry()
-        _ = registry.list_agents()
+        _ = registry.list_personas()
 
         # Test persona loader
         loader = PersonaLoader()

@@ -159,7 +159,7 @@ async def test_workflow_agent_handoff():
                 user_id="test_user",
             )
 
-            result = await env.client.execute_workflow(
+            _ = await env.client.execute_workflow(
                 DevTeamWorkflow.run,
                 workflow_input,
                 id="test-workflow-3",
