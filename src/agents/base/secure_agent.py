@@ -7,13 +7,13 @@ tracing, and proper tool integration. All operations are async for Temporal comp
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Dict, List, Optional, TypeVar
 from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, TypeVar
 
-from agents import Agent, Runner, FunctionTool, Session, SQLiteSession
-from agents.models.openai_chatcompletions import OpenAIChatCompletionsModel
 from openai import AsyncOpenAI
 
+from agents import Agent, FunctionTool, Runner, SQLiteSession
+from agents.models.openai_chatcompletions import OpenAIChatCompletionsModel
 from src.config.settings import get_settings
 from src.utils.logging import get_logger, set_agent_context
 
@@ -30,7 +30,7 @@ class AgentContext:
 
     correlation_id: Optional[str] = None
     agent_name: Optional[str] = None
-    session_data: Dict[str, Any] = None
+    session_data: Optional[Dict[str, Any]] = None
 
     def __post_init__(self):
         if self.session_data is None:
@@ -85,11 +85,11 @@ class SecureAgent:
             model=self.model,
             instructions=instructions
             or f"You are {self.agent_name}, a helpful AI assistant.",
-            tools=tools or [],
+            tools=tools or [],  # type: ignore[arg-type]
         )
 
         # Session for conversation management
-        self.session: Optional[Session] = None
+        self.session: Optional[SQLiteSession] = None
         self.runner = Runner()
 
     async def start(self) -> None:
@@ -98,7 +98,8 @@ class SecureAgent:
 
         # Create SQLite session for conversation persistence
         self.session = SQLiteSession(
-            database_path=f".ai/sessions/{self.agent_name}_sessions.db"
+            session_id=f"{self.agent_name}_session",
+            db_path=f".ai/sessions/{self.agent_name}_sessions.db",
         )
 
     async def stop(self) -> None:
@@ -129,8 +130,8 @@ class SecureAgent:
                 result = await asyncio.get_event_loop().run_in_executor(
                     None,
                     lambda: self.runner.run_sync(
-                        agent=self.agent,
-                        messages=[user_message],
+                        starting_agent=self.agent,
+                        input=user_message,
                         context=context,
                         session=self.session,
                     ),

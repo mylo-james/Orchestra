@@ -1,16 +1,16 @@
 """Tests for GitHub tools using OpenAI Agents SDK FunctionTool implementations."""
 
 from unittest.mock import AsyncMock, Mock, patch
+
 import pytest
 
 from agents import FunctionTool
-
+from src.agents.base.secure_agent import AgentContext
 from src.agents.tools.github import (
     create_github_pr_tool,
-    list_repositories_tool,
     get_github_tools,
+    list_repositories_tool,
 )
-from src.agents.base.secure_agent import AgentContext
 
 
 @pytest.fixture

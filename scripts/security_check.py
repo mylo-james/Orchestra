@@ -218,25 +218,25 @@ def check_dependency_security() -> Dict[str, Any]:
     print("📦 Checking dependency security...")
 
     try:
-        # Run safety check
+        # Run pip-audit check
         result = subprocess.run(
-            ["poetry", "run", "safety", "scan", "--json"],
+            ["poetry", "run", "pip-audit", "--format=json"],
             capture_output=True,
             text=True,
         )
 
         if result.stdout:
             try:
-                safety_results = json.loads(result.stdout)
-                return {"vulnerabilities": safety_results}
+                audit_results = json.loads(result.stdout)
+                return {"vulnerabilities": audit_results}
             except json.JSONDecodeError:
-                # Safety might output non-JSON when no issues found
+                # pip-audit might output non-JSON when no issues found
                 return {"vulnerabilities": []}
         else:
             return {"vulnerabilities": []}
 
     except subprocess.CalledProcessError as e:
-        # Safety not installed or other error
+        # pip-audit not installed or other error
         return {"error": f"Dependency security check failed: {e}"}
     except Exception as e:
         logger.error("Dependency security check failed", error=str(e), exc_info=True)
@@ -260,7 +260,16 @@ def generate_security_report(results: Dict[str, Any]) -> None:
         if check_name == "bandit_scan":
             issues = check_results.get("results", [])
         elif check_name == "dependency_security":
-            issues = check_results.get("vulnerabilities", [])
+            vulnerabilities = check_results.get("vulnerabilities", [])
+            # Handle both formats: list of vulnerabilities or audit report
+            if isinstance(vulnerabilities, list):
+                issues = vulnerabilities
+            else:
+                issues = (
+                    vulnerabilities.get("vulnerabilities", [])
+                    if vulnerabilities
+                    else []
+                )
 
         if issues:
             print(f"\n⚠️  {check_name}: {len(issues)} issues found")

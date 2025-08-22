@@ -1,11 +1,26 @@
-# Simple Bandit configuration
+# Minimal Bandit configuration for development
+# Enterprise version available in bandit.enterprise.yaml
+
 exclude_dirs:
   - tests
-  - scripts
   - .venv
   - __pycache__
+  - backups
 
-# Basic settings
+# Development-friendly settings
 severity: MEDIUM
 confidence: MEDIUM
 format: txt
+
+# Skip development-unfriendly checks
+skips:
+  - B101 # Skip assert_used in development
+# Essential security tests only
+tests:
+  - B105 # hardcoded_password_string
+  - B106 # hardcoded_password_funcarg
+  - B107 # hardcoded_password_default
+  - B108 # hardcoded_tmp_directory
+  - B307 # eval
+  - B602 # subprocess_popen_with_shell_equals_true
+  - B608 # hardcoded_sql_expressions

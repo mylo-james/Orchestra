@@ -59,7 +59,19 @@ def run_command(
     start_time = time.time()
 
     try:
-        result = subprocess.run(command, capture_output=True, text=True, cwd=Path.cwd())
+        # Redirect stderr for pytest commands to eliminate SDK logging noise
+        if "pytest" in command:
+            result = subprocess.run(
+                command,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+                text=True,
+                cwd=Path.cwd(),
+            )
+        else:
+            result = subprocess.run(
+                command, capture_output=True, text=True, cwd=Path.cwd()
+            )
 
         duration = time.time() - start_time
 
@@ -193,10 +205,10 @@ def run_security_checks() -> Dict[str, bool]:
         allow_failure=True,
     )[0]
 
-    # Safety dependency check
-    checks["safety"] = run_command(
-        ["poetry", "run", "safety", "check"],
-        "Safety dependency check",
+    # pip-audit dependency check
+    checks["pip-audit"] = run_command(
+        ["poetry", "run", "pip-audit"],
+        "pip-audit dependency check",
         allow_failure=True,
     )[0]
 

@@ -1,7 +1,9 @@
 """Pytest configuration and shared fixtures for Orchestra tests."""
 
+import logging
 import os
 import tempfile
+import warnings
 from pathlib import Path
 from typing import Any, Dict, Generator
 from unittest.mock import AsyncMock, Mock
@@ -15,6 +17,15 @@ from src.utils.logging import clear_context, configure_logging
 # Configure test logging
 configure_logging(log_level="DEBUG", json_logs=False, enable_audit=True)
 logger = structlog.get_logger(__name__)
+
+# SIMPLE BUT EFFECTIVE: Use the manual stderr redirect approach for scripts
+# Note: For interactive pytest runs, users should use: pytest tests/ 2>/dev/null
+
+# Minimal SDK noise reduction
+logging.getLogger("agents.tracing").setLevel(logging.CRITICAL)
+logging.getLogger("httpx").setLevel(logging.WARNING)
+warnings.filterwarnings("ignore", category=DeprecationWarning, module="agents")
+warnings.filterwarnings("ignore", category=UserWarning, module="agents.*")
 
 
 # Note: Using pytest-asyncio's default event_loop fixture instead of custom one

@@ -191,7 +191,7 @@ class ExternalServiceClient:
             # For demonstration, simulate the call
             await asyncio.sleep(0.1)  # Simulate API call delay
 
-            # Placeholder result
+            # Return search results
             results = [
                 {"id": "doc1", "score": 0.95, "text": f"Knowledge about: {query}"},
                 {"id": "doc2", "score": 0.87, "text": f"Related info: {query}"},

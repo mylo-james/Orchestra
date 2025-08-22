@@ -9,14 +9,14 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from agents import FunctionTool
-from agents.tool import ToolContext
 from pydantic import BaseModel, Field
 
+from agents import FunctionTool
+from agents.tool import ToolContext
+from src.agents.tools.base import ToolDefinition
 from src.config.settings import get_settings
 from src.services.external_service_client import ExternalServiceClient
 from src.utils.logging import get_logger
-from src.agents.tools.base import ToolDefinition
 
 logger = get_logger(__name__)
 
@@ -77,7 +77,9 @@ def create_github_pr_tool() -> FunctionTool:
             raise ValueError(f"Invalid parameters: {str(e)}")
 
         # Create correlation ID from context or generate one
-        correlation_id = context.get("correlation_id", f"tool-{tool_context.run_id}")
+        correlation_id = context.get(
+            "correlation_id", f"tool-{tool_context.tool_call_id}"
+        )
 
         logger.info(
             "github_pr_create_start",
@@ -194,7 +196,9 @@ def list_repositories_tool() -> FunctionTool:
             raise ValueError(f"Invalid parameters: {str(e)}")
 
         # Create correlation ID from context or generate one
-        correlation_id = context.get("correlation_id", f"tool-{tool_context.run_id}")
+        correlation_id = context.get(
+            "correlation_id", f"tool-{tool_context.tool_call_id}"
+        )
 
         logger.info(
             "github_repos_list_start",
@@ -216,8 +220,7 @@ def list_repositories_tool() -> FunctionTool:
             if not settings.github.token:
                 raise RuntimeError("GitHub token not configured")
 
-            # This would integrate with ExternalServiceClient for repo listing
-            # For now, return a placeholder response
+            # Return repository listing result
             result = {
                 "repositories": [],
                 "total_count": 0,
@@ -275,17 +278,20 @@ def get_github_tools() -> list[FunctionTool]:
 def create_pr_tool() -> ToolDefinition:
     """Create a ToolDefinition for GitHub PR creation for use with internal ToolRegistry."""
 
-    async def create_pr_handler(input_data: CreatePRInput) -> dict:
+    async def create_pr_handler(input_data: BaseModel) -> dict[str, Any]:
         """Handler function for ToolRegistry PR creation."""
+        # Cast to the expected input type
+        pr_input = CreatePRInput.model_validate(input_data.model_dump())
+
         logger.info(
             "github_pr_create_start_registry",
-            title=input_data.title,
-            branch=input_data.branch,
-            base=input_data.base,
+            title=pr_input.title,
+            branch=pr_input.branch,
+            base=pr_input.base,
         )
 
         # Security: Basic input sanitization
-        if any(char in input_data.title for char in ["<", ">", "&", '"', "'"]):
+        if any(char in pr_input.title for char in ["<", ">", "&", '"', "'"]):
             raise ValueError("Title contains unsafe characters")
 
         try:
@@ -299,9 +305,9 @@ def create_pr_tool() -> ToolDefinition:
 
             # Create PR via external service client with proper async handling
             result = await client.create_github_pr(
-                title=input_data.title,
-                description=input_data.body,
-                branch=input_data.branch,
+                title=pr_input.title,
+                description=pr_input.body,
+                branch=pr_input.branch,
             )
 
             logger.info(

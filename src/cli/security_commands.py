@@ -285,7 +285,7 @@ def test_security_monitoring():
         console.print("4. Testing output security with secret detection...")
         output_result = monitor.check_output_security(
             agent_id="test-agent-001",
-            output_data="# Here's your API key: sk-1234567890abcdef1234567890abcdef1234567890abcdef",
+            output_data="# Here's your API key: sk-test-example-key-not-real",
             operation_type="code_generation",
         )
         console.print(

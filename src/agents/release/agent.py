@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from src.agents.base.secure_agent import SecureAgent, AgentContext
+from typing import Optional
+
+from src.agents.base.secure_agent import AgentContext, SecureAgent
 from src.agents.tools.github import get_github_tools
 
 
@@ -41,7 +43,7 @@ branch management, and release coordination."""
         )
 
     async def draft_notes(
-        self, changes_summary: str, context: AgentContext = None
+        self, changes_summary: str, context: Optional[AgentContext] = None
     ) -> str:
         """Draft release notes from a changes summary."""
         if context is None:

@@ -174,7 +174,7 @@ class SecurityAuditLogger:
             event_type=event_type,
             security=True,
             audit=True,
-            **details,
+            **(details or {}),  # Handle None gracefully
         )
 
     def log_agent_handoff(

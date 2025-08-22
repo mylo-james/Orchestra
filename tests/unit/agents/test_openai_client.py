@@ -1,7 +1,8 @@
 from unittest.mock import Mock, patch
+
 import pytest
 
-from src.agents.base.secure_agent import SecureAgent, ModelConfig, AgentContext
+from src.agents.base.secure_agent import AgentContext, ModelConfig, SecureAgent
 
 
 @pytest.mark.asyncio

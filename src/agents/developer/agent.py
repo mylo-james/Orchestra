@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from src.agents.base.secure_agent import SecureAgent, AgentContext
+from typing import Optional
+
+from src.agents.base.secure_agent import AgentContext, SecureAgent
 from src.agents.tools.github import get_github_tools
 
 
@@ -43,7 +45,7 @@ manage branches, and coordinate with other agents."""
             tools=tools,
         )
 
-    async def implement(self, task: str, context: AgentContext = None) -> str:
+    async def implement(self, task: str, context: Optional[AgentContext] = None) -> str:
         """Implement a development task with best practices."""
         if context is None:
             context = AgentContext(

@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from src.agents.base.secure_agent import SecureAgent, AgentContext
+from typing import Optional
+
+from src.agents.base.secure_agent import AgentContext, SecureAgent
 from src.agents.tools.github import get_github_tools
 
 
@@ -34,7 +36,7 @@ with Developer and Release agents for implementation tasks."""
             tools=tools,
         )
 
-    async def plan(self, goal: str, context: AgentContext = None) -> str:
+    async def plan(self, goal: str, context: Optional[AgentContext] = None) -> str:
         """Create a multi-agent plan for the given goal."""
         if context is None:
             context = AgentContext(
