@@ -2,9 +2,9 @@
 
 from unittest.mock import MagicMock
 
-from src.agents.base.monitoring import AgentMonitor
-from src.agents.base.secure_agent import AgentContext
-from src.agents.factory import AgentRegistry
+from src.system.base import AgentContext
+from src.system.factory import AgentRegistry
+from src.system.monitoring import AgentMonitor
 
 
 class TestAgentContextFunctionality:

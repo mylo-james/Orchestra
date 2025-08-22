@@ -1,8 +1,8 @@
-"""Tests for src/agents/factory.py."""
+"""Tests for src/system/factory.py."""
 
 # Import to ensure module is loaded for coverage
-import src.agents.factory
-from src.agents.factory import AgentRegistry
+import src.system.factory
+from src.system.factory import AgentRegistry
 
 
 class TestAgentFactory:

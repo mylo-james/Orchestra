@@ -11,9 +11,32 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from agents import FunctionTool
-from agents.tool import ToolContext
-from src.agents.tools.base import ToolDefinition
+# Import FunctionTool from openai package if available, otherwise define locally
+try:
+    from agents import FunctionTool
+    from agents.tool import ToolContext
+except ImportError:
+    # Define minimal FunctionTool for type hints
+    class FunctionTool:
+        def __init__(self, name: str, description: str, func: Any, parameters: Any):
+            self.name = name
+            self.description = description
+            self.func = func
+            self.parameters = parameters
+
+    class ToolContext:
+        pass
+
+
+# Import base tool definition
+try:
+    from src.agents.tools.base import ToolDefinition
+except ImportError:
+
+    class ToolDefinition:
+        pass
+
+
 from src.config.settings import get_settings
 from src.services.external_service_client import ExternalServiceClient
 from src.utils.logging import get_logger

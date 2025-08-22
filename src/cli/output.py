@@ -10,6 +10,21 @@ from rich.table import Table
 from rich.tree import Tree
 
 
+def error_panel(message: str) -> Panel:
+    """Create an error panel."""
+    return Panel(f"❌ {message}", title="Error", border_style="red")
+
+
+def info_panel(message: str) -> Panel:
+    """Create an info panel."""
+    return Panel(f"ℹ️ {message}", title="Info", border_style="blue")
+
+
+def success_panel(message: str) -> Panel:
+    """Create a success panel."""
+    return Panel(f"✅ {message}", title="Success", border_style="green")
+
+
 def display_banner(console: Console, version: str) -> None:
     """Display the Orchestra banner."""
     banner_text = f"""

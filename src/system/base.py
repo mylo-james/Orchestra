@@ -10,14 +10,13 @@ import asyncio
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, TypeVar
 
-from openai import AsyncOpenAI
-
 from agents import Agent, FunctionTool, Runner, SQLiteSession
 from agents.models.openai_chatcompletions import OpenAIChatCompletionsModel
-from src.config.settings import get_settings
-from src.utils.logging import get_logger, set_agent_context
+from openai import AsyncOpenAI
 
-from .monitoring import AgentMonitor
+from src.config.settings import get_settings
+from src.system.monitoring import AgentMonitor
+from src.utils.logging import get_logger, set_agent_context
 
 logger = get_logger(__name__)
 
