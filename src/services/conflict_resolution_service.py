@@ -1,40 +1,20 @@
 """Conflict resolution service for knowledge synchronization."""
 
-from datetime import datetime
-from enum import Enum
+import math
+from datetime import datetime, timedelta
 from typing import List, Optional
-
-import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
 
 from src.models.knowledge import (
     KnowledgeChunk,
     KnowledgeConflict,
     KnowledgeVersion,
+    MergeStrategy,
+    SeverityLevel,
 )
 from src.services.embedding_service import EmbeddingService
-from src.services.knowledge_service import KnowledgeService
 from src.utils.logging import get_logger
 
 logger = get_logger(__name__)
-
-
-class ConflictSeverity(str, Enum):
-    """Severity levels for knowledge conflicts."""
-
-    MINOR = "minor"  # 0.85-0.90 similarity
-    MAJOR = "major"  # 0.90-0.95 similarity
-    CRITICAL = "critical"  # >0.95 similarity
-
-
-class MergeStrategy(str, Enum):
-    """Strategies for merging conflicting knowledge."""
-
-    APPEND = "append"  # Add both versions
-    VOTE = "vote"  # Use confidence-weighted voting
-    HYBRID = "hybrid"  # Complex merge with potential escalation
-    CONSERVATIVE = "conservative"  # Keep existing version
-    AGGRESSIVE = "aggressive"  # Always take new version
 
 
 class ConflictResolutionService:
@@ -47,32 +27,34 @@ class ConflictResolutionService:
 
     def __init__(
         self,
-        knowledge_service: KnowledgeService,
         embedding_service: Optional[EmbeddingService] = None,
     ):
         """
         Initialize the conflict resolution service.
 
         Args:
-            knowledge_service: Service for knowledge operations
             embedding_service: Service for generating embeddings
         """
-        self.knowledge_service = knowledge_service
         self.embedding_service = embedding_service or EmbeddingService()
 
         # Conflict detection thresholds
         self.similarity_thresholds = {
-            ConflictSeverity.MINOR: (0.85, 0.90),
-            ConflictSeverity.MAJOR: (0.90, 0.95),
-            ConflictSeverity.CRITICAL: (0.95, 1.0),
+            SeverityLevel.LOW: (0.85, 0.90),
+            SeverityLevel.MEDIUM: (0.90, 0.95),
+            SeverityLevel.HIGH: (0.95, 0.98),
+            SeverityLevel.CRITICAL: (0.98, 1.0),
         }
 
         # Strategy selection rules
         self.strategy_rules = {
-            ConflictSeverity.MINOR: MergeStrategy.APPEND,
-            ConflictSeverity.MAJOR: MergeStrategy.VOTE,
-            ConflictSeverity.CRITICAL: MergeStrategy.HYBRID,
+            SeverityLevel.LOW: MergeStrategy.APPEND,
+            SeverityLevel.MEDIUM: MergeStrategy.VOTE,
+            SeverityLevel.HIGH: MergeStrategy.HYBRID,
+            SeverityLevel.CRITICAL: MergeStrategy.HYBRID,
         }
+
+        # Default resolution strategies per severity
+        self.default_strategies = self.strategy_rules
 
         # Human escalation queue (Phase 1 MVP)
         self.escalation_queue: List[KnowledgeConflict] = []
@@ -322,23 +304,36 @@ class ConflictResolutionService:
         self, embedding_a: List[float], embedding_b: List[float]
     ) -> float:
         """Calculate cosine similarity between two embeddings."""
-        # Reshape for sklearn
-        a = np.array(embedding_a).reshape(1, -1)
-        b = np.array(embedding_b).reshape(1, -1)
+        # Manual cosine similarity calculation
+        if not embedding_a or not embedding_b:
+            return 0.0
+
+        # Calculate dot product
+        dot_product = sum(a * b for a, b in zip(embedding_a, embedding_b))
+
+        # Calculate magnitudes
+        mag_a = math.sqrt(sum(a * a for a in embedding_a))
+        mag_b = math.sqrt(sum(b * b for b in embedding_b))
+
+        # Avoid division by zero
+        if mag_a == 0 or mag_b == 0:
+            return 0.0
 
         # Calculate cosine similarity
-        similarity = cosine_similarity(a, b)[0, 0]
+        similarity = dot_product / (mag_a * mag_b)
 
         return float(similarity)
 
-    def _classify_severity(self, similarity: float) -> ConflictSeverity:
+    def _classify_severity(
+        self, similarity: float, time_delta: timedelta
+    ) -> SeverityLevel:
         """Classify conflict severity based on similarity score."""
         for severity, (min_sim, max_sim) in self.similarity_thresholds.items():
             if min_sim <= similarity < max_sim:
                 return severity
 
         # Default to critical for very high similarity
-        return ConflictSeverity.CRITICAL
+        return SeverityLevel.CRITICAL
 
     def _determine_conflict_type(
         self, existing: KnowledgeChunk, proposed: KnowledgeChunk
@@ -385,24 +380,8 @@ class ConflictResolutionService:
 
     def _needs_human_escalation(self, conflict: KnowledgeConflict) -> bool:
         """Determine if a conflict needs human escalation."""
-        # Escalation criteria
-        if conflict.similarity_score > 0.95:
-            return True
-
-        # Check confidence delta
-        conf_a = conflict.version_a.metadata.get("confidence_score", 0)
-        conf_b = conflict.version_b.metadata.get("confidence_score", 0)
-        if abs(conf_a - conf_b) > 0.5:
-            return True
-
-        # Check for high business impact (would need domain-specific logic)
-        if (
-            "critical" in conflict.version_a.content.lower()
-            or "critical" in conflict.version_b.content.lower()
-        ):
-            return True
-
-        return False
+        # Phase 1 MVP: Critical conflicts always escalate
+        return conflict.severity == SeverityLevel.CRITICAL
 
     def get_escalation_queue(self) -> List[KnowledgeConflict]:
         """Get the current human escalation queue."""

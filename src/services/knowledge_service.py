@@ -97,7 +97,7 @@ class KnowledgeService:
             logger.error(f"Failed to initialize Qdrant collection: {e}")
             raise
 
-    @CircuitBreaker()
+    @CircuitBreaker(name="qdrant_grab")
     async def grab(
         self,
         document_id: str,
@@ -150,7 +150,7 @@ class KnowledgeService:
             await self._release_lock(lock)
             raise
 
-    @CircuitBreaker()
+    @CircuitBreaker(name="qdrant_upsert")
     async def upsert(
         self,
         chunk: KnowledgeChunk,
@@ -228,7 +228,7 @@ class KnowledgeService:
                 await self._release_lock(lock)
             return False
 
-    @CircuitBreaker()
+    @CircuitBreaker(name="qdrant_query")
     async def query(
         self,
         query: KnowledgeQuery,

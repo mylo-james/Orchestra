@@ -49,7 +49,7 @@ class EmbeddingService:
         self._batch_size = 20  # OpenAI recommended batch size
         self._batch_timeout = 0.1  # 100ms
 
-    @CircuitBreaker()
+    @CircuitBreaker(name="openai_embeddings")
     async def generate_embedding(self, text: str) -> List[float]:
         """
         Generate embedding for a single text.
