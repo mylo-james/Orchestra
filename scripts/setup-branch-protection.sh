@@ -70,9 +70,7 @@ setup_main_protection() {
   "required_status_checks": {
     "strict": true,
     "checks": [
-      {"context": "Test Suite"},
-      {"context": "Security & Quality Gates"},
-      {"context": "Docker Build & Security"}
+      {"context": "Orchestra Laptop-Optimized CI / Quality Gate"}
     ]
   },
   "enforce_admins": false,
@@ -104,9 +102,7 @@ setup_develop_protection() {
   "required_status_checks": {
     "strict": true,
     "checks": [
-      {"context": "Test Suite"},
-      {"context": "Security & Quality Gates"},
-      {"context": "Docker Build & Security"}
+      {"context": "Orchestra Laptop-Optimized CI / Quality Gate"}
     ]
   },
   "enforce_admins": false,
@@ -255,11 +251,9 @@ Protection Rules (Single Developer Mode):
         - No PR reviews required (single developer)
 
 Required Status Checks:
-    - Test Suite
-    - Security & Quality Gates
-    - Docker Build & Security
+    - Orchestra Laptop-Optimized CI / Quality Gate
 
-These must match your CI job names exactly.
+This must match your CI job name exactly.
 EOF
         exit 0
         ;;
