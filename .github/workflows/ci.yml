@@ -82,8 +82,9 @@ jobs:
           POSTGRES_PASSWORD=test_password
           EOF
 
-      - name: Run all tests
+      - name: Run all tests with coverage gate
         run: |
+          echo "🧪 Running tests with HARD 70% coverage gate..."
           poetry run pytest tests/ \
             --cov=src \
             --cov-fail-under=70 \
@@ -91,16 +92,20 @@ jobs:
             --cov-report=html \
             --cov-report=term-missing \
             --junit-xml=junit.xml \
-            -v 2>/dev/null
+            -v
 
-      # Codecov upload disabled - coverage tracked locally in htmlcov/
-      # To enable: Add CODECOV_TOKEN secret and uncomment below
-      # - name: Upload coverage to Codecov
-      #   uses: codecov/codecov-action@v3
-      #   with:
-      #     file: ./coverage.xml
-      #     fail_ci_if_error: false
-      #     token: ${{ secrets.CODECOV_TOKEN }}
+          echo "✅ Tests and coverage gate passed!"
+
+      - name: Validate coverage threshold (backup gate)
+        run: |
+          echo "🎯 Validating coverage meets 70% minimum..."
+          COVERAGE=$(poetry run coverage report --precision=2 | grep TOTAL | awk '{print $4}' | sed 's/%//')
+          echo "Current coverage: ${COVERAGE}%"
+          if (( $(echo "$COVERAGE < 70" | bc -l) )); then
+            echo "❌ COVERAGE GATE FAILED: ${COVERAGE}% < 70%"
+            exit 1
+          fi
+          echo "✅ Coverage gate passed: ${COVERAGE}% ≥ 70%"
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
