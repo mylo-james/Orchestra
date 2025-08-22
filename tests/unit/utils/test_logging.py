@@ -1,12 +1,12 @@
 """Tests for logging utilities - easy coverage wins."""
 
-from unittest.mock import patch, MagicMock
 import logging
+from unittest.mock import MagicMock, patch
 
 from src.utils.logging import (
-    get_logger,
-    configure_logging,
     SecurityAuditLogger,
+    configure_logging,
+    get_logger,
     set_correlation_id,
 )
 

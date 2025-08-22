@@ -1,8 +1,9 @@
 """Simple tests to boost CLI main coverage from 65% to 80%+."""
 
+from unittest.mock import MagicMock, patch
+
 import pytest
 from typer.testing import CliRunner
-from unittest.mock import patch, MagicMock
 
 from src.cli.main import app, run_async_command
 

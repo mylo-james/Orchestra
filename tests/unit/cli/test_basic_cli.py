@@ -50,10 +50,10 @@ class TestCLIBasicFunctionality:
         """Test that output functions exist."""
         from src.cli.output import (
             display_banner,
-            display_success,
             display_error,
-            display_warning,
             display_info,
+            display_success,
+            display_warning,
         )
 
         # All should be callable
@@ -93,9 +93,11 @@ class TestCLIBasicFunctionality:
 
     def test_output_with_console(self):
         """Test output functions with actual console."""
-        from src.cli.output import display_success, display_info
-        from rich.console import Console
         from io import StringIO
+
+        from rich.console import Console
+
+        from src.cli.output import display_info, display_success
 
         # Create console with string buffer
         output = StringIO()
@@ -110,8 +112,9 @@ class TestCLIBasicFunctionality:
 
     def test_typer_app_creation(self):
         """Test typer app creation."""
-        from src.cli.main import app
         import typer
+
+        from src.cli.main import app
 
         # Should be a typer app
         assert isinstance(app, typer.Typer)
@@ -131,11 +134,11 @@ class TestCLIBasicFunctionality:
         """Test that basic imports work without errors."""
         # These should all import successfully
         import src.cli
-        import src.cli.main
+        import src.cli.circuit_breaker_commands
         import src.cli.commands
+        import src.cli.main
         import src.cli.output
         import src.cli.security_commands
-        import src.cli.circuit_breaker_commands
 
         # All should be importable
         assert all(

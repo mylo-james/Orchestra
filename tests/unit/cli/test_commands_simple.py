@@ -1,12 +1,13 @@
 """Simple tests to boost CLI commands coverage from 34% to 55%+."""
 
+from unittest.mock import MagicMock, patch
+
 from typer.testing import CliRunner
-from unittest.mock import patch, MagicMock
 
 from src.cli.commands import (
-    create_basic_command_group,
     agent_cmd,
     config_cmd,
+    create_basic_command_group,
     dev_cmd,
     workflow_cmd,
 )

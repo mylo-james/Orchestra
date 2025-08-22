@@ -3,7 +3,6 @@
 # Import the actual modules to ensure they're loaded for coverage
 import src.security.ai_agent_monitor
 import src.security.ai_agent_validator
-
 from src.security.ai_agent_monitor import (
     AIAgentSecurityMonitor,
     SecurityEventType,

@@ -1,8 +1,9 @@
 """Tests for configuration settings - easy coverage wins."""
 
-import pytest
-from unittest.mock import patch
 import os
+from unittest.mock import patch
+
+import pytest
 
 from src.config.settings import Settings, get_settings
 

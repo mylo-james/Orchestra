@@ -4,18 +4,19 @@ Tests for src/cli/security_commands.py
 Tests security CLI commands for AI agent security monitoring and management.
 """
 
-import pytest
-from unittest.mock import MagicMock, patch, mock_open
-from typer.testing import CliRunner
+from unittest.mock import MagicMock, mock_open, patch
+
 import click
+import pytest
+from typer.testing import CliRunner
 
 from src.cli.security_commands import (
+    generate_security_report,
+    list_agent_metrics,
     security_app,
     security_status,
-    list_agent_metrics,
     show_security_logs,
     test_security_monitoring,
-    generate_security_report,
 )
 
 

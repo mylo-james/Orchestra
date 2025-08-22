@@ -1,19 +1,20 @@
 """Tests for src/cli/main.py following 1:1 source-to-test mapping."""
 
+from unittest.mock import MagicMock, patch
+
 import pytest
 from typer.testing import CliRunner
-from unittest.mock import patch, MagicMock
 
 # Import the actual modules to ensure they're loaded for coverage
 import src.cli.main
 from src.cli.main import (
     app,
-    run_async_command,
     configure_logging,
-    main,
-    version,
     health,
+    main,
+    run_async_command,
     serve,
+    version,
 )
 
 

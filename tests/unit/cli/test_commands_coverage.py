@@ -3,9 +3,9 @@
 from typer.testing import CliRunner
 
 from src.cli.commands import (
-    create_basic_command_group,
     agent_cmd,
     config_cmd,
+    create_basic_command_group,
     dev_cmd,
     workflow_cmd,
 )

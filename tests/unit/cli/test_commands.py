@@ -1,24 +1,25 @@
 """Tests for src/cli/commands.py following 1:1 source-to-test mapping."""
 
+from unittest.mock import MagicMock, patch
+
 import pytest
 from typer.testing import CliRunner
-from unittest.mock import patch, MagicMock
 
 # Import the actual modules to ensure they're loaded for coverage
 import src.cli.commands
 from src.cli.commands import (
-    create_basic_command_group,
     agent_cmd,
     config_cmd,
+    create_basic_command_group,
     dev_cmd,
-    workflow_cmd,
-    start_agent,
-    run_workflow,
-    validate_config,
-    show_config,
-    run_tests,
     run_linting,
     run_security_scan,
+    run_tests,
+    run_workflow,
+    show_config,
+    start_agent,
+    validate_config,
+    workflow_cmd,
 )
 
 

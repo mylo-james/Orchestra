@@ -3,12 +3,12 @@
 from rich.console import Console
 
 from src.cli.output import (
-    display_banner,
-    display_success,
-    display_error,
-    display_warning,
-    display_info,
     display_agent_status,
+    display_banner,
+    display_error,
+    display_info,
+    display_success,
+    display_warning,
     display_workflow_status,
 )
 

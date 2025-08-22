@@ -1,7 +1,8 @@
 """Tests for src/services/external_service_client.py following 1:1 mapping."""
 
+from unittest.mock import Mock, patch
+
 import pytest
-from unittest.mock import patch, Mock
 
 # Import the actual module to ensure it's loaded for coverage
 import src.services.external_service_client

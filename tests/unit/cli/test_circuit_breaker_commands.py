@@ -4,16 +4,17 @@ Tests for src/cli/circuit_breaker_commands.py
 Tests circuit breaker CLI commands for monitoring and managing external service circuit breakers.
 """
 
-import pytest
 from unittest.mock import patch
-from typer.testing import CliRunner
+
 import click
+import pytest
+from typer.testing import CliRunner
 
 from src.cli.circuit_breaker_commands import (
     cb_app,
+    circuit_breaker_health,
     circuit_breaker_status,
     reset_circuit_breakers,
-    circuit_breaker_health,
     simulate_service_failure,
 )
 

@@ -6,22 +6,23 @@ Tests rich output formatting utilities for Orchestra CLI.
 
 from io import StringIO
 from unittest.mock import MagicMock
+
 from rich.console import Console
 
 from src.cli.output import (
-    display_banner,
-    display_success,
-    display_error,
-    display_warning,
-    display_info,
+    create_progress_bar,
     display_agent_status,
-    display_workflow_status,
+    display_banner,
     display_code_diff,
     display_config_tree,
+    display_error,
+    display_info,
     display_logs,
-    create_progress_bar,
     display_security_scan_results,
+    display_success,
     display_task_progress,
+    display_warning,
+    display_workflow_status,
 )
 
 

@@ -6,8 +6,8 @@ from src.utils.circuit_breaker import (
     CircuitBreakerConfig,
     get_circuit_breaker_stats,
     get_failing_services,
-    get_openai_circuit_breaker,
     get_github_circuit_breaker,
+    get_openai_circuit_breaker,
     protect_external_service,
 )
 

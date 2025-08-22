@@ -1,7 +1,8 @@
 """Async services tests using fixtures for final coverage push to 80%."""
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock, AsyncMock
 
 from src.services.external_service_client import ExternalServiceClient
 

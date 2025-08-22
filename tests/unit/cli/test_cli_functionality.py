@@ -9,7 +9,7 @@ from rich.console import Console
 from typer.testing import CliRunner
 
 from src.cli.main import app, run_async_command
-from src.cli.output import display_banner, display_success, display_agent_status
+from src.cli.output import display_agent_status, display_banner, display_success
 
 
 class TestCLICommandFunctionality:
