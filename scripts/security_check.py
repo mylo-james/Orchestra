@@ -173,7 +173,7 @@ def check_secrets_in_code() -> Dict[str, Any]:
     secret_patterns = [
         (r"sk-[a-zA-Z0-9]{48}", "OpenAI API Key"),
         (r"ghp_[a-zA-Z0-9]{36}", "GitHub Personal Access Token"),
-        (r"pk-[a-zA-Z0-9]{32}", "Pinecone API Key"),
+        (r"qdrant-[a-zA-Z0-9-]{20,}", "Qdrant Auth Token"),
         (r"password\s*=\s*['\"][^'\"]+['\"]", "Hardcoded Password"),
         (r"secret\s*=\s*['\"][^'\"]+['\"]", "Hardcoded Secret"),
         (r"token\s*=\s*['\"][^'\"]+['\"]", "Hardcoded Token"),

@@ -163,19 +163,14 @@ def health() -> None:
         settings = get_settings()
         console.print("✅ Configuration loaded successfully")
 
-        # Check required environment variables
-        required_vars = ["OPENAI_API_KEY", "PINECONE_API_KEY"]
+        # Check required environment variables (Qdrant doesn't need API key for local deployment)
+        required_vars = ["OPENAI_API_KEY"]
         missing_vars = []
 
         for var in required_vars:
             if (
                 not getattr(settings.openai, "api_key", None)
                 and var == "OPENAI_API_KEY"
-            ):
-                missing_vars.append(var)
-            elif (
-                not getattr(settings.pinecone, "api_key", None)
-                and var == "PINECONE_API_KEY"
             ):
                 missing_vars.append(var)
 

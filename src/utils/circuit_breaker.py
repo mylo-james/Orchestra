@@ -501,17 +501,17 @@ def get_temporal_circuit_breaker() -> CircuitBreaker:
     return get_circuit_breaker("temporal_cloud", config)
 
 
-def get_pinecone_circuit_breaker() -> CircuitBreaker:
-    """Get circuit breaker configured for Pinecone vector database."""
+def get_qdrant_circuit_breaker() -> CircuitBreaker:
+    """Get circuit breaker configured for Qdrant vector database."""
     config = CircuitBreakerConfig(
         failure_threshold=4,  # Vector DB can handle some load
         success_threshold=2,  # Quick recovery
-        timeout=45.0,  # 45 seconds before retry
-        recovery_timeout=240.0,  # 4 minutes full recovery
+        timeout=30.0,  # 30 seconds before retry (local is faster)
+        recovery_timeout=120.0,  # 2 minutes full recovery (local recovery)
         max_retry_attempts=3,  # Reasonable for vector DB
-        request_timeout=30.0,  # Vector queries should be fast
+        request_timeout=15.0,  # Local vector queries should be very fast
     )
-    return get_circuit_breaker("pinecone_vector_db", config)
+    return get_circuit_breaker("qdrant_vector_db", config)
 
 
 def get_github_circuit_breaker() -> CircuitBreaker:

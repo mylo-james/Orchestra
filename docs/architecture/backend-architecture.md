@@ -94,12 +94,12 @@ class OrchestratorService:
 
     def query_knowledge(self, query: str, knowledge_type: str = None) -> str:
         """Tool for orchestrator to query vector database."""
-        # Implementation connects to Pinecone
+        # Implementation connects to Qdrant
         pass
 
     def upsert_knowledge(self, content: str, metadata: Dict[str, Any]) -> str:
         """Tool for orchestrator to update knowledge base."""
-        # Implementation updates Pinecone with new embeddings
+        # Implementation updates Qdrant with new embeddings
         pass
 ```
 

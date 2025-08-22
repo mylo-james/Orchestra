@@ -75,7 +75,7 @@ so that agents can grab, edit, and upsert evolving project knowledge safely.
 
 ### Story 1.4 Acceptance Criteria
 
-1. Vector database (Pinecone/Weaviate/Qdrant) with upsert and versioning capabilities
+1. Vector database (Qdrant) with upsert and versioning capabilities
 2. OpenAI embedding model (text-embedding-3-large) for real-time re-vectorization
 3. Knowledge versioning system with conflict detection and resolution
 4. Atomic grab-edit-upsert operations to prevent data corruption

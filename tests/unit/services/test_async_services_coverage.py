@@ -15,7 +15,7 @@ class TestExternalServiceAsyncMethods:
         self,
         test_settings,
         mock_openai_client,
-        mock_pinecone_client,
+        mock_qdrant_client,
         mock_temporal_client,
     ):
         """Test service client async methods comprehensively."""

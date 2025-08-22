@@ -16,7 +16,7 @@ This guide details the migration from all-cloud architecture to hybrid local/clo
 
 ### Phase 2: Data Migration
 
-- [ ] Export existing knowledge from Pinecone (if any)
+- [ ] Export existing knowledge from cloud vector DB (if any)
 - [ ] Import knowledge data to local Qdrant
 - [ ] Verify data integrity and search functionality
 
@@ -39,7 +39,7 @@ This guide details the migration from all-cloud architecture to hybrid local/clo
 **Before (Cloud):**
 
 - Temporal Cloud: $100/month
-- Pinecone: $70/month
+- Qdrant: $0/month (local deployment)
 - OpenAI API: $5-25/month
 - **Total: ~$175/month**
 
@@ -80,7 +80,7 @@ This guide details the migration from all-cloud architecture to hybrid local/clo
 
 - **Port:** 6333
 - **Purpose:** Knowledge storage and semantic search
-- **Alternative to:** Pinecone
+- **Alternative to:** Cloud vector databases
 
 ### PostgreSQL
 
@@ -123,7 +123,8 @@ POSTGRES_PORT=5432
 
 ```bash
 TEMPORAL_HOST=your-temporal-cloud-endpoint
-PINECONE_API_KEY=your-pinecone-key
+QDRANT_HOST=localhost
+QDRANT_PORT=6333
 ```
 
 ## Success Criteria

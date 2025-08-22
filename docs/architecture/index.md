@@ -46,7 +46,7 @@
     - [OpenAI API](./external-apis.md#openai-api)
     - [GitHub API](./external-apis.md#github-api)
     - [Temporal Cloud API](./external-apis.md#temporal-cloud-api)
-    - [Pinecone API](./external-apis.md#pinecone-api)
+    - [Qdrant API](./external-apis.md#qdrant-api)
   - [Core Workflows](./core-workflows.md)
   - [Database Schema](./database-schema.md)
   - [CLI Architecture](./cli-architecture.md)

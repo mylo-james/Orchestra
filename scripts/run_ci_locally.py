@@ -139,8 +139,8 @@ def setup_environment() -> bool:
             f.write("ENVIRONMENT=test\n")
             f.write("DEBUG=true\n")
             f.write("OPENAI_API_KEY=sk-test-key-for-local-ci-testing\n")
-            f.write("PINECONE_API_KEY=test-pinecone-key\n")
-            f.write("PINECONE_ENVIRONMENT=test-environment\n")
+            f.write("QDRANT_HOST=localhost\n")
+            f.write("QDRANT_PORT=6333\n")
 
         print_success("Created .env with test values")
 

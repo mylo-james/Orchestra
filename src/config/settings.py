@@ -59,19 +59,21 @@ class OpenAISettings(BaseSettings):
         return v
 
 
-class PineconeSettings(BaseSettings):
-    """Pinecone vector database configuration."""
+class QdrantSettings(BaseSettings):
+    """Qdrant vector database configuration."""
 
-    api_key: str = Field(default="test-pinecone-key", description="Pinecone API key")
-    environment: str = Field(
-        default="test-environment", description="Pinecone environment"
+    host: str = Field(default="localhost", description="Qdrant server host")
+    port: int = Field(default=6333, description="Qdrant HTTP port")
+    grpc_port: int = Field(default=6334, description="Qdrant gRPC port")
+    collection_name: str = Field(
+        default="orchestra-knowledge", description="Collection name"
     )
-    index_name: str = Field(default="orchestra-knowledge", description="Index name")
     dimension: int = Field(
         default=3072, description="Vector dimension for text-embedding-3-large"
     )
+    prefer_grpc: bool = Field(default=False, description="Prefer gRPC over HTTP")
 
-    model_config = SettingsConfigDict(env_prefix="PINECONE_")
+    model_config = SettingsConfigDict(env_prefix="QDRANT_")
 
 
 class GitHubSettings(BaseSettings):
@@ -139,7 +141,7 @@ class Settings(BaseSettings):
     database: DatabaseSettings = Field(default_factory=lambda: DatabaseSettings())
     temporal: TemporalSettings = Field(default_factory=lambda: TemporalSettings())
     openai: OpenAISettings = Field(default_factory=lambda: OpenAISettings())
-    pinecone: PineconeSettings = Field(default_factory=lambda: PineconeSettings())
+    qdrant: QdrantSettings = Field(default_factory=lambda: QdrantSettings())
     github: GitHubSettings = Field(default_factory=lambda: GitHubSettings())
     security: SecuritySettings = Field(default_factory=lambda: SecuritySettings())
     logging: LoggingSettings = Field(default_factory=lambda: LoggingSettings())

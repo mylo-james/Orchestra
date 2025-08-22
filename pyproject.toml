@@ -29,7 +29,7 @@ aiosqlite = "^0.20.0"
 # Temporal SDK (placeholder - actual SDK TBD)
 # temporalio = "^1.7.0"
 # Vector Database
-pinecone-client = "^2.2.4"
+qdrant-client = "^1.7.0"
 pip-audit = "^2.7.0"
 openai-agents = "^0.2.9"
 

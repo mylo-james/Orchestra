@@ -19,7 +19,7 @@ from src.utils.circuit_breaker import (
     get_failing_services,
     get_github_circuit_breaker,
     get_openai_circuit_breaker,
-    get_pinecone_circuit_breaker,
+    get_qdrant_circuit_breaker,
     get_temporal_circuit_breaker,
     protect_external_service,
     protect_external_service_async,
@@ -171,13 +171,13 @@ class ExternalServiceClient:
             logger.error(f"GitHub API call failed: {e}")
             raise
 
-    # Pinecone Vector Database with circuit breaker protection
-    @protect_external_service_async("pinecone_vector_db", fallback_result=[])
-    async def query_pinecone_knowledge(
+    # Qdrant Vector Database with circuit breaker protection
+    @protect_external_service_async("qdrant_vector_db", fallback_result=[])
+    async def query_qdrant_knowledge(
         self, query: str, top_k: int = 5
     ) -> list[Dict[str, Any]]:
         """
-        Query Pinecone vector database with circuit breaker protection.
+        Query Qdrant vector database with circuit breaker protection.
 
         Args:
             query: Search query
@@ -187,9 +187,11 @@ class ExternalServiceClient:
             Search results or empty list as fallback
         """
         try:
-            # This would contain actual Pinecone client logic
+            # This would contain actual Qdrant client logic
             # For demonstration, simulate the call
-            await asyncio.sleep(0.1)  # Simulate API call delay
+            await asyncio.sleep(
+                0.05
+            )  # Simulate local API call delay (faster than cloud)
 
             # Return search results
             results = [
@@ -197,11 +199,11 @@ class ExternalServiceClient:
                 {"id": "doc2", "score": 0.87, "text": f"Related info: {query}"},
             ]
 
-            logger.info(f"Pinecone query successful - {len(results)} results")
+            logger.info(f"Qdrant query successful - {len(results)} results")
             return results
 
         except Exception as e:
-            logger.error(f"Pinecone API call failed: {e}")
+            logger.error(f"Qdrant API call failed: {e}")
             raise
 
     # Temporal Cloud with circuit breaker protection
@@ -282,14 +284,14 @@ class SecureAIAgent:
             # Step 1: Get knowledge context (with fallback)
             try:
                 result["knowledge_context"] = (
-                    await self.external_client.query_pinecone_knowledge(prompt)
+                    await self.external_client.query_qdrant_knowledge(prompt)
                 )
                 logger.info("Knowledge context retrieved successfully")
             except CircuitBreakerError:
-                result["fallbacks_used"].append("pinecone_fallback")
+                result["fallbacks_used"].append("qdrant_fallback")
                 result["knowledge_context"] = []
                 logger.warning(
-                    "Using empty knowledge context due to Pinecone circuit breaker"
+                    "Using empty knowledge context due to Qdrant circuit breaker"
                 )
 
             # Step 2: Generate code (with fallback)
@@ -362,8 +364,8 @@ async def test_circuit_breakers():
     temporal_cb = get_temporal_circuit_breaker()
     print(f"Temporal circuit breaker state: {temporal_cb.state.value}")
 
-    pinecone_cb = get_pinecone_circuit_breaker()
-    print(f"Pinecone circuit breaker state: {pinecone_cb.state.value}")
+    qdrant_cb = get_qdrant_circuit_breaker()
+    print(f"Qdrant circuit breaker state: {qdrant_cb.state.value}")
 
     github_cb = get_github_circuit_breaker()
     print(f"GitHub circuit breaker state: {github_cb.state.value}")

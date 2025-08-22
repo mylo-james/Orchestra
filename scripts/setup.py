@@ -29,7 +29,6 @@ def check_prerequisites():
         "python3": "Python 3.12+",
         "poetry": "Poetry 1.7.1+",
         "docker": "Docker",
-        "docker-compose": "Docker Compose",
     }
 
     missing_tools = []
@@ -96,11 +95,11 @@ def setup_docker():
 
     # Build Docker images
     print("🏗️  Building Docker images...")
-    run_command("docker-compose build")
+    run_command("docker compose build")
 
     # Start services
     print("🚀 Starting services...")
-    run_command("docker-compose up -d")
+    run_command("docker compose up -d")
 
     # Wait for services to be ready
     print("⏳ Waiting for services to be ready...")
@@ -109,7 +108,7 @@ def setup_docker():
     time.sleep(10)
 
     # Check service status
-    result = run_command("docker-compose ps", check=False)
+    result = run_command("docker compose ps", check=False)
     print(result.stdout)
 
     print("✅ Docker environment setup complete")

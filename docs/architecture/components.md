@@ -10,7 +10,7 @@
 - `/api/workflows` - Workflow management
 - `/internal/knowledge` - Vector database operations
 
-**Dependencies:** OpenAI Agents SDK, Temporal Client, Pinecone Client, FastAPI
+**Dependencies:** OpenAI Agents SDK, Temporal Client, Qdrant Client, FastAPI
 
 **Technology Stack:** Python 3.12 + FastAPI + OpenAI Agents SDK + Temporal SDK
 
@@ -52,9 +52,9 @@
 - `/knowledge/upsert` - Knowledge updates
 - `/knowledge/evolution` - Version management
 
-**Dependencies:** Pinecone, OpenAI Embeddings API, PostgreSQL
+**Dependencies:** Qdrant, OpenAI Embeddings API, PostgreSQL
 
-**Technology Stack:** Python 3.12 + Pinecone + text-embedding-3-large
+**Technology Stack:** Python 3.12 + Qdrant + text-embedding-3-large
 
 ## Frontend Application
 
@@ -89,9 +89,12 @@ graph TB
 
     subgraph "External Services"
         OpenAI[OpenAI API]
-        Temporal[Temporal Cloud]
-        Pinecone[Pinecone]
+        Temporal[Temporal Local]
         GitHub[GitHub API]
+    end
+
+    subgraph "Local Services"
+        Qdrant[Qdrant Vector DB]
     end
 
     UI --> State
@@ -107,6 +110,6 @@ graph TB
     Rel --> OpenAI
 
     Orch --> Temporal
-    Know --> Pinecone
+    Know --> Qdrant
     Rel --> GitHub
 ```

@@ -122,7 +122,7 @@ Monthly Costs:
 ```
 Monthly Costs:
 - Temporal Cloud: $100/month
-- Pinecone: $70/month
+- Qdrant: $0/month (local deployment)
 - OpenAI API: $5-25/month
 - Total: ~$175/month ($2,100/year)
 

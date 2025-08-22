@@ -78,10 +78,10 @@ class TestExternalServiceIntegration:
     """Test integration with external services (mocked)."""
 
     @pytest.mark.asyncio
-    async def test_openai_pinecone_integration(
-        self, mock_openai_client, mock_pinecone_client
+    async def test_openai_qdrant_integration(
+        self, mock_openai_client, mock_qdrant_client
     ):
-        """Test integration between OpenAI and Pinecone services."""
+        """Test integration between OpenAI and Qdrant services."""
         # Generate embedding with OpenAI
         embedding_response = await mock_openai_client.embeddings.create(
             model="text-embedding-3-large", input="test text for embedding"
@@ -90,18 +90,26 @@ class TestExternalServiceIntegration:
         embedding_vector = embedding_response.data[0].embedding
         assert len(embedding_vector) == 3072  # text-embedding-3-large dimension
 
-        # Store in Pinecone
-        index = mock_pinecone_client.Index("test-index")
-        upsert_response = index.upsert(
-            [("test-doc-1", embedding_vector, {"text": "test text for embedding"})]
+        # Store in Qdrant
+        upsert_response = mock_qdrant_client.upsert(
+            collection_name="test-collection",
+            points=[
+                {
+                    "id": "test-doc-1",
+                    "vector": embedding_vector,
+                    "payload": {"text": "test text for embedding"},
+                }
+            ],
         )
 
-        assert upsert_response["upserted_count"] == 1
+        assert upsert_response["status"] == "acknowledged"
 
-        # Query Pinecone
-        query_response = index.query(vector=embedding_vector, top_k=1)
-        assert len(query_response["matches"]) == 1
-        assert query_response["matches"][0]["score"] == 0.95  # Mock score
+        # Query Qdrant
+        query_response = mock_qdrant_client.search(
+            collection_name="test-collection", query_vector=embedding_vector, limit=1
+        )
+        assert len(query_response) == 1
+        assert query_response[0]["score"] == 0.95  # Mock score
 
 
 @pytest.mark.integration

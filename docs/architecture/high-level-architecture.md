@@ -7,7 +7,7 @@ The AI Dev Team Orchestrator MVP employs a Python-based CLI architecture where a
 ## Platform and Infrastructure Choice
 
 **Platform:** Local Development with Essential Cloud Services
-**Key Services:** Temporal Cloud (workflow orchestration), Pinecone (vector database), Local CLI (user interface)
+**Key Services:** Temporal Local (workflow orchestration), Qdrant (local vector database), Local CLI (user interface)
 **Deployment:** Local development environment with cloud service integration for agent orchestration
 
 ## Repository Structure

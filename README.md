@@ -7,7 +7,7 @@ Orchestra is a sophisticated AI agent system designed to orchestrate complex dev
 - **Multi-Agent Coordination**: Orchestrates specialized AI agents (Developer, Release, QA) through structured workflows
 - **Temporal Integration**: Durable workflow execution with fault tolerance and state persistence
 - **Security-First Design**: Comprehensive input validation, output scanning, and audit logging
-- **Vector Knowledge Base**: Pinecone-powered semantic search for project knowledge and context
+- **Vector Knowledge Base**: Qdrant-powered local semantic search for project knowledge and context
 - **Rich CLI Interface**: Beautiful command-line interface with progress tracking and formatted output
 - **Docker Support**: Complete containerized development environment
 - **Comprehensive Testing**: Unit, integration, and security test suites
@@ -60,8 +60,8 @@ nano .env
 
 **Required Environment Variables:**
 - `OPENAI_API_KEY`: Your OpenAI API key (get from [OpenAI Platform](https://platform.openai.com/api-keys))
-- `PINECONE_API_KEY`: Your Pinecone API key (get from [Pinecone Console](https://app.pinecone.io/))
-- `PINECONE_ENVIRONMENT`: Your Pinecone environment
+- `QDRANT_HOST`: Qdrant server host (default: localhost)
+- `QDRANT_PORT`: Qdrant HTTP port (default: 6333)
 
 ### 3. Install Dependencies
 
@@ -290,7 +290,7 @@ See `.env.example` for all available configuration options.
 
 - **Application**: Basic app settings
 - **OpenAI**: AI model configuration
-- **Pinecone**: Vector database settings
+- **Qdrant**: Vector database settings
 - **Temporal**: Workflow orchestration
 - **Database**: PostgreSQL configuration
 - **Security**: Security feature toggles
@@ -464,7 +464,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 - OpenAI for the Agents SDK and language models
 - Temporal for workflow orchestration
-- Pinecone for vector database services
+- Qdrant for local vector database services
 - The Python community for excellent tooling
 
 ## 📞 Support

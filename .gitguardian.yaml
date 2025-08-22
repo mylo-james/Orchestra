@@ -5,47 +5,47 @@ version: 2
 
 # Paths to exclude from scanning
 paths-ignore:
-  - "tests/security/test_security_validation.py"  # Contains fake test patterns
-  - ".env.example"                                # Contains template values
-  - "docs/**"                                     # Documentation files
-  - "scripts/**"                                  # Setup scripts
-  - "**/*.md"                                     # Markdown files
-  - ".secrets.baseline"                           # Baseline file
-  - ".gitguardian.yaml"                          # This config file
+  - 'tests/security/test_security_validation.py' # Contains fake test patterns
+  - '.env.example' # Contains template values
+  - 'docs/**' # Documentation files
+  - 'scripts/**' # Setup scripts
+  - '**/*.md' # Markdown files
+  - '.secrets.baseline' # Baseline file
+  - '.gitguardian.yaml' # This config file
 
 # Specific patterns to ignore
 patterns-ignore:
   # Test patterns that are obviously fake
-  - "FAKE_.*_FOR_TESTING"
-  - "TEST_.*_PATTERN"
-  - "EXAMPLE_.*_KEY"
-  - "DEMO_.*_SECRET"
-  - "SAMPLE_.*_TOKEN"
+  - 'FAKE_.*_FOR_TESTING'
+  - 'TEST_.*_PATTERN'
+  - 'EXAMPLE_.*_KEY'
+  - 'DEMO_.*_SECRET'
+  - 'SAMPLE_.*_TOKEN'
 
   # Common test values
-  - "sk-FAKE_OPENAI_KEY_FOR_TESTING_PURPOSES_XXXXXX"
-  - "ghp_FAKE_TOKEN_FOR_TESTING_PURPOSES_XXX"
-  - "pk-FAKE_PINECONE_KEY_FOR_TESTING"
-  - "ghp_FAKE_GITHUB_TOKEN_FOR_TEST"
-  - "FAKE_PASSWORD_FOR_TESTING"
+  - 'sk-FAKE_OPENAI_KEY_FOR_TESTING_PURPOSES_XXXXXX'
+  - 'ghp_FAKE_TOKEN_FOR_TESTING_PURPOSES_XXX'
+  - 'qdrant-FAKE_TOKEN_FOR_TESTING'
+  - 'ghp_FAKE_GITHUB_TOKEN_FOR_TEST'
+  - 'FAKE_PASSWORD_FOR_TESTING'
 
 # File patterns to ignore
 ignore:
   # Environment template files
-  - ".env.example"
-  - ".env.template"
-  - ".env.sample"
+  - '.env.example'
+  - '.env.template'
+  - '.env.sample'
 
   # Test files with known fake patterns
-  - "tests/security/test_security_validation.py"
+  - 'tests/security/test_security_validation.py'
 
   # Configuration files
-  - "bandit.yaml"
-  - "codecov.yml"
+  - 'bandit.yaml'
+  - 'codecov.yml'
 
   # Documentation
-  - "README.md"
-  - "docs/**/*.md"
+  - 'README.md'
+  - 'docs/**/*.md'
 
 # Detector-specific configuration
 detectors:
@@ -56,10 +56,10 @@ detectors:
   github_token:
     # Ignore obviously fake patterns
     ignore_patterns:
-      - "ghp_FAKE_.*"
-      - "ghp_TEST_.*"
-      - "ghp_EXAMPLE_.*"
-      - "ghp_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+      - 'ghp_FAKE_.*'
+      - 'ghp_TEST_.*'
+      - 'ghp_EXAMPLE_.*'
+      - 'ghp_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
 
 # Scan settings
 scan:
@@ -67,7 +67,7 @@ scan:
   include_binary: false
 
   # Maximum file size to scan (in bytes)
-  max_file_size: 1048576  # 1MB
+  max_file_size: 1048576 # 1MB
 
   # Scan hidden files
   include_hidden: false

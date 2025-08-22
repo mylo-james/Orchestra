@@ -21,7 +21,7 @@
 - Generate tests for all agent tool functions
 - Cover handoff scenarios and error conditions
 - Follow AAA pattern (Arrange, Act, Assert)
-- Mock all external dependencies (OpenAI, GitHub, Pinecone)
+- Mock all external dependencies (OpenAI, GitHub, Qdrant)
 
 ### Integration Tests
 
@@ -30,7 +30,7 @@
 - **Test Infrastructure:**
   - **PostgreSQL:** Testcontainers for isolated database testing
   - **Temporal:** Local Temporal server for workflow testing
-  - **Vector DB:** Pinecone test environment with isolated indexes
+  - **Vector DB:** Qdrant test collections with isolated data
   - **External APIs:** Mocked responses using responses library
 
 ### End-to-End Tests

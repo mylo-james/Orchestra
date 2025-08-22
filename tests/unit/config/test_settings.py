@@ -54,7 +54,7 @@ class TestSettings:
 
     @patch.dict(
         os.environ,
-        {"OPENAI_API_KEY": "sk-test-key", "PINECONE_API_KEY": "test-pinecone-key"},
+        {"OPENAI_API_KEY": "sk-test-key", "QDRANT_HOST": "localhost"},
     )
     def test_api_key_configuration(self):
         """Test API key configuration."""
@@ -105,11 +105,11 @@ class TestSettingsSubcomponents:
         assert db_config is not None
         # Should have required attributes for database config
 
-    def test_pinecone_settings(self):
-        """Test Pinecone settings component."""
+    def test_qdrant_settings(self):
+        """Test Qdrant settings component."""
         settings = Settings()
-        # Should handle Pinecone config
-        assert hasattr(settings, "pinecone")
+        # Should handle Qdrant config
+        assert hasattr(settings, "qdrant")
 
     def test_github_settings(self):
         """Test GitHub settings component."""

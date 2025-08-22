@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Temporal Server
   temporal:
@@ -13,8 +11,8 @@ services:
       - POSTGRES_SEEDS=postgresql
       - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml
     ports:
-      - "7233:7233"   # Temporal gRPC
-      - "8233:8233"   # Temporal Web UI
+      - '7233:7233' # Temporal gRPC
+      - '8233:8233' # Temporal Web UI
     depends_on:
       - postgresql
     networks:
@@ -22,7 +20,7 @@ services:
     volumes:
       - ./scripts/temporal-config:/etc/temporal/config/dynamicconfig
     healthcheck:
-      test: ["CMD", "tctl", "--address", "temporal:7233", "cluster", "health"]
+      test: ['CMD', 'tctl', '--address', 'temporal:7233', 'cluster', 'health']
       interval: 30s
       timeout: 10s
       retries: 5
@@ -36,13 +34,13 @@ services:
       POSTGRES_USER: temporal
       POSTGRES_PASSWORD: temporal
     ports:
-      - "5432:5432"
+      - '5432:5432'
     networks:
       - orchestra-network
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U temporal"]
+      test: ['CMD-SHELL', 'pg_isready -U temporal']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -61,22 +59,48 @@ services:
       - POSTGRES_DB=temporal
       - POSTGRES_USER=temporal
       - POSTGRES_PASSWORD=temporal
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
+      - QDRANT_GRPC_PORT=6334
       - PYTHONPATH=/app
     ports:
-      - "8000:8000"
+      - '8000:8000'
     depends_on:
       temporal:
         condition: service_healthy
       postgresql:
         condition: service_healthy
+      qdrant:
+        condition: service_healthy
     networks:
       - orchestra-network
     volumes:
       - .:/app
-      - /app/.venv  # Exclude virtual environment from bind mount
-    command: ["python", "-m", "src.cli.main", "serve"]
+      - /app/.venv # Exclude virtual environment from bind mount
+    command: ['python', '-m', 'src.cli.main', 'serve']
     healthcheck:
-      test: ["CMD", "python", "-c", "import src; print('Orchestra is healthy')"]
+      test: ['CMD', 'python', '-c', "import src; print('Orchestra is healthy')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Qdrant Vector Database
+  qdrant:
+    image: qdrant/qdrant:v1.15.1
+    container_name: orchestra-qdrant
+    environment:
+      - QDRANT__SERVICE__HOST=0.0.0.0
+      - QDRANT__SERVICE__HTTP_PORT=6333
+      - QDRANT__SERVICE__GRPC_PORT=6334
+    ports:
+      - '6333:6333' # Qdrant HTTP API
+      - '6334:6334' # Qdrant gRPC API
+    networks:
+      - orchestra-network
+    volumes:
+      - qdrant_data:/qdrant/storage
+    healthcheck:
+      test: ['CMD', 'curl', '-s', 'http://localhost:6333/']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -94,7 +118,7 @@ services:
     volumes:
       - .:/app
     working_dir: /app
-    command: ["sleep", "infinity"]
+    command: ['sleep', 'infinity']
     profiles:
       - dev
 
@@ -104,4 +128,6 @@ networks:
 
 volumes:
   postgres_data:
+    driver: local
+  qdrant_data:
     driver: local

@@ -227,7 +227,7 @@ class SecurityAuditLogger:
         """Log external API calls for audit.
 
         Args:
-            service: External service name (openai, github, pinecone)
+            service: External service name (openai, github, qdrant)
             endpoint: API endpoint called
             success: Whether the call was successful
             response_code: HTTP response code if applicable

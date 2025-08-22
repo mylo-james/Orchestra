@@ -111,7 +111,7 @@ class TestSecretDetection:
         api_key_patterns = [
             "sk-FAKE_OPENAI_KEY_FOR_TESTING_PURPOSES_XXXXXXXX",  # OpenAI format (48+ chars)
             "ghp_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",  # GitHub format
-            "pk-FAKE_PINECONE_KEY_FOR_TESTING_XXXX",  # Pinecone format (32+ chars)
+            "qdrant-test-auth-token-12345678",  # Qdrant auth token format
         ]
 
         for api_key in api_key_patterns:
@@ -120,8 +120,8 @@ class TestSecretDetection:
                 assert len(api_key) >= 48  # OpenAI key length
             elif api_key.startswith("ghp_"):
                 assert len(api_key) >= 36  # GitHub key length
-            elif api_key.startswith("pk-"):
-                assert len(api_key) >= 32  # Pinecone key length
+            elif api_key.startswith("qdrant-"):
+                assert len(api_key) >= 20  # Qdrant token length
 
     def test_password_detection(self):
         """Test detection of passwords in code."""
@@ -224,7 +224,7 @@ class TestSecurityAuditLogging:
         # Test external API call logging
         api_calls = [
             ("openai", "/chat/completions", True, 200),
-            ("pinecone", "/vectors/upsert", True, 201),
+            ("qdrant", "/collections/upsert", True, 200),
             ("github", "/repos/owner/repo", False, 403),
             ("temporal", "/workflow/start", True, 200),
         ]

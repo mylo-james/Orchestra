@@ -21,7 +21,7 @@
 
 - **Agent Tool Functions:** All agent tools must include comprehensive docstrings and type hints for OpenAI SDK schema generation
 - **Vector Database Access:** Only Orchestrator agent may perform vector database operations - never direct access from other agents
-- **Temporal Activities:** All external API calls (OpenAI, GitHub, Pinecone) must be wrapped in Temporal activities for durability
+- **Temporal Activities:** All external API calls (OpenAI, GitHub) and Qdrant operations must be wrapped in Temporal activities for durability
 - **Error Context:** All exceptions must include correlation IDs for tracing across agent handoffs
 - **Knowledge Updates:** All knowledge upserts must include version information and confidence scoring
 - **Session Management:** Agent conversations must maintain session context through OpenAI SDK session management

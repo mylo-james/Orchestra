@@ -8,7 +8,7 @@ from src.utils.circuit_breaker import (
     get_failing_services,
     get_github_circuit_breaker,
     get_openai_circuit_breaker,
-    get_pinecone_circuit_breaker,
+    get_qdrant_circuit_breaker,
     get_temporal_circuit_breaker,
     protect_external_service,
     protect_external_service_async,
@@ -37,8 +37,8 @@ class TestCircuitBreakerUtilities:
         github_cb = get_github_circuit_breaker()
         assert github_cb is not None
 
-        pinecone_cb = get_pinecone_circuit_breaker()
-        assert pinecone_cb is not None
+        qdrant_cb = get_qdrant_circuit_breaker()
+        assert qdrant_cb is not None
 
         temporal_cb = get_temporal_circuit_breaker()
         assert temporal_cb is not None

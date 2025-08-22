@@ -15,10 +15,10 @@ GITHUB_TOKEN=
 GITHUB_ORG=
 GITHUB_REPO=
 
-# Pinecone (optional; knowledge features)
-PINECONE_API_KEY=
-PINECONE_ENVIRONMENT=
-PINECONE_INDEX_NAME=orchestra-knowledge
+# Qdrant (local vector database for knowledge features)
+QDRANT_HOST=localhost
+QDRANT_PORT=6333
+QDRANT_COLLECTION_NAME=orchestra-knowledge
 
 # Temporal (defaults OK for local)
 TEMPORAL_HOST=localhost

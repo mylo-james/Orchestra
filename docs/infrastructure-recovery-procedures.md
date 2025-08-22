@@ -26,7 +26,7 @@ Based on comprehensive infrastructure assessment, Orchestra AI Agent System curr
 ### 2. No External Service Recovery
 
 **Current State:** No procedures for external service failures
-**Risk:** Temporal, Pinecone, OpenAI, GitHub outages stop all operations
+**Risk:** Temporal, OpenAI, GitHub outages stop all operations (Qdrant is local)
 **Recovery Time:** Dependent on external service providers
 
 ### 3. No Configuration Backup
@@ -101,16 +101,25 @@ import json
 import os
 from datetime import datetime
 
-def backup_pinecone_vectors():
-    """Export Pinecone vector database content"""
-    # Implementation depends on Pinecone SDK
-    vectors = pinecone_client.list_vectors()
-    backup_file = f"pinecone_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+def backup_qdrant_vectors():
+    """Export Qdrant vector database content"""
+    # Implementation uses Qdrant client
+    from qdrant_client import QdrantClient
+    client = QdrantClient(host="localhost", port=6333)
 
-    with open(f"/backups/pinecone/{backup_file}", 'w') as f:
-        json.dump(vectors, f)
+    backup_file = f"qdrant_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
 
-    print(f"✅ Pinecone backup complete: {backup_file}")
+    # Export all collections and points
+    collections = client.get_collections().collections
+    backup_data = {}
+    for collection in collections:
+        points = client.scroll(collection_name=collection.name, limit=10000)
+        backup_data[collection.name] = points
+
+    with open(f"/backups/qdrant/{backup_file}", 'w') as f:
+        json.dump(backup_data, f, default=str)
+
+    print(f"✅ Qdrant backup complete: {backup_file}")
 
 def backup_temporal_workflows():
     """Export Temporal workflow state"""
@@ -236,7 +245,7 @@ def backup_temporal_workflows():
 
 **Symptoms:**
 
-- Temporal, Pinecone, and OpenAI all unavailable
+- Temporal, OpenAI unavailable (Qdrant is local and always available)
 - Complete AI agent system unavailability
 
 **Recovery Procedure:**
@@ -299,7 +308,7 @@ def backup_temporal_workflows():
    sqlite3 data/orchestra.db "PRAGMA integrity_check;"
 
    # Validate vector database
-   python scripts/validate_pinecone_data.py
+   python scripts/validate_qdrant_data.py
 
    # Check workflow state consistency
    python scripts/validate_temporal_state.py
@@ -312,7 +321,7 @@ def backup_temporal_workflows():
    cp /backups/orchestra/orchestra_backup_GOOD.db ./data/orchestra.db
 
    # Restore vector database
-   python scripts/restore_pinecone_backup.py --backup-file=GOOD
+   python scripts/restore_qdrant_backup.py --backup-file=GOOD
 
    # Clear corrupted workflow state
    temporal workflow reset --workflow-id=all --reset-point=LAST_GOOD
@@ -409,7 +418,7 @@ def check_backup_health():
 ### External Service Support
 
 - **Temporal Cloud:** support@temporal.io
-- **Pinecone:** support@pinecone.io
+- **Qdrant:** Local deployment (no external support needed)
 - **OpenAI:** support@openai.com
 - **GitHub:** support@github.com
 

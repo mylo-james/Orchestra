@@ -151,8 +151,7 @@ openai_api_key
 openai.key
 github_token
 github.key
-pinecone_api_key
-pinecone.key
+qdrant_data/
 temporal.key
 
 # Docker secrets
@@ -218,7 +217,7 @@ safety-report.json
 
 # Vector database indexes
 *.index
-pinecone_index/
+qdrant_index/
 
 # Local development overrides
 local_config.py

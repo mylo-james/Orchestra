@@ -56,8 +56,8 @@ def test_settings() -> Settings:
         "ENVIRONMENT": "test",
         "DEBUG": "true",
         "OPENAI_API_KEY": "sk-test-key-for-testing-only",
-        "PINECONE_API_KEY": "test-pinecone-key",
-        "PINECONE_ENVIRONMENT": "test-environment",
+        "QDRANT_HOST": "localhost",
+        "QDRANT_PORT": "6333",
         "POSTGRES_PASSWORD": "test-password",
         "LOG_LEVEL": "DEBUG",
     }
@@ -113,17 +113,18 @@ def mock_openai_client():
 
 
 @pytest.fixture
-def mock_pinecone_client():
-    """Mock Pinecone client for testing."""
+def mock_qdrant_client():
+    """Mock Qdrant client for testing."""
     mock_client = Mock()
 
-    # Mock index operations
-    mock_index = Mock()
-    mock_index.upsert.return_value = {"upserted_count": 1}
-    mock_index.query.return_value = {
-        "matches": [{"id": "test-id", "score": 0.95, "metadata": {"test": "data"}}]
+    # Mock collection operations
+    mock_client.upsert.return_value = {
+        "operation_id": "test-operation",
+        "status": "acknowledged",
     }
-    mock_client.Index.return_value = mock_index
+    mock_client.search.return_value = [
+        {"id": "test-id", "score": 0.95, "payload": {"test": "data"}}
+    ]
 
     return mock_client
 

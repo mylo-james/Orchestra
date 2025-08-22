@@ -116,20 +116,20 @@ safety:
 # Docker
 docker-build:
 	@echo "🐳 Building Docker image..."
-	docker-compose build
+	docker compose build
 
 docker-up:
 	@echo "🐳 Starting Docker services..."
-	docker-compose up -d
+	docker compose up -d
 	@echo "✅ Services started! Check with: make docker-logs"
 
 docker-down:
 	@echo "🐳 Stopping Docker services..."
-	docker-compose down
+	docker compose down
 
 docker-logs:
 	@echo "📋 Docker service logs:"
-	docker-compose logs -f
+	docker compose logs -f
 
 # CI/CD
 ci:
