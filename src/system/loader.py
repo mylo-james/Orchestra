@@ -5,7 +5,7 @@ from typing import Dict, List, Optional
 
 import yaml
 
-from src.personas.specs import (
+from src.system.specs import (
     BehavioralContract,
     CommandDefinition,
     CommandInterface,
@@ -40,7 +40,7 @@ class PersonaLoader:
 
         # Define search paths in precedence order
         self.search_paths = [
-            Path("src/agents/personas"),
+            Path("src/personas"),
             Path(".bmad-core/personas"),
         ]
 

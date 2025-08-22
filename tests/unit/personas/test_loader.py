@@ -7,8 +7,8 @@ from unittest.mock import patch
 import pytest
 import yaml
 
-from src.personas.loader import PersonaLoader
-from src.personas.specs import PersonaSpec
+from src.system.loader import PersonaLoader
+from src.system.specs import PersonaSpec
 
 
 @pytest.fixture

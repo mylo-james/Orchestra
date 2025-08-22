@@ -9,10 +9,10 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from pydantic import BaseModel, Field
-
 from agents import FunctionTool
 from agents.tool import ToolContext
+from pydantic import BaseModel, Field
+
 from src.agents.tools.base import ToolDefinition
 from src.config.settings import get_settings
 from src.services.external_service_client import ExternalServiceClient

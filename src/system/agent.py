@@ -4,10 +4,11 @@ import asyncio
 from typing import Any, Dict, List, Optional
 
 from agents.tools import FunctionTool
-from src.agents.base.secure_agent import SecureAgent
-from src.agents.tools.github import create_github_pr_tool, list_repositories_tool
-from src.personas.loader import PersonaLoader
-from src.personas.specs import CommandDefinition, PersonaSpec
+
+from src.system.base import SecureAgent
+from src.system.loader import PersonaLoader
+from src.system.specs import CommandDefinition, PersonaSpec
+from src.system.tools import create_github_pr_tool, list_repositories_tool
 from src.utils.logging import get_logger
 
 logger = get_logger(__name__)

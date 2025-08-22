@@ -2,16 +2,15 @@
 
 import asyncio
 import sys
-from typing import Optional
 
 from rich.console import Console
 from rich.table import Table
 
-from src.agents.factory import get_registry
 from src.cli.output import error_panel, info_panel, success_panel
-from src.personas.loader import PersonaLoader
 from src.security.ai_agent_monitor import AIAgentMonitor
 from src.security.ai_agent_validator import AIAgentValidator
+from src.system.factory import get_registry
+from src.system.loader import PersonaLoader
 from src.utils.circuit_breaker import CircuitBreaker
 from src.utils.logging import get_logger
 
@@ -19,24 +18,18 @@ logger = get_logger(__name__)
 console = Console()
 
 
-def start_agent(agent_name: str, persona: Optional[str] = None) -> None:
+def start_agent(persona_id: str) -> None:
     """
-    Start an agent with optional persona specification.
+    Start an agent with the specified persona.
 
     Args:
-        agent_name: Name of the agent to start (for backward compatibility)
-        persona: Persona ID to use (overrides agent_name)
+        persona_id: ID of the persona to use
     """
     try:
         registry = get_registry()
 
-        # Use persona if specified, otherwise use agent_name
-        if persona:
-            console.print(info_panel(f"Starting agent with persona: {persona}"))
-            agent = registry.create(agent_name, persona_id=persona)
-        else:
-            console.print(info_panel(f"Starting agent: {agent_name}"))
-            agent = registry.create(agent_name)
+        console.print(info_panel(f"Starting agent with persona: {persona_id}"))
+        agent = registry.create(persona_id)
 
         # Display agent information
         if hasattr(agent, "describe"):
@@ -54,18 +47,17 @@ def start_agent(agent_name: str, persona: Optional[str] = None) -> None:
 
 
 def list_agents() -> None:
-    """List all available agents and personas."""
+    """List all available agent personas."""
     try:
         registry = get_registry()
 
-        # Get all agents and personas
-        all_agents = registry.list_agents()
+        # Get all personas
         personas = registry.list_personas()
 
         # Create table
-        table = Table(title="Available Agents and Personas")
-        table.add_column("Name/ID", style="cyan")
-        table.add_column("Type", style="green")
+        table = Table(title="Available Agent Personas")
+        table.add_column("Persona ID", style="cyan")
+        table.add_column("Name", style="green")
         table.add_column("Description", style="yellow")
 
         # Add personas
@@ -73,13 +65,10 @@ def list_agents() -> None:
             spec = registry.get_persona_spec(persona_id)
             if spec:
                 table.add_row(
-                    persona_id, "Persona", f"{spec.identity.icon} {spec.identity.title}"
+                    persona_id,
+                    f"{spec.identity.icon} {spec.identity.name}",
+                    spec.identity.title,
                 )
-
-        # Add any legacy agents not covered by personas
-        legacy_only = set(all_agents) - set(personas)
-        for agent in legacy_only:
-            table.add_row(agent, "Legacy", "Hardcoded agent")
 
         console.print(table)
 

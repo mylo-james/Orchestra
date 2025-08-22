@@ -7,9 +7,9 @@ from typing import Any, Dict
 
 from temporalio import activity
 
-from src.agents.base.secure_agent import AgentContext
-from src.agents.factory import get_registry
-from src.agents.universal_agent import UniversalAgent
+from src.system.agent import UniversalAgent
+from src.system.base import AgentContext
+from src.system.factory import get_registry
 from src.utils.logging import get_logger
 
 logger = get_logger(__name__)
@@ -46,9 +46,16 @@ async def execute_agent_activity(params: Dict[str, Any]) -> Dict[str, Any]:
     )
 
     try:
-        # Create agent instance using the registry (which now supports personas)
+        # Create agent instance using persona
         registry = get_registry()
-        agent = registry.create(agent_type)
+        # Map agent_type to persona_id if needed
+        persona_map = {
+            "orchestrator": "orchestrator",
+            "developer": "dev",
+            "release": "release",
+        }
+        persona_id = persona_map.get(agent_type, agent_type)
+        agent = registry.create(persona_id)
 
         # Create agent context from workflow context
         agent_context = AgentContext(

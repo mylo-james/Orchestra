@@ -1,23 +1,12 @@
-"""Persona system for the Universal Agent framework."""
+"""Persona definitions for the Orchestra system.
 
-from src.personas.loader import PersonaLoader
-from src.personas.specs import (
-    BehavioralContract,
-    CommandDefinition,
-    CommandInterface,
-    KnowledgeContext,
-    PersonaIdentity,
-    PersonaSpec,
-    ResourceDependencies,
-)
+This directory contains YAML persona definitions that define
+agent behaviors, tools, and capabilities.
 
-__all__ = [
-    "PersonaLoader",
-    "PersonaSpec",
-    "PersonaIdentity",
-    "BehavioralContract",
-    "CommandInterface",
-    "CommandDefinition",
-    "ResourceDependencies",
-    "KnowledgeContext",
-]
+Available personas:
+- orchestrator: Master planning and coordination agent
+- dev: Development and implementation agent
+- release: Release management and deployment agent
+"""
+
+# This module only contains YAML files, no Python code to export
