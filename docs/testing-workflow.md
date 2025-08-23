@@ -6,33 +6,34 @@ This document establishes the 4-step process for ensuring great test coverage al
 
 ## 4-Step Testing Process
 
-### Step 1: Read the PRD - What should this code be doing?
+### Step 1: PRD Analysis - What should this code be doing?
 
 - Identify relevant Epic/Story from PRD documents
 - Extract functional requirements (FR) and acceptance criteria
 - Map code functionality to specific PRD requirements
 - Document expected behavior based on PRD specifications
 
-### Step 2: Read the existing code - Does this do what the PRD says it should?
+### Step 2: Code Analysis - Does implementation match the PRD?
 
 - Analyze implementation against PRD requirements
 - Identify gaps between current implementation and PRD expectations
 - Document any deviations or missing functionality
 - Note architectural decisions and patterns
 
-### Step 3: Read tests - Do these tests represent the behavior as outlined in the PRD?
+### Step 3: Test Analysis - Do tests represent PRD-outlined behavior?
 
 - Review existing test coverage for the file
 - Map tests to PRD requirements and acceptance criteria
 - Identify missing test scenarios based on PRD
 - Assess test quality and comprehensiveness
 
-### Step 4: Align misalignments - Code to tests, and tests to PRD
+### Step 4: Align Misalignments - Align tests to PRD, align code to tests
 
-- Update implementation to match PRD requirements
-- Write/update tests to cover PRD-specified behavior
-- Ensure tests validate acceptance criteria
-- Refactor code for better testability and PRD compliance
+- **First**: Write/update tests to match PRD requirements
+- **Second**: Fix code to make tests pass
+- This creates proper alignment: PRD → Tests → Code
+- Ensure tests validate all acceptance criteria
+- Refactor code for better testability while maintaining PRD compliance
 
 ## Priority Files for Testing (Ordered by Impact)
 

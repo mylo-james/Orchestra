@@ -64,10 +64,10 @@
 
 Our proven 4-step process [[memory:6992838]] delivered exceptional results:
 
-1. **Read the PRD** - Understanding requirements first
-2. **Read the existing code** - Verifying implementation  
-3. **Read existing tests** - Checking test coverage
-4. **Align misalignments** - Fixing code/tests to match requirements
+1. **PRD Analysis** - What should this code be doing?
+2. **Code Analysis** - Does implementation match the PRD?
+3. **Test Analysis** - Do tests represent PRD-outlined behavior?
+4. **Align Misalignments** - Align tests to PRD, align code to tests
 
 ### **Key Success Factors:**
 
