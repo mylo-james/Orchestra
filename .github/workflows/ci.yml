@@ -1,8 +1,12 @@
 name: Orchestra Laptop-Optimized CI
 
 on:
+  push:
+    branches: [main, develop]
   pull_request:
     branches: [main, develop]
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2 AM UTC for security checks
 
 permissions:
   contents: read
