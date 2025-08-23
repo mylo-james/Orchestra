@@ -1,23 +1,22 @@
 """Tests for CLI output formatting utilities."""
 
-from unittest.mock import Mock
-
 import pytest
+from unittest.mock import Mock, patch
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
 from src.cli.output import (
-    display_agent_status,
-    display_banner,
-    display_error,
-    display_info,
-    display_success,
-    display_warning,
-    display_workflow_status,
     error_panel,
     info_panel,
     success_panel,
+    display_banner,
+    display_success,
+    display_error,
+    display_warning,
+    display_info,
+    display_agent_status,
+    display_workflow_status
 )
 
 
@@ -27,7 +26,7 @@ class TestPanelFunctions:
     def test_error_panel(self):
         """Test error panel creation."""
         panel = error_panel("Test error message")
-
+        
         assert isinstance(panel, Panel)
         assert "❌ Test error message" in panel.renderable
         assert panel.title == "Error"
@@ -36,7 +35,7 @@ class TestPanelFunctions:
     def test_info_panel(self):
         """Test info panel creation."""
         panel = info_panel("Test info message")
-
+        
         assert isinstance(panel, Panel)
         assert "ℹ️ Test info message" in panel.renderable
         assert panel.title == "Info"
@@ -45,7 +44,7 @@ class TestPanelFunctions:
     def test_success_panel(self):
         """Test success panel creation."""
         panel = success_panel("Test success message")
-
+        
         assert isinstance(panel, Panel)
         assert "✅ Test success message" in panel.renderable
         assert panel.title == "Success"
@@ -56,7 +55,7 @@ class TestPanelFunctions:
         error_p = error_panel("")
         info_p = info_panel("")
         success_p = success_panel("")
-
+        
         assert isinstance(error_p, Panel)
         assert isinstance(info_p, Panel)
         assert isinstance(success_p, Panel)
@@ -73,10 +72,10 @@ class TestDisplayFunctions:
     def test_display_banner(self, mock_console):
         """Test banner display."""
         display_banner(mock_console, "1.0.0")
-
+        
         # Verify console.print was called
         mock_console.print.assert_called_once()
-
+        
         # Verify the call was made with a Panel
         call_args = mock_console.print.call_args[0][0]
         assert isinstance(call_args, Panel)
@@ -86,7 +85,7 @@ class TestDisplayFunctions:
     def test_display_success(self, mock_console):
         """Test success message display."""
         display_success(mock_console, "Operation completed")
-
+        
         mock_console.print.assert_called_once()
         call_args = mock_console.print.call_args[0][0]
         assert "✅" in call_args
@@ -95,7 +94,7 @@ class TestDisplayFunctions:
     def test_display_error(self, mock_console):
         """Test error message display."""
         display_error(mock_console, "Operation failed")
-
+        
         mock_console.print.assert_called_once()
         call_args = mock_console.print.call_args[0][0]
         assert "❌" in call_args
@@ -104,7 +103,7 @@ class TestDisplayFunctions:
     def test_display_warning(self, mock_console):
         """Test warning message display."""
         display_warning(mock_console, "Warning message")
-
+        
         mock_console.print.assert_called_once()
         call_args = mock_console.print.call_args[0][0]
         assert "⚠️" in call_args
@@ -113,7 +112,7 @@ class TestDisplayFunctions:
     def test_display_info(self, mock_console):
         """Test info message display."""
         display_info(mock_console, "Info message")
-
+        
         mock_console.print.assert_called_once()
         call_args = mock_console.print.call_args[0][0]
         assert "ℹ️" in call_args
@@ -131,7 +130,7 @@ class TestStatusDisplayFunctions:
     def test_display_agent_status_empty_list(self, mock_console):
         """Test agent status display with empty list."""
         display_agent_status(mock_console, [])
-
+        
         mock_console.print.assert_called_once()
         call_args = mock_console.print.call_args[0][0]
         assert isinstance(call_args, Table)
@@ -144,18 +143,18 @@ class TestStatusDisplayFunctions:
                 "name": "Agent 1",
                 "status": "active",
                 "last_activity": "2023-01-01 12:00:00",
-                "task_count": 5,
+                "task_count": 5
             },
             {
                 "name": "Agent 2",
                 "status": "inactive",
                 "last_activity": "2023-01-01 11:00:00",
-                "task_count": 0,
-            },
+                "task_count": 0
+            }
         ]
-
+        
         display_agent_status(mock_console, agents)
-
+        
         mock_console.print.assert_called_once()
         call_args = mock_console.print.call_args[0][0]
         assert isinstance(call_args, Table)
@@ -169,9 +168,9 @@ class TestStatusDisplayFunctions:
                 # Missing other fields
             }
         ]
-
+        
         display_agent_status(mock_console, agents)
-
+        
         mock_console.print.assert_called_once()
         call_args = mock_console.print.call_args[0][0]
         assert isinstance(call_args, Table)
@@ -179,7 +178,7 @@ class TestStatusDisplayFunctions:
     def test_display_workflow_status_empty_list(self, mock_console):
         """Test workflow status display with empty list."""
         display_workflow_status(mock_console, [])
-
+        
         mock_console.print.assert_called_once()
         call_args = mock_console.print.call_args[0][0]
         assert isinstance(call_args, Table)
@@ -193,19 +192,19 @@ class TestStatusDisplayFunctions:
                 "status": "running",
                 "progress": "50%",
                 "started": "2023-01-01 12:00:00",
-                "duration": "1h 30m",
+                "duration": "1h 30m"
             },
             {
                 "id": "workflow-2",
                 "status": "completed",
                 "progress": "100%",
                 "started": "2023-01-01 10:00:00",
-                "duration": "2h 15m",
-            },
+                "duration": "2h 15m"
+            }
         ]
-
+        
         display_workflow_status(mock_console, workflows)
-
+        
         mock_console.print.assert_called_once()
         call_args = mock_console.print.call_args[0][0]
         assert isinstance(call_args, Table)
@@ -218,11 +217,11 @@ class TestStatusDisplayFunctions:
             {"id": "w2", "status": "completed"},
             {"id": "w3", "status": "failed"},
             {"id": "w4", "status": "paused"},
-            {"id": "w5", "status": "unknown"},
+            {"id": "w5", "status": "unknown"}
         ]
-
+        
         display_workflow_status(mock_console, workflows)
-
+        
         mock_console.print.assert_called_once()
         call_args = mock_console.print.call_args[0][0]
         assert isinstance(call_args, Table)
@@ -235,9 +234,9 @@ class TestStatusDisplayFunctions:
                 # Missing other fields
             }
         ]
-
+        
         display_workflow_status(mock_console, workflows)
-
+        
         mock_console.print.assert_called_once()
         call_args = mock_console.print.call_args[0][0]
         assert isinstance(call_args, Table)
@@ -257,11 +256,11 @@ class TestIntegration:
         error_p = error_panel("Integration test error")
         info_p = info_panel("Integration test info")
         success_p = success_panel("Integration test success")
-
+        
         assert isinstance(error_p, Panel)
         assert isinstance(info_p, Panel)
         assert isinstance(success_p, Panel)
-
+        
         # Test that panels can be rendered (basic integration test)
         try:
             # Just verify the panels can be created without errors
@@ -279,13 +278,13 @@ class TestIntegration:
                 "name": "Test Agent",
                 "status": "active",
                 "last_activity": "2023-01-01 12:00:00",
-                "task_count": 3,
+                "task_count": 3
             }
         ]
-
+        
         # This should not raise any exceptions
         display_agent_status(real_console, agents)
-
+        
         # Test workflow status table
         workflows = [
             {
@@ -293,9 +292,9 @@ class TestIntegration:
                 "status": "running",
                 "progress": "75%",
                 "started": "2023-01-01 12:00:00",
-                "duration": "45m",
+                "duration": "45m"
             }
         ]
-
+        
         # This should not raise any exceptions
         display_workflow_status(real_console, workflows)

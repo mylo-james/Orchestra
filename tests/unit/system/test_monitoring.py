@@ -1,6 +1,8 @@
 """Tests for system monitoring module."""
 
 import pytest
+from unittest.mock import Mock, patch, MagicMock
+from datetime import datetime, timedelta
 
 from src.system.monitoring import AgentMonitor
 
@@ -23,9 +25,9 @@ class TestAgentMonitor:
             name="test_metric",
             duration_ms=150.5,
             success=True,
-            details={"test": "data"},
+            details={"test": "data"}
         )
-
+        
         agent_monitor.emit(metric)
         # Note: emit just logs the metric, no return value to test
 

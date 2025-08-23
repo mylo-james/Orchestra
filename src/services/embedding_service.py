@@ -34,7 +34,6 @@ class EmbeddingService:
 
         # Circuit breaker for OpenAI API calls
         from src.utils.circuit_breaker import CircuitBreakerConfig
-
         config = CircuitBreakerConfig(
             failure_threshold=3,
             recovery_timeout=30.0,

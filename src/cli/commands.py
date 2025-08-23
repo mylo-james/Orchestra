@@ -25,36 +25,34 @@ logger = get_logger(__name__)
 console = Console()
 
 
-def create_basic_command_group(
-    name: str = "basic", help_text: str = "Basic commands"
-) -> typer.Typer:
+def create_basic_command_group(name: str = "basic", help_text: str = "Basic commands") -> typer.Typer:
     """
     Create a basic command group with common commands.
-
+    
     Args:
         name: Name of the command group
         help_text: Help text for the command group
-
+    
     Returns:
         Typer app with basic commands
     """
     app = typer.Typer(name=name, help=help_text)
-
+    
     @app.command("version")
     def version():
         """Show version information."""
         console.print("Orchestra AI Agent System v0.1.0")
-
+    
     @app.command("status")
     def status():
         """Show system status."""
         console.print("System status: Ready")
-
+    
     @app.command("list")
     def list_commands():
         """List available commands."""
         console.print("Available commands: version, status, list")
-
+    
     return app
 
 
@@ -238,12 +236,12 @@ def test_security() -> None:
 
     # Test validator
     validator = AIAgentValidator("test-agent")
-
+    
     # Test validation using the validate_operation decorator
     @validator.validate_operation("test_operation")
     def test_function(prompt: str):
         return f"Processed: {prompt}"
-
+    
     try:
         result = test_function("Test prompt")
         console.print(success_panel("✓ AI Agent Validator: Working"))
@@ -253,15 +251,11 @@ def test_security() -> None:
     # Test monitor
     monitor = AIAgentMonitor()
     monitor.log_agent_operation("test_agent", "test_action", "test data")
-
+    
     # Test security checks
-    input_check = monitor.check_input_security(
-        "test_agent", "test_operation", "Test input"
-    )
-    output_check = monitor.check_output_security(
-        "test_agent", "test_operation", "Test output"
-    )
-
+    input_check = monitor.check_input_security("test_agent", "test_operation", "Test input")
+    output_check = monitor.check_output_security("test_agent", "test_operation", "Test output")
+    
     if input_check["is_safe"] and output_check["is_safe"]:
         console.print(success_panel("✓ AI Agent Monitor: Working"))
     else:
@@ -276,11 +270,13 @@ def test_circuit_breaker() -> None:
     console.print(info_panel("Testing circuit breaker..."))
 
     from src.utils.circuit_breaker import CircuitBreakerConfig
-
+    
     config = CircuitBreakerConfig(
-        failure_threshold=3, recovery_timeout=5.0, request_timeout=30.0
+        failure_threshold=3,
+        recovery_timeout=5.0,
+        request_timeout=30.0
     )
-
+    
     breaker = CircuitBreaker("test-circuit-breaker", config)
 
     # Test normal operation

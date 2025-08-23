@@ -58,10 +58,8 @@ async def execute_agent_activity(params: Dict[str, Any]) -> Dict[str, Any]:
 
         # All agents must be UniversalAgent instances
         if not isinstance(agent, UniversalAgent):
-            raise ValueError(
-                f"Agent must be a UniversalAgent instance, got {type(agent)}"
-            )
-
+            raise ValueError(f"Agent must be a UniversalAgent instance, got {type(agent)}")
+        
         result = await _execute_with_universal_agent(agent, operation, context)
 
         logger.info(
@@ -136,6 +134,7 @@ def _determine_next_action(persona_id: str, operation: str) -> str:
     elif persona_id == "release":
         return "complete"
     return "continue"
+
 
 
 @activity.defn

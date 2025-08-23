@@ -22,7 +22,7 @@ The PersonaLoader (100 statements) implements exactly what Epic 1.6 requires:
 
 1. **✅ Override Precedence System**: `src/personas/` > `.bmad-core/personas/`
 2. **✅ Dynamic YAML Loading**: Discovers and loads persona specifications
-3. **✅ Caching System**: Efficient persona reuse with cache management
+3. **✅ Caching System**: Efficient persona reuse with cache management  
 4. **✅ Validation**: Comprehensive YAML structure validation
 5. **✅ Error Handling**: Graceful failures with detailed logging
 6. **✅ Discovery API**: Find all available personas
@@ -38,7 +38,7 @@ The PersonaLoader (100 statements) implements exactly what Epic 1.6 requires:
 
 **Type A Over-Mocking Fix Required:**
 1. ✅ Add `import src.system.loader` to test file
-2. ✅ Run validation tests to confirm real code execution
+2. ✅ Run validation tests to confirm real code execution  
 3. ✅ Target remaining 9 missing lines for 91% → 95%+ coverage
 
 This should be a **quick victory** like victories 7-8!

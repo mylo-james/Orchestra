@@ -9,9 +9,9 @@ from src.models.knowledge import (
     ConflictType,
     KnowledgeChunk,
     KnowledgeConflict,
-    KnowledgeDomain,
-    KnowledgeMetadata,
     KnowledgeVersion,
+    KnowledgeMetadata,
+    KnowledgeDomain,
     MergeStrategy,
     SeverityLevel,
 )
@@ -102,7 +102,7 @@ class ConflictResolutionService:
         if similarity < 0.85 and not is_concurrent:
             # Different enough and not concurrent - no conflict
             return None
-
+        
         # Very low similarity even if concurrent - no conflict
         if similarity < 0.5:
             return None
@@ -113,9 +113,7 @@ class ConflictResolutionService:
             chunk_id=existing.id,
             existing_version=existing,
             incoming_version=proposed,
-            conflict_type=ConflictType(
-                self._determine_conflict_type(existing, proposed)
-            ),
+            conflict_type=ConflictType(self._determine_conflict_type(existing, proposed)),
             severity=self._classify_severity(similarity),
             detected_at=datetime.utcnow(),
             similarity_score=similarity,
@@ -201,12 +199,12 @@ class ConflictResolutionService:
             metadata=KnowledgeMetadata(
                 domain=KnowledgeDomain.TECHNICAL,
                 confidence_score=merged_metadata.get("confidence_score", 0.8),
-                agent_attribution="system",
+                agent_attribution="system"
             ),
             version=max(conflict.version_a.version, conflict.version_b.version) + 1,
             created_at=conflict.version_a.created_at,
             updated_at=datetime.utcnow(),
-            author="system",
+            author="system"
         )
 
     async def _merge_vote(self, conflict: KnowledgeConflict) -> KnowledgeChunk:
@@ -225,7 +223,6 @@ class ConflictResolutionService:
 
         # Apply exponential weighting
         import math
-
         weight_a = math.exp(conf_a)
         weight_b = math.exp(conf_b)
 
@@ -252,12 +249,12 @@ class ConflictResolutionService:
             metadata=KnowledgeMetadata(
                 domain=KnowledgeDomain.TECHNICAL,
                 confidence_score=merged_metadata.get("confidence_score", 0.8),
-                agent_attribution=winner.agent_attribution,
+                agent_attribution=winner.agent_attribution
             ),
             version=max(conflict.version_a.version, conflict.version_b.version) + 1,
             created_at=conflict.version_a.created_at,
             updated_at=datetime.utcnow(),
-            author=winner.agent_attribution,
+            author=winner.agent_attribution
         )
 
     async def _merge_hybrid(self, conflict: KnowledgeConflict) -> KnowledgeChunk:
@@ -329,12 +326,12 @@ class ConflictResolutionService:
             metadata=KnowledgeMetadata(
                 domain=KnowledgeDomain.TECHNICAL,
                 confidence_score=merged_metadata.get("confidence_score", 0.8),
-                agent_attribution="system",
+                agent_attribution="system"
             ),
             version=max(conflict.version_a.version, conflict.version_b.version) + 1,
             created_at=conflict.version_a.created_at,
             updated_at=datetime.utcnow(),
-            author="system",
+            author="system"
         )
 
     async def _merge_conservative(self, conflict: KnowledgeConflict) -> KnowledgeChunk:
@@ -419,12 +416,12 @@ class ConflictResolutionService:
             metadata=KnowledgeMetadata(
                 domain=KnowledgeDomain.TECHNICAL,
                 confidence_score=version.metadata.get("confidence_score", 0.8),
-                agent_attribution=version.agent_attribution,
+                agent_attribution=version.agent_attribution
             ),
             version=version.version,
             created_at=version.created_at,
             updated_at=datetime.utcnow(),
-            author=version.agent_attribution,
+            author=version.agent_attribution
         )
 
     def _needs_human_escalation(self, conflict: KnowledgeConflict) -> bool:
@@ -436,9 +433,7 @@ class ConflictResolutionService:
         """Get the current human escalation queue."""
         return self.escalation_queue.copy()
 
-    async def resolve_escalation(
-        self, conflict_id: str, resolution: str
-    ) -> Optional[KnowledgeChunk]:
+    async def resolve_escalation(self, conflict_id: str, resolution: str) -> Optional[KnowledgeChunk]:
         """
         Resolve a conflict from the escalation queue.
 
@@ -465,7 +460,7 @@ class ConflictResolutionService:
                     version=conflict.existing_version.version + 1,
                     created_at=conflict.existing_version.created_at,
                     updated_at=datetime.utcnow(),
-                    author="human",
+                    author="human"
                 )
 
                 # Remove from queue
