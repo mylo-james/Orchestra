@@ -41,7 +41,7 @@ pytest-cov = "^6.0.0"
 # Code Quality
 black = "^24.10.0"
 isort = "^5.13.0"
-ruff = "^0.8.0"
+ruff = "^0.12.10"
 mypy = "^1.13.0"
 # Development tools
 bandit = "^1.8.0"
