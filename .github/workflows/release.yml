@@ -1,0 +1,77 @@
+name: Simple Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  PYTHON_VERSION: '3.11'
+  POETRY_VERSION: '1.8.3'
+
+jobs:
+  # Simple release validation
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get version from tag
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Creating release for: $VERSION"
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: ${{ env.POETRY_VERSION }}
+
+      - name: Install and test
+        run: |
+          poetry install --no-interaction
+          echo "🧪 Running final test validation..."
+          poetry run pytest --cov=src --cov-fail-under=90 -x
+          echo "✅ Release validation passed!"
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: Orchestra ${{ steps.version.outputs.version }}
+          body: |
+            # Orchestra Release ${{ steps.version.outputs.version }}
+
+            🎯 **Laptop-Optimized AI Agent System**
+
+            ## Key Features
+            - Multi-agent coordination with OpenAI SDK
+            - Temporal workflow orchestration
+            - Security-first design with audit trails
+            - Local deployment on laptop + OpenAI API calls
+
+            ## Quick Start
+            ```bash
+            git clone <repo>
+            make setup
+            make docker-up
+            poetry run orchestra --help
+            ```
+
+            ## Coverage & Quality
+            - ✅ 90%+ test coverage maintained
+            - ✅ Security scans passing
+            - ✅ Code quality gates enforced
+
+            See README.md and docs/ for complete setup instructions.
+          draft: false
+          prerelease: ${{ contains(steps.version.outputs.version, '-') }}

@@ -1,0 +1,4 @@
+!.bmad-core/
+!.bmad-infrastructure-devops/
+!.cursor/
+!.env.example

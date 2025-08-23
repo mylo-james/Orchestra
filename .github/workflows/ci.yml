@@ -1,0 +1,100 @@
+name: Orchestra Laptop-Optimized CI
+
+on:
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
+env:
+  PYTHON_VERSION: '3.13'
+  POETRY_VERSION: '1.8.3'
+
+jobs:
+  # Core Quality Pipeline - Fast & Essential
+  quality-gate:
+    name: Quality Gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: ${{ env.POETRY_VERSION }}
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root
+
+      - name: Install project
+        run: poetry install --no-interaction
+
+      - name: Verify Python version
+        run: |
+          echo "Python version in CI: $(python --version)"
+          echo "Poetry Python version: $(poetry run python --version)"
+          poetry env info
+
+      - name: 🎨 Code Quality - Format & Lint (BLOCKING)
+        run: |
+          echo "🎨 Checking code formatting..."
+          poetry run black --check src/ tests/
+          poetry run isort --check-only src/ tests/
+          echo "🔍 Running linting checks..."
+          poetry run ruff check src/ tests/
+
+      - name: 🔒 Pre-commit Validation (BLOCKING)
+        run: |
+          echo "🔒 Verifying pre-commit standards would pass..."
+          poetry run pre-commit run --all-files
+
+      - name: 🔒 Security Scan (BLOCKING)
+        run: |
+          echo "🔍 Running security scans..."
+          poetry run bandit -r src/ -c bandit.yaml
+          poetry run pip-audit
+
+      - name: 🧪 Tests + Coverage Gate (BLOCKING)
+        run: |
+          echo "🧪 Running tests with HARD 90% coverage gate..."
+          poetry run pytest tests/ \
+            --cov=src \
+            --cov-fail-under=90 \
+            --cov-report=term-missing \
+            --cov-report=html \
+            -v
+
+          echo "🎯 Validating coverage meets 90% minimum..."
+          COVERAGE=$(poetry run coverage report --precision=2 | grep TOTAL | awk '{print $4}' | sed 's/%//')
+          echo "✅ Coverage: ${COVERAGE}% (required: ≥90%)"
+          if (( $(echo "$COVERAGE < 90" | bc -l) )); then
+            echo "❌ COVERAGE GATE FAILED: ${COVERAGE}% < 90%"
+            exit 1
+          fi
+
+      - name: 🐳 Docker Build Test (Local Only)
+        run: |
+          echo "🐳 Testing Docker build for laptop deployment..."
+          docker build -t orchestra:ci-test .
+          docker run --rm orchestra:ci-test python -c "import src; print('✅ Docker build works!')"
+          echo "✅ Docker image builds successfully for laptop deployment"
