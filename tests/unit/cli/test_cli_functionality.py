@@ -207,7 +207,7 @@ class TestCLICommandGroupFunctionality:
         # Test that list command actually executes and provides feedback
         result = runner.invoke(test_group, ["list"])
         assert result.exit_code == 0
-        assert "available commands" in result.stdout.lower()  # Updated to match actual output
+        assert "configured" in result.stdout.lower()  # Updated from placeholder
 
         # Test that status command actually executes
         result = runner.invoke(test_group, ["status"])
@@ -257,23 +257,17 @@ class TestCLICommandGroupFunctionality:
             assert result.exit_code == 0
             assert expected_name in result.stdout.lower()
 
-            # Test list command provides meaningful output (if it exists)
+            # Test list command provides meaningful output
             result = runner.invoke(cmd_group, ["list"])
-            if result.exit_code == 0:
-                # Should contain meaningful output (not empty)
-                assert len(result.stdout.strip()) > 0
-            else:
-                # Some command groups might not have list command, that's ok
-                pass
+            assert result.exit_code == 0
+            # Should contain meaningful output (not empty)
+            assert len(result.stdout.strip()) > 0
 
-            # Test status command provides meaningful output (if it exists)
+            # Test status command provides meaningful output
             result = runner.invoke(cmd_group, ["status"])
-            if result.exit_code == 0:
-                # Should show meaningful status
-                assert len(result.stdout.strip()) > 0
-            else:
-                # Some command groups might not have status command, that's ok
-                pass
+            assert result.exit_code == 0
+            # Should show meaningful status (ready, loaded, etc.)
+            assert "ready" in result.stdout.lower() or "loaded" in result.stdout.lower()
 
 
 class TestCLIIntegrationFunctionality:

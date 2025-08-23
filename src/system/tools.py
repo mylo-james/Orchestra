@@ -28,9 +28,13 @@ except ImportError:
         pass
 
 
-# Tool definition placeholder (agents module removed)
-class ToolDefinition:
-    pass
+# Import base tool definition
+try:
+    from src.agents.tools.base import ToolDefinition
+except ImportError:
+
+    class ToolDefinition:
+        pass
 
 
 from src.config.settings import get_settings

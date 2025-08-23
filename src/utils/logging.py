@@ -16,46 +16,6 @@ agent_context: ContextVar[str | None] = ContextVar("agent_context", default=None
 workflow_context: ContextVar[str | None] = ContextVar("workflow_context", default=None)
 
 
-class SilentTraceProvider:
-    """Silent trace provider that prevents shutdown logging issues.
-    
-    The OpenAI Agents SDK's default trace provider tries to log during Python
-    interpreter shutdown when logging streams are already closed. This provider
-    implements the TraceProvider interface but does nothing, preventing the
-    "I/O operation on closed file" errors during test shutdown.
-    """
-    
-    def shutdown(self):
-        """Silent shutdown - no logging."""
-        pass
-    
-    def __getattr__(self, name):
-        """Return no-op functions for any other trace provider methods."""
-        return lambda *args, **kwargs: None
-
-
-def _configure_agents_tracing():
-    """Configure OpenAI Agents SDK tracing to prevent shutdown issues.
-    
-    Sets up a silent trace provider that doesn't log during interpreter shutdown,
-    preventing the "I/O operation on closed file" errors that occur when pytest
-    closes logging streams before the SDK's atexit handlers run.
-    """
-    try:
-        import agents.tracing
-        
-        # Disable tracing globally first
-        agents.tracing.set_tracing_disabled(True)
-        
-        # Set a silent trace provider that won't log during shutdown
-        silent_provider = SilentTraceProvider()
-        agents.tracing.set_trace_provider(silent_provider)
-        
-    except ImportError:
-        # Agents SDK not available, skip configuration
-        pass
-
-
 def add_correlation_id(
     logger: Any, method_name: str, event_dict: EventDict
 ) -> EventDict:
@@ -101,27 +61,12 @@ def configure_logging(
         json_logs: Whether to output logs in JSON format
         enable_audit: Whether to enable security audit logging
     """
-    # Prevent noisy traceback on logging handler errors during shutdown
-    logging.raiseExceptions = False
-
     # Configure standard library logging
     logging.basicConfig(
         format="%(message)s",
-        # Use real stdout so pytest's capture closure doesn't break logging at shutdown
-        stream=sys.__stdout__,
+        stream=sys.stdout,
         level=getattr(logging, log_level.upper()),
     )
-
-    # Configure OpenAI Agents SDK tracing to prevent shutdown issues
-    _configure_agents_tracing()
-
-    # Proactively silence OpenAI Agents SDK logging (avoids shutdown emit on closed streams)
-    for name in ("agents", "agents.tracing"):
-        _sdk_logger = logging.getLogger(name)
-        _sdk_logger.handlers.clear()
-        _sdk_logger.addHandler(logging.NullHandler())
-        _sdk_logger.setLevel(logging.CRITICAL)
-        _sdk_logger.propagate = False
 
     # Build processor chain
     processors: list[Processor] = [

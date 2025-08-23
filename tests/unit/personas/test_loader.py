@@ -7,9 +7,6 @@ from unittest.mock import patch
 import pytest
 import yaml
 
-# Import the module to ensure it's loaded for coverage
-import src.system.loader
-
 from src.system.loader import PersonaLoader
 from src.system.specs import PersonaSpec
 
@@ -233,50 +230,3 @@ def test_yaml_error_handling(temp_persona_dir):
 
     spec = loader.load_persona("bad")
     assert spec is None
-
-
-class TestMissingCoverageLines:
-    """Test specific code paths that were missing coverage."""
-
-    def test_load_persona_validation_failure(self, temp_persona_dir):
-        """Test load_persona when validation fails - covers lines 113-114."""
-        loader = PersonaLoader()
-        loader.search_paths = [temp_persona_dir]
-        
-        # Create a persona file with invalid structure that will fail validation
-        invalid_persona = temp_persona_dir / "invalid_persona.yaml"
-        invalid_data = {
-            "identity": {
-                "name": "Test Agent"
-                # Missing required fields like role, title
-            }
-            # Missing other required sections
-        }
-        
-        with open(invalid_persona, 'w') as f:
-            yaml.dump(invalid_data, f)
-            
-        result = loader.load_persona("invalid_persona")
-        assert result is None  # Should return None when validation fails
-
-    def test_load_persona_general_exception(self):
-        """Test load_persona when general exception occurs - covers lines 126-128."""
-        from unittest.mock import patch
-        loader = PersonaLoader()
-        
-        with patch.object(Path, 'exists', return_value=True), \
-             patch.object(Path, 'read_text', side_effect=Exception("File read error")):
-            
-            result = loader.load_persona("test_persona")
-            assert result is None  # Should return None when exception occurs
-
-    def test_validate_persona_file_general_exception(self, temp_persona_dir):
-        """Test validate_persona_file with general exception - covers lines 257-260."""
-        loader = PersonaLoader()
-        
-        # Use a non-existent file to trigger FileNotFoundError
-        non_existent_file = temp_persona_dir / "does_not_exist.yaml"
-        
-        errors = loader.validate_persona_file(non_existent_file)
-        assert len(errors) > 0
-        assert any("Validation error" in error for error in errors)

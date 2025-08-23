@@ -33,12 +33,11 @@ class EmbeddingService:
         self.model = model
 
         # Circuit breaker for OpenAI API calls
-        from src.utils.circuit_breaker import CircuitBreakerConfig
-        config = CircuitBreakerConfig(
+        self.circuit_breaker = CircuitBreaker(
             failure_threshold=3,
-            recovery_timeout=30.0,
+            recovery_timeout=30,
+            expected_exception=Exception,
         )
-        self.circuit_breaker = CircuitBreaker("openai_embeddings", config)
 
         # Cache for embeddings (hash -> embedding)
         self._cache: Dict[str, List[float]] = {}
@@ -50,6 +49,7 @@ class EmbeddingService:
         self._batch_size = 20  # OpenAI recommended batch size
         self._batch_timeout = 0.1  # 100ms
 
+    @CircuitBreaker(name="openai_embeddings")
     async def generate_embedding(self, text: str) -> List[float]:
         """
         Generate embedding for a single text.

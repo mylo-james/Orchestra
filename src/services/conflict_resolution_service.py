@@ -1,17 +1,13 @@
 """Conflict resolution service for knowledge synchronization."""
 
 import math
-import uuid
 from datetime import datetime, timedelta
 from typing import List, Optional
 
 from src.models.knowledge import (
-    ConflictType,
     KnowledgeChunk,
     KnowledgeConflict,
     KnowledgeVersion,
-    KnowledgeMetadata,
-    KnowledgeDomain,
     MergeStrategy,
     SeverityLevel,
 )
@@ -102,21 +98,15 @@ class ConflictResolutionService:
         if similarity < 0.85 and not is_concurrent:
             # Different enough and not concurrent - no conflict
             return None
-        
-        # Very low similarity even if concurrent - no conflict
-        if similarity < 0.5:
-            return None
 
         # Create conflict object
         conflict = KnowledgeConflict(
-            id=str(uuid.uuid4()),
-            chunk_id=existing.id,
-            existing_version=existing,
-            incoming_version=proposed,
-            conflict_type=ConflictType(self._determine_conflict_type(existing, proposed)),
-            severity=self._classify_severity(similarity),
-            detected_at=datetime.utcnow(),
+            document_id=existing.metadata.get("document_id", "unknown"),
+            version_a=self._chunk_to_version(existing),
+            version_b=self._chunk_to_version(proposed),
+            conflict_type=self._determine_conflict_type(existing, proposed),
             similarity_score=similarity,
+            detected_at=datetime.utcnow(),
         )
 
         # Add to history
@@ -193,18 +183,9 @@ class ConflictResolutionService:
         }
 
         return KnowledgeChunk(
-            id=conflict.chunk_id,
             content=merged_content,
-            embedding=[],  # Will be regenerated
-            metadata=KnowledgeMetadata(
-                domain=KnowledgeDomain.TECHNICAL,
-                confidence_score=merged_metadata.get("confidence_score", 0.8),
-                agent_attribution="system"
-            ),
+            metadata=merged_metadata,
             version=max(conflict.version_a.version, conflict.version_b.version) + 1,
-            created_at=conflict.version_a.created_at,
-            updated_at=datetime.utcnow(),
-            author="system"
         )
 
     async def _merge_vote(self, conflict: KnowledgeConflict) -> KnowledgeChunk:
@@ -222,9 +203,8 @@ class ConflictResolutionService:
         conf_b = conflict.version_b.metadata.get("confidence_score", 0.5)
 
         # Apply exponential weighting
-        import math
-        weight_a = math.exp(conf_a)
-        weight_b = math.exp(conf_b)
+        weight_a = np.exp(conf_a)
+        weight_b = np.exp(conf_b)
 
         # Select winner
         if weight_b > weight_a:
@@ -243,18 +223,9 @@ class ConflictResolutionService:
         }
 
         return KnowledgeChunk(
-            id=conflict.chunk_id,
             content=winner.content,
-            embedding=[],  # Will be regenerated
-            metadata=KnowledgeMetadata(
-                domain=KnowledgeDomain.TECHNICAL,
-                confidence_score=merged_metadata.get("confidence_score", 0.8),
-                agent_attribution=winner.agent_attribution
-            ),
+            metadata=merged_metadata,
             version=max(conflict.version_a.version, conflict.version_b.version) + 1,
-            created_at=conflict.version_a.created_at,
-            updated_at=datetime.utcnow(),
-            author=winner.agent_attribution
         )
 
     async def _merge_hybrid(self, conflict: KnowledgeConflict) -> KnowledgeChunk:
@@ -320,18 +291,9 @@ class ConflictResolutionService:
         }
 
         return KnowledgeChunk(
-            id=conflict.chunk_id,
             content=merged_content,
-            embedding=[],  # Will be regenerated
-            metadata=KnowledgeMetadata(
-                domain=KnowledgeDomain.TECHNICAL,
-                confidence_score=merged_metadata.get("confidence_score", 0.8),
-                agent_attribution="system"
-            ),
+            metadata=merged_metadata,
             version=max(conflict.version_a.version, conflict.version_b.version) + 1,
-            created_at=conflict.version_a.created_at,
-            updated_at=datetime.utcnow(),
-            author="system"
         )
 
     async def _merge_conservative(self, conflict: KnowledgeConflict) -> KnowledgeChunk:
@@ -363,7 +325,7 @@ class ConflictResolutionService:
         return float(similarity)
 
     def _classify_severity(
-        self, similarity: float, time_delta: Optional[timedelta] = None
+        self, similarity: float, time_delta: timedelta
     ) -> SeverityLevel:
         """Classify conflict severity based on similarity score."""
         for severity, (min_sim, max_sim) in self.similarity_thresholds.items():
@@ -410,18 +372,10 @@ class ConflictResolutionService:
     def _version_to_chunk(self, version: KnowledgeVersion) -> KnowledgeChunk:
         """Convert a version object to a knowledge chunk."""
         return KnowledgeChunk(
-            id=version.document_id,
             content=version.content,
-            embedding=[],  # Will be regenerated
-            metadata=KnowledgeMetadata(
-                domain=KnowledgeDomain.TECHNICAL,
-                confidence_score=version.metadata.get("confidence_score", 0.8),
-                agent_attribution=version.agent_attribution
-            ),
+            metadata=version.metadata,
             version=version.version,
             created_at=version.created_at,
-            updated_at=datetime.utcnow(),
-            author=version.agent_attribution
         )
 
     def _needs_human_escalation(self, conflict: KnowledgeConflict) -> bool:
@@ -433,43 +387,31 @@ class ConflictResolutionService:
         """Get the current human escalation queue."""
         return self.escalation_queue.copy()
 
-    async def resolve_escalation(self, conflict_id: str, resolution: str) -> Optional[KnowledgeChunk]:
+    def resolve_escalation(self, conflict_id: str, resolution: KnowledgeChunk) -> bool:
         """
         Resolve a conflict from the escalation queue.
 
         Args:
             conflict_id: ID of the conflict to resolve
-            resolution: The resolved content
+            resolution: The resolved knowledge chunk
 
         Returns:
-            Resolved knowledge chunk if found, None otherwise
+            True if resolved, False if conflict not found
         """
         for i, conflict in enumerate(self.escalation_queue):
-            if conflict.id == conflict_id:
+            if conflict.document_id == conflict_id:
                 # Mark as resolved
                 conflict.resolved = True
                 conflict.resolved_by = "human"
                 conflict.resolved_at = datetime.utcnow()
 
-                # Create resolved chunk
-                resolved_chunk = KnowledgeChunk(
-                    id=conflict.chunk_id,
-                    content=resolution,
-                    embedding=conflict.existing_version.embedding,
-                    metadata=conflict.existing_version.metadata,
-                    version=conflict.existing_version.version + 1,
-                    created_at=conflict.existing_version.created_at,
-                    updated_at=datetime.utcnow(),
-                    author="human"
-                )
-
                 # Remove from queue
                 del self.escalation_queue[i]
 
                 logger.info(f"Human resolved conflict: {conflict_id}")
-                return resolved_chunk
+                return True
 
-        return None
+        return False
 
     def get_conflict_history(self, limit: int = 100) -> List[KnowledgeConflict]:
         """Get conflict history for audit purposes."""
