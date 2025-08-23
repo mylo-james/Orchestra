@@ -25,7 +25,7 @@ structlog = "^24.4.0"
 # Security Framework
 cryptography = "^44.0.0"
 # Database
-aiosqlite = "^0.20.0"
+aiosqlite = "^0.21.0"
 # Temporal SDK (placeholder - actual SDK TBD)
 temporalio = "^1.7.0"
 # Vector Database
