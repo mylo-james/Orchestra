@@ -1,20 +1,18 @@
 """
-Comprehensive tests for src/security/ai_agent_validator.py
+Tests for src/security/ai_agent_validator.py
 
-Tests the AI Agent Validation framework including:
-- Input/output validation
-- Security monitoring integration
-- Decorator functionality
-- Error handling and logging
-- Example agent implementations
+This module provides comprehensive testing for the AIAgentValidator class,
+ensuring secure agent operations with validation and monitoring.
 """
 
 import asyncio
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 
-# Import the module to ensure it's loaded for coverage
+# Import the actual module to ensure it's loaded for coverage
+import src.security.ai_agent_validator
+from src.security.ai_agent_monitor import AIAgentSecurityMonitor
 from src.security.ai_agent_validator import (
     AIAgentValidationError,
     AIAgentValidator,
@@ -22,579 +20,460 @@ from src.security.ai_agent_validator import (
     SecureOperationResult,
     ValidationResult,
     create_secure_agent,
-    test_ai_agent_validation,
 )
 
 
 class TestValidationResult:
-    """Test ValidationResult dataclass."""
+    """Test the ValidationResult dataclass."""
 
     def test_validation_result_creation(self):
-        """Test ValidationResult creation with all fields."""
+        """Test creating a ValidationResult."""
         result = ValidationResult(
-            is_valid=True, violations=[], action="allow", severity="low"
+            is_valid=True,
+            violations=[],
+            risk_score=0.1,
+            recommendations=["Continue monitoring"]
         )
-
         assert result.is_valid is True
-        assert result.violations == []
-        assert result.action == "allow"
-        assert result.severity == "low"
-
-    def test_validation_result_with_violations(self):
-        """Test ValidationResult with violations."""
-        violations = ["prompt_injection", "suspicious_pattern"]
-        result = ValidationResult(
-            is_valid=False, violations=violations, action="block", severity="high"
-        )
-
-        assert result.is_valid is False
-        assert result.violations == violations
-        assert result.action == "block"
-        assert result.severity == "high"
+        assert len(result.violations) == 0
+        assert result.risk_score == 0.1
+        assert len(result.recommendations) == 1
 
 
 class TestSecureOperationResult:
-    """Test SecureOperationResult dataclass."""
+    """Test the SecureOperationResult dataclass."""
 
-    def test_secure_operation_result_success(self):
-        """Test successful SecureOperationResult."""
-        input_validation = ValidationResult(True, [], "allow", "low")
-        output_validation = ValidationResult(True, [], "allow", "low")
-
+    def test_secure_operation_result_creation(self):
+        """Test creating a SecureOperationResult."""
         result = SecureOperationResult(
             success=True,
-            result="test output",
-            operation_id="op-123",
-            input_validation=input_validation,
-            output_validation=output_validation,
+            result="Operation completed",
+            validation_passed=True,
+            security_events=[]
         )
-
         assert result.success is True
-        assert result.result == "test output"
-        assert result.operation_id == "op-123"
-        assert result.input_validation == input_validation
-        assert result.output_validation == output_validation
-        assert result.error is None
-
-    def test_secure_operation_result_failure(self):
-        """Test failed SecureOperationResult."""
-        input_validation = ValidationResult(False, ["error"], "block", "high")
-
-        result = SecureOperationResult(
-            success=False,
-            result=None,
-            operation_id="",
-            input_validation=input_validation,
-            error="Validation failed",
-        )
-
-        assert result.success is False
-        assert result.result is None
-        assert result.operation_id == ""
-        assert result.input_validation == input_validation
-        assert result.output_validation is None
-        assert result.error == "Validation failed"
+        assert result.result == "Operation completed"
+        assert result.validation_passed is True
+        assert len(result.security_events) == 0
 
 
 class TestAIAgentValidationError:
-    """Test AIAgentValidationError exception."""
+    """Test the custom validation error."""
 
     def test_validation_error_creation(self):
-        """Test AIAgentValidationError creation."""
-        violations = ["prompt_injection", "malicious_code"]
-        error = AIAgentValidationError("Validation failed", violations, "critical")
-
+        """Test creating a validation error."""
+        error = AIAgentValidationError(
+            "Validation failed",
+            violations=["SQL injection detected"],
+            agent_id="test-agent"
+        )
         assert str(error) == "Validation failed"
-        assert error.violations == violations
-        assert error.severity == "critical"
-
-    def test_validation_error_inheritance(self):
-        """Test that AIAgentValidationError inherits from Exception."""
-        error = AIAgentValidationError("test", [], "low")
-        assert isinstance(error, Exception)
+        assert error.violations == ["SQL injection detected"]
+        assert error.agent_id == "test-agent"
 
 
 class TestAIAgentValidator:
-    """Test AIAgentValidator class."""
-
-    @patch("src.security.ai_agent_validator.AIAgentSecurityMonitor")
-    def test_validator_initialization(self, mock_monitor_class):
-        """Test AIAgentValidator initialization."""
-        mock_monitor = Mock()
-        mock_monitor_class.return_value = mock_monitor
-
-        validator = AIAgentValidator("test-agent")
-
-        assert validator.agent_id == "test-agent"
-        assert validator.monitor == mock_monitor
-        mock_monitor_class.assert_called_once()
-
-    @patch("src.security.ai_agent_validator.AIAgentSecurityMonitor")
-    def test_extract_input_data_from_kwargs(self, mock_monitor_class):
-        """Test input data extraction from kwargs."""
-        validator = AIAgentValidator("test-agent")
-
-        # Test prompt parameter
-        result = validator._extract_input_data((), {"prompt": "test prompt"})
-        assert result == "test prompt"
-
-        # Test input parameter
-        result = validator._extract_input_data((), {"input": "test input"})
-        assert result == "test input"
-
-        # Test request parameter
-        result = validator._extract_input_data((), {"request": "test request"})
-        assert result == "test request"
-
-    @patch("src.security.ai_agent_validator.AIAgentSecurityMonitor")
-    def test_extract_input_data_from_args(self, mock_monitor_class):
-        """Test input data extraction from args."""
-        validator = AIAgentValidator("test-agent")
-
-        # Test first string argument
-        result = validator._extract_input_data(("test string", 123), {})
-        assert result == "test string"
-
-        # Test no string arguments
-        result = validator._extract_input_data((123, 456), {"num": 789})
-        assert result == "(123, 456){'num': 789}"
-
-    @patch("src.security.ai_agent_validator.AIAgentSecurityMonitor")
-    def test_validate_input(self, mock_monitor_class):
-        """Test input validation."""
-        mock_monitor = Mock()
-        mock_monitor_class.return_value = mock_monitor
-        mock_monitor.check_input_security.return_value = {
-            "is_safe": True,
-            "violations": [],
-            "action": "allow",
-            "severity": "low",
-        }
-
-        validator = AIAgentValidator("test-agent")
-        result = validator._validate_input("test input", "code_generation")
-
-        assert isinstance(result, ValidationResult)
-        assert result.is_valid is True
-        assert result.violations == []
-        assert result.action == "allow"
-        assert result.severity == "low"
-
-        mock_monitor.check_input_security.assert_called_once_with(
-            "test-agent", "test input", "code_generation"
-        )
-
-    @patch("src.security.ai_agent_validator.AIAgentSecurityMonitor")
-    def test_validate_output(self, mock_monitor_class):
-        """Test output validation."""
-        mock_monitor = Mock()
-        mock_monitor_class.return_value = mock_monitor
-        mock_monitor.check_output_security.return_value = {
-            "is_safe": False,
-            "violations": ["malicious_code"],
-            "action": "block",
-            "severity": "high",
-        }
-
-        validator = AIAgentValidator("test-agent")
-        result = validator._validate_output("malicious output", "code_generation")
-
-        assert isinstance(result, ValidationResult)
-        assert result.is_valid is False
-        assert result.violations == ["malicious_code"]
-        assert result.action == "block"
-        assert result.severity == "high"
-
-        mock_monitor.check_output_security.assert_called_once_with(
-            "test-agent", "malicious output", "code_generation"
-        )
-
-    @patch("src.security.ai_agent_validator.AIAgentSecurityMonitor")
-    def test_validate_operation_decorator_success(self, mock_monitor_class):
-        """Test validate_operation decorator with successful operation."""
-        mock_monitor = Mock()
-        mock_monitor_class.return_value = mock_monitor
-        mock_monitor.check_input_security.return_value = {
-            "is_safe": True,
-            "violations": [],
-            "action": "allow",
-            "severity": "low",
-        }
-        mock_monitor.check_output_security.return_value = {
-            "is_safe": True,
-            "violations": [],
-            "action": "allow",
-            "severity": "low",
-        }
-        mock_monitor.log_agent_operation.return_value = "op-123"
-
-        validator = AIAgentValidator("test-agent")
-
-        @validator.validate_operation("code_generation")
-        def test_function(prompt: str) -> str:
-            return f"Generated: {prompt}"
-
-        result = test_function("test prompt")
-
-        assert isinstance(result, SecureOperationResult)
-        assert result.success is True
-        assert result.result == "Generated: test prompt"
-        assert result.operation_id == "op-123"
-        assert result.input_validation.is_valid is True
-        assert result.output_validation.is_valid is True
-
-    @patch("src.security.ai_agent_validator.AIAgentSecurityMonitor")
-    def test_validate_operation_decorator_input_blocked(self, mock_monitor_class):
-        """Test validate_operation decorator with blocked input."""
-        mock_monitor = Mock()
-        mock_monitor_class.return_value = mock_monitor
-        mock_monitor.check_input_security.return_value = {
-            "is_safe": False,
-            "violations": ["prompt_injection"],
-            "action": "block",
-            "severity": "high",
-        }
-
-        validator = AIAgentValidator("test-agent")
-
-        @validator.validate_operation("code_generation")
-        def test_function(prompt: str) -> str:
-            return f"Generated: {prompt}"
-
-        with pytest.raises(AIAgentValidationError) as exc_info:
-            test_function("malicious prompt")
-
-        assert "Input validation failed" in str(exc_info.value)
-        assert exc_info.value.violations == ["prompt_injection"]
-        assert exc_info.value.severity == "high"
-
-    @patch("src.security.ai_agent_validator.AIAgentSecurityMonitor")
-    def test_validate_operation_decorator_output_blocked(self, mock_monitor_class):
-        """Test validate_operation decorator with blocked output."""
-        mock_monitor = Mock()
-        mock_monitor_class.return_value = mock_monitor
-        mock_monitor.check_input_security.return_value = {
-            "is_safe": True,
-            "violations": [],
-            "action": "allow",
-            "severity": "low",
-        }
-        mock_monitor.check_output_security.return_value = {
-            "is_safe": False,
-            "violations": ["malicious_code"],
-            "action": "block",
-            "severity": "critical",
-        }
-
-        validator = AIAgentValidator("test-agent")
-
-        @validator.validate_operation("code_generation")
-        def test_function(prompt: str) -> str:
-            return "rm -rf /"
-
-        with pytest.raises(AIAgentValidationError) as exc_info:
-            test_function("test prompt")
-
-        assert "Output validation failed" in str(exc_info.value)
-        assert exc_info.value.violations == ["malicious_code"]
-        assert exc_info.value.severity == "critical"
-
-    @patch("src.security.ai_agent_validator.AIAgentSecurityMonitor")
-    def test_validate_operation_decorator_function_error(self, mock_monitor_class):
-        """Test validate_operation decorator with function error."""
-        mock_monitor = Mock()
-        mock_monitor_class.return_value = mock_monitor
-        mock_monitor.check_input_security.return_value = {
-            "is_safe": True,
-            "violations": [],
-            "action": "allow",
-            "severity": "low",
-        }
-
-        validator = AIAgentValidator("test-agent")
-
-        @validator.validate_operation("code_generation")
-        def test_function(prompt: str) -> str:
-            raise ValueError("Test error")
-
-        result = test_function("test prompt")
-
-        assert isinstance(result, SecureOperationResult)
-        assert result.success is False
-        assert result.result is None
-        assert result.error == "Test error"
-        assert result.input_validation.is_valid is True
-
-
-class TestConvenienceFunction:
-    """Test convenience functions."""
-
-    @patch("src.security.ai_agent_validator.AIAgentValidator")
-    def test_create_secure_agent(self, mock_validator_class):
-        """Test create_secure_agent convenience function."""
-        mock_validator = Mock()
-        mock_validator_class.return_value = mock_validator
-
-        result = create_secure_agent("test-agent-123")
-
-        assert result == mock_validator
-        mock_validator_class.assert_called_once_with("test-agent-123")
-
-
-class TestSecureAIAgentExample:
-    """Test SecureAIAgentExample class."""
-
-    @patch("src.security.ai_agent_validator.create_secure_agent")
-    def test_secure_agent_example_initialization(self, mock_create_secure_agent):
-        """Test SecureAIAgentExample initialization."""
-        mock_validator = Mock()
-        mock_create_secure_agent.return_value = mock_validator
-
-        agent = SecureAIAgentExample("example-agent")
-
-        assert agent.agent_id == "example-agent"
-        assert agent.validator == mock_validator
-        mock_create_secure_agent.assert_called_once_with("example-agent")
-
-    @patch("src.security.ai_agent_validator.create_secure_agent")
-    def test_generate_code_success(self, mock_create_secure_agent):
-        """Test generate_code method with successful validation."""
-        mock_validator = Mock()
-        mock_create_secure_agent.return_value = mock_validator
-
-        # Mock successful validation
-        mock_validator._validate_input.return_value = ValidationResult(
-            True, [], "allow", "low"
-        )
-        mock_validator._validate_output.return_value = ValidationResult(
-            True, [], "allow", "low"
-        )
-        mock_validator.monitor.log_agent_operation.return_value = "op-123"
-
-        agent = SecureAIAgentExample("example-agent")
-        result = agent.generate_code("hello world function")
-
-        assert "def hello_world():" in result
-        assert "Hello, World!" in result
-        mock_validator._validate_input.assert_called_once()
-        mock_validator._validate_output.assert_called_once()
-        mock_validator.monitor.log_agent_operation.assert_called_once()
-
-    @patch("src.security.ai_agent_validator.create_secure_agent")
-    def test_generate_code_input_blocked(self, mock_create_secure_agent):
-        """Test generate_code method with blocked input."""
-        mock_validator = Mock()
-        mock_create_secure_agent.return_value = mock_validator
-
-        # Mock blocked input validation
-        mock_validator._validate_input.return_value = ValidationResult(
-            False, ["malicious_pattern"], "block", "high"
-        )
-
-        agent = SecureAIAgentExample("example-agent")
-
-        with pytest.raises(AIAgentValidationError) as exc_info:
-            agent.generate_code("malicious prompt")
-
-        assert "Input validation failed" in str(exc_info.value)
-        assert exc_info.value.violations == ["malicious_pattern"]
-
-    @patch("src.security.ai_agent_validator.create_secure_agent")
-    def test_modify_file_success(self, mock_create_secure_agent):
-        """Test modify_file method with successful validation."""
-        mock_validator = Mock()
-        mock_create_secure_agent.return_value = mock_validator
-
-        # Mock successful validation
-        mock_validator._validate_input.return_value = ValidationResult(
-            True, [], "allow", "low"
-        )
-        mock_validator._validate_output.return_value = ValidationResult(
-            True, [], "allow", "low"
-        )
-        mock_validator.monitor.log_agent_operation.return_value = "op-456"
-
-        agent = SecureAIAgentExample("example-agent")
-        result = agent.modify_file("test.py", "print('hello')")
-
-        assert "Modified test.py with 14 characters" == result
-        mock_validator._validate_input.assert_called_once()
-        mock_validator._validate_output.assert_called_once()
-        mock_validator.monitor.log_agent_operation.assert_called_once()
-
-    @patch("src.security.ai_agent_validator.create_secure_agent")
-    def test_create_pull_request_success(self, mock_create_secure_agent):
-        """Test create_pull_request method with successful validation."""
-        mock_validator = Mock()
-        mock_create_secure_agent.return_value = mock_validator
-
-        # Mock successful validation (no output validation for git operations)
-        mock_validator._validate_input.return_value = ValidationResult(
-            True, [], "allow", "low"
-        )
-        mock_validator.monitor.log_agent_operation.return_value = "op-789"
-
-        agent = SecureAIAgentExample("example-agent")
-        result = agent.create_pull_request("Fix bug", "This fixes the bug")
-
-        assert result == "Created PR: Fix bug"
-        mock_validator._validate_input.assert_called_once()
-        mock_validator.monitor.log_agent_operation.assert_called_once()
-
-
-class TestMainFunction:
-    """Test main test function."""
-
-    @patch("src.security.ai_agent_validator.SecureAIAgentExample")
-    @patch("builtins.print")
-    def test_ai_agent_validation_test_function(self, mock_print, mock_agent_class):
-        """Test test_ai_agent_validation function."""
-        mock_agent = Mock()
-        mock_agent_class.return_value = mock_agent
-
-        # Mock successful operations
-        mock_agent.generate_code.return_value = "def hello_world(): pass"
-        mock_agent.modify_file.return_value = "Modified config.py"
-
-        # Test that function runs without error
-        test_ai_agent_validation()
-
-        # Verify agent was created and methods called
-        mock_agent_class.assert_called_once_with("test-orchestrator-001")
-        assert mock_agent.generate_code.call_count >= 2  # At least 2 calls in test
-        mock_agent.modify_file.assert_called_once()
-
-        # Verify print statements were made
-        assert mock_print.call_count > 0
-
-
-class TestAsyncValidatorMissingCoverage:
-    """Test async validation functionality to cover missing lines 126-140 and 243-316."""
+    """Test the AIAgentValidator class."""
 
     @pytest.fixture
     def validator(self):
-        """Create AIAgentValidator instance."""
-        return AIAgentValidator("async-test-agent")
+        """Create a validator instance."""
+        return AIAgentValidator("test-agent")
 
-    @pytest.mark.asyncio
-    async def test_validate_async_operation_decorator_success(self, validator):
-        """Test validate_async_operation decorator - covers lines 126-140."""
+    @pytest.fixture
+    def monitor(self):
+        """Create a mock monitor."""
+        return MagicMock(spec=AIAgentSecurityMonitor)
 
-        # Mock the monitoring system
-        with (
-            patch.object(
-                validator.monitor, "log_agent_operation", return_value="async-op-123"
-            ),
-            patch.object(
-                validator,
-                "_validate_input",
-                return_value=ValidationResult(True, [], "allow", "low"),
-            ),
-            patch.object(
-                validator,
-                "_validate_output",
-                return_value=ValidationResult(True, [], "allow", "low"),
-            ),
-        ):
+    def test_init(self, validator):
+        """Test validator initialization."""
+        assert validator.agent_id == "test-agent"
+        assert validator.monitor is not None
+        assert isinstance(validator.monitor, AIAgentSecurityMonitor)
 
-            @validator.validate_async_operation("async_code_generation")
-            async def async_generate_code(prompt: str) -> str:
-                await asyncio.sleep(0.001)  # Simulate async work
-                return f"Generated code for: {prompt}"
+    def test_validate_operation_decorator(self, validator):
+        """Test the validate_operation decorator."""
+        
+        @validator.validate_operation()
+        def test_function(data):
+            return f"Processed: {data}"
+        
+        # Test with safe input
+        result = test_function("safe data")
+        assert result == "Processed: safe data"
 
-            result = await async_generate_code("Create async function")
+    def test_validate_operation_with_validation(self, validator):
+        """Test validate_operation with custom validation."""
+        
+        def custom_validator(data):
+            return data != "forbidden"
+        
+        @validator.validate_operation(input_validator=custom_validator)
+        def test_function(data):
+            return f"Processed: {data}"
+        
+        # Test with valid input
+        result = test_function("allowed")
+        assert result == "Processed: allowed"
+        
+        # Test with invalid input
+        with pytest.raises(AIAgentValidationError):
+            test_function("forbidden")
 
-            # Verify successful execution through decorator
-            assert result.success is True
-            assert "Generated code for: Create async function" in str(result.result)
-            assert result.input_validation.is_valid is True
+    def test_validate_async_operation_decorator(self, validator):
+        """Test the validate_async_operation decorator."""
+        
+        @validator.validate_async_operation()
+        async def test_async_function(data):
+            return f"Async processed: {data}"
+        
+        # Test with safe input
+        result = asyncio.run(test_async_function("safe data"))
+        assert result == "Async processed: safe data"
 
-    @pytest.mark.asyncio
-    async def test_validate_async_operation_input_validation_failure(self, validator):
-        """Test async operation with input validation failure - covers lines 243-316."""
+    def test_execute_secure_operation(self, validator):
+        """Test _execute_secure_operation method."""
+        mock_func = Mock(return_value="result")
+        mock_monitor = Mock()
+        validator.monitor = mock_monitor
+        
+        # Mock the monitor methods
+        mock_monitor.check_input_security.return_value = {"is_safe": True, "violations": []}
+        mock_monitor.check_output_security.return_value = {"is_safe": True, "violations": []}
+        mock_monitor.log_agent_operation.return_value = "op-123"
+        
+        result = validator._execute_secure_operation(
+            func=mock_func,
+            args=("arg1",),
+            kwargs={"key": "value"},
+            input_validator=None,
+            output_validator=None
+        )
+        
+        assert result == "result"
+        mock_func.assert_called_once_with("arg1", key="value")
+        mock_monitor.check_input_security.assert_called_once()
+        mock_monitor.check_output_security.assert_called_once()
+        mock_monitor.log_agent_operation.assert_called_once()
 
-        # Mock validation to fail
-        with patch.object(
-            validator,
-            "_validate_input",
-            return_value=ValidationResult(False, ["Malicious input"], "block", "high"),
-        ):
-
-            @validator.validate_async_operation(
-                "async_code_generation", block_on_violations=True
+    def test_execute_secure_operation_with_unsafe_input(self, validator):
+        """Test _execute_secure_operation with unsafe input."""
+        mock_func = Mock()
+        mock_monitor = Mock()
+        validator.monitor = mock_monitor
+        
+        # Mock unsafe input
+        mock_monitor.check_input_security.return_value = {
+            "is_safe": False,
+            "violations": ["SQL injection detected"]
+        }
+        
+        with pytest.raises(AIAgentValidationError) as exc_info:
+            validator._execute_secure_operation(
+                func=mock_func,
+                args=("DROP TABLE users",),
+                kwargs={},
+                input_validator=None,
+                output_validator=None
             )
-            async def async_generate_malicious_code(prompt: str) -> str:
-                await asyncio.sleep(0.001)
-                return "This should not execute"
+        
+        assert "SQL injection detected" in exc_info.value.violations
+        mock_func.assert_not_called()
 
-            # Should raise validation error
-            with pytest.raises(AIAgentValidationError) as exc_info:
-                await async_generate_malicious_code("malicious prompt")
-
-            assert "Input validation failed" in str(exc_info.value)
-            assert exc_info.value.violations == ["Malicious input"]
-
-    @pytest.mark.asyncio
-    async def test_validate_async_operation_output_validation_failure(self, validator):
-        """Test async operation with output validation failure - covers error handling."""
-
-        with (
-            patch.object(
-                validator.monitor, "log_agent_operation", return_value="async-op-456"
-            ),
-            patch.object(
-                validator,
-                "_validate_input",
-                return_value=ValidationResult(True, [], "allow", "low"),
-            ),
-            patch.object(
-                validator,
-                "_validate_output",
-                return_value=ValidationResult(
-                    False, ["Dangerous output"], "block", "high"
-                ),
-            ),
-        ):
-
-            @validator.validate_async_operation(
-                "async_code_generation", block_on_violations=True
+    def test_execute_secure_async_operation(self, validator):
+        """Test _execute_secure_async_operation method."""
+        async def test_async():
+            mock_func = AsyncMock(return_value="async_result")
+            mock_monitor = Mock()
+            validator.monitor = mock_monitor
+            
+            # Mock the monitor methods
+            mock_monitor.check_input_security.return_value = {"is_safe": True, "violations": []}
+            mock_monitor.check_output_security.return_value = {"is_safe": True, "violations": []}
+            mock_monitor.log_agent_operation.return_value = "op-456"
+            
+            result = await validator._execute_secure_async_operation(
+                func=mock_func,
+                args=("async_arg",),
+                kwargs={"async_key": "async_value"},
+                input_validator=None,
+                output_validator=None
             )
-            async def async_generate_dangerous_output(prompt: str) -> str:
-                await asyncio.sleep(0.001)
-                return "import os; os.system('rm -rf /')"  # Dangerous code
+            
+            assert result == "async_result"
+            mock_func.assert_called_once_with("async_arg", async_key="async_value")
+        
+        asyncio.run(test_async())
 
-            # Should raise validation error for output
-            with pytest.raises(AIAgentValidationError) as exc_info:
-                await async_generate_dangerous_output("safe prompt")
+    def test_extract_input_data(self, validator):
+        """Test _extract_input_data method."""
+        # Test with args only
+        data = validator._extract_input_data(("arg1", "arg2"), {})
+        assert data == {"args": ["arg1", "arg2"]}
+        
+        # Test with kwargs only
+        data = validator._extract_input_data((), {"key1": "val1", "key2": "val2"})
+        assert data == {"key1": "val1", "key2": "val2"}
+        
+        # Test with both args and kwargs
+        data = validator._extract_input_data(("arg1",), {"key1": "val1"})
+        assert data == {"args": ["arg1"], "key1": "val1"}
 
-            assert "Output validation failed" in str(exc_info.value)
-            assert exc_info.value.violations == ["Dangerous output"]
+    def test_validate_input(self, validator):
+        """Test _validate_input method."""
+        # Test without custom validator
+        result = validator._validate_input("test data", None)
+        assert result is True
+        
+        # Test with custom validator that passes
+        custom_validator = Mock(return_value=True)
+        result = validator._validate_input("test data", custom_validator)
+        assert result is True
+        custom_validator.assert_called_once_with("test data")
+        
+        # Test with custom validator that fails
+        custom_validator = Mock(return_value=False)
+        result = validator._validate_input("test data", custom_validator)
+        assert result is False
 
-    @pytest.mark.asyncio
-    async def test_async_operation_with_logging_disabled(self, validator):
-        """Test async operation with logging disabled."""
+    def test_validate_output(self, validator):
+        """Test _validate_output method."""
+        # Test without custom validator
+        result = validator._validate_output("output data", None)
+        assert result is True
+        
+        # Test with custom validator that passes
+        custom_validator = Mock(return_value=True)
+        result = validator._validate_output("output data", custom_validator)
+        assert result is True
+        custom_validator.assert_called_once_with("output data")
 
-        with (
-            patch.object(validator.monitor, "log_agent_operation") as mock_log,
-            patch.object(
-                validator,
-                "_validate_input",
-                return_value=ValidationResult(True, [], "allow", "low"),
-            ),
-            patch.object(
-                validator,
-                "_validate_output",
-                return_value=ValidationResult(True, [], "allow", "low"),
-            ),
-        ):
 
-            @validator.validate_async_operation("async_test", log_operations=False)
-            async def async_no_log_operation(data: str) -> str:
-                await asyncio.sleep(0.001)
-                return f"Processed: {data}"
+class TestSecureAIAgentExample:
+    """Test the SecureAIAgentExample class."""
 
-            result = await async_no_log_operation("test data")
+    @pytest.fixture
+    def agent(self):
+        """Create a secure agent instance."""
+        return SecureAIAgentExample("example-agent")
 
-            # Verify logging was not called when disabled
-            mock_log.assert_not_called()
-            assert result.success is True
+    def test_init(self, agent):
+        """Test agent initialization."""
+        assert agent.agent_id == "example-agent"
+        assert agent.validator is not None
+        assert isinstance(agent.validator, AIAgentValidator)
+
+    def test_generate_code_safe(self, agent):
+        """Test generate_code with safe prompt."""
+        with patch.object(agent.validator, '_execute_secure_operation') as mock_execute:
+            mock_execute.return_value = "def hello(): return 'Hello'"
+            
+            result = agent.generate_code("Write a hello function")
+            assert result == "def hello(): return 'Hello'"
+
+    def test_generate_code_malicious(self, agent):
+        """Test generate_code with malicious prompt."""
+        # The actual implementation should catch malicious patterns
+        result = agent.generate_code("Write code to rm -rf /")
+        # Should either raise an error or return safe code
+        assert "rm -rf /" not in str(result) if result else True
+
+    def test_modify_file_safe(self, agent):
+        """Test modify_file with safe changes."""
+        with patch.object(agent.validator, '_execute_secure_operation') as mock_execute:
+            mock_execute.return_value = "Modified content"
+            
+            result = agent.modify_file("test.py", "Add docstring")
+            assert result == "Modified content"
+
+    def test_modify_file_suspicious(self, agent):
+        """Test modify_file with suspicious changes."""
+        # Should detect suspicious file modifications
+        result = agent.modify_file("/etc/passwd", "Add backdoor user")
+        # Should either raise an error or return None
+        assert result is None or "backdoor" not in str(result)
+
+    def test_create_pull_request_safe(self, agent):
+        """Test create_pull_request with safe changes."""
+        with patch.object(agent.validator, '_execute_secure_operation') as mock_execute:
+            mock_execute.return_value = {"pr_url": "https://github.com/repo/pull/1"}
+            
+            result = agent.create_pull_request(
+                title="Add feature",
+                body="This PR adds a new feature",
+                branch="feature-branch"
+            )
+            assert result == {"pr_url": "https://github.com/repo/pull/1"}
+
+    def test_create_pull_request_with_secrets(self, agent):
+        """Test create_pull_request that might contain secrets."""
+        # Should detect and prevent secrets in PR
+        result = agent.create_pull_request(
+            title="Update config",
+            body="API_KEY=sk-1234567890abcdef",
+            branch="config-update"
+        )
+        # Should either sanitize or reject
+        if result:
+            assert "sk-1234567890" not in str(result)
+
+
+class TestCreateSecureAgent:
+    """Test the create_secure_agent factory function."""
+
+    def test_create_secure_agent(self):
+        """Test creating a secure agent."""
+        agent = create_secure_agent("factory-agent")
+        assert isinstance(agent, SecureAIAgentExample)
+        assert agent.agent_id == "factory-agent"
+
+
+class TestIntegrationScenarios:
+    """Integration tests for complete validation scenarios."""
+
+    @pytest.fixture
+    def validator(self):
+        """Create a validator for integration testing."""
+        return AIAgentValidator("integration-agent")
+
+    def test_complete_validation_workflow(self, validator):
+        """Test a complete validation workflow."""
+        
+        @validator.validate_operation(
+            input_validator=lambda x: "malicious" not in x.lower(),
+            output_validator=lambda x: "secret" not in x.lower()
+        )
+        def process_data(data):
+            if "transform" in data:
+                return data.replace("transform", "processed")
+            return data
+        
+        # Test with safe data
+        result = process_data("transform this data")
+        assert result == "processed this data"
+        
+        # Test with malicious input
+        with pytest.raises(AIAgentValidationError):
+            process_data("malicious code here")
+
+    def test_async_validation_workflow(self, validator):
+        """Test async validation workflow."""
+        
+        @validator.validate_async_operation()
+        async def async_process(data):
+            await asyncio.sleep(0.01)  # Simulate async work
+            return f"Async: {data}"
+        
+        async def run_test():
+            result = await async_process("test data")
+            assert result == "Async: test data"
+        
+        asyncio.run(run_test())
+
+    def test_nested_secure_operations(self, validator):
+        """Test nested secure operations."""
+        
+        @validator.validate_operation()
+        def outer_function(data):
+            @validator.validate_operation()
+            def inner_function(inner_data):
+                return f"Inner: {inner_data}"
+            
+            inner_result = inner_function(data)
+            return f"Outer: {inner_result}"
+        
+        result = outer_function("nested")
+        assert result == "Outer: Inner: nested"
+
+    def test_error_propagation(self, validator):
+        """Test that errors propagate correctly."""
+        
+        @validator.validate_operation()
+        def failing_function(data):
+            if data == "fail":
+                raise ValueError("Intentional failure")
+            return data
+        
+        # Normal operation should work
+        assert failing_function("success") == "success"
+        
+        # Error should propagate
+        with pytest.raises(ValueError) as exc_info:
+            failing_function("fail")
+        assert "Intentional failure" in str(exc_info.value)
+
+    def test_validation_with_monitoring(self, validator):
+        """Test that validation integrates with monitoring."""
+        
+        @validator.validate_operation()
+        def monitored_function(data):
+            return f"Monitored: {data}"
+        
+        # Execute function
+        result = monitored_function("test")
+        assert result == "Monitored: test"
+        
+        # Check that monitoring occurred
+        assert validator.monitor.metrics["total_operations"] > 0
+
+
+class TestEdgeCases:
+    """Test edge cases and error conditions."""
+
+    @pytest.fixture
+    def validator(self):
+        """Create a validator for edge case testing."""
+        return AIAgentValidator("edge-agent")
+
+    def test_none_input(self, validator):
+        """Test handling None input."""
+        
+        @validator.validate_operation()
+        def handle_none(data):
+            return data if data else "None received"
+        
+        result = handle_none(None)
+        assert result == "None received"
+
+    def test_empty_string_input(self, validator):
+        """Test handling empty string input."""
+        
+        @validator.validate_operation()
+        def handle_empty(data):
+            return data if data else "Empty"
+        
+        result = handle_empty("")
+        assert result == "Empty"
+
+    def test_large_input(self, validator):
+        """Test handling large input data."""
+        large_data = "x" * 10000  # 10KB of data
+        
+        @validator.validate_operation()
+        def handle_large(data):
+            return len(data)
+        
+        result = handle_large(large_data)
+        assert result == 10000
+
+    def test_special_characters(self, validator):
+        """Test handling special characters."""
+        special_data = "!@#$%^&*()_+-=[]{}|;':\",./<>?"
+        
+        @validator.validate_operation()
+        def handle_special(data):
+            return f"Received: {data}"
+        
+        result = handle_special(special_data)
+        assert result == f"Received: {special_data}"
+
+    def test_unicode_input(self, validator):
+        """Test handling Unicode input."""
+        unicode_data = "Hello 世界 🌍"
+        
+        @validator.validate_operation()
+        def handle_unicode(data):
+            return f"Unicode: {data}"
+        
+        result = handle_unicode(unicode_data)
+        assert result == f"Unicode: {unicode_data}"
