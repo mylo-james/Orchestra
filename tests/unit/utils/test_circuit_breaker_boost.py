@@ -1,4 +1,4 @@
-"""Simple tests to boost circuit breaker coverage from 59% to 70%+."""
+"""Simple tests to boost circuit breaker coverage contributing to repo-wide 80% target."""
 
 import pytest
 

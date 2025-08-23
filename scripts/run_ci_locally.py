@@ -242,18 +242,19 @@ def run_tests() -> Dict[str, bool]:
         allow_failure=True,
     )[0]
 
-    # Coverage report
+    # Coverage report (repo-wide 80% minimum)
     tests["coverage"] = run_command(
         [
-            "poetry",
-            "run",
+            "python",
+            "-m",
             "pytest",
             "tests/",
             "--cov=src",
             "--cov-report=term-missing",
             "--cov-report=html",
+            "--cov-report=json",
         ],
-        "Coverage report",
+        "Repository coverage check (80% minimum)",
         allow_failure=True,
     )[0]
 

@@ -196,7 +196,13 @@ async def validate_agent_output_activity(params: Dict[str, Any]) -> Dict[str, An
     )
 
     # Use AI Agent Validator for comprehensive validation
-    _ = AIAgentValidator()  # Will be used in actual implementation
+    # Note: AIAgentValidator requires agent_id parameter, but this is a placeholder
+    # In actual implementation, this would be properly instantiated
+    try:
+        _ = AIAgentValidator(agent_id=agent_type or "unknown")
+    except Exception:
+        # Fallback if validator fails to initialize
+        pass
 
     # Validate output structure
     if not output:

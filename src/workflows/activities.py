@@ -8,7 +8,6 @@ from typing import Any, Dict
 from temporalio import activity
 
 from src.system.agent import UniversalAgent
-from src.system.base import AgentContext
 from src.system.factory import get_registry
 from src.utils.logging import get_logger
 
@@ -57,26 +56,11 @@ async def execute_agent_activity(params: Dict[str, Any]) -> Dict[str, Any]:
         persona_id = persona_map.get(agent_type, agent_type)
         agent = registry.create(persona_id)
 
-        # Create agent context from workflow context
-        agent_context = AgentContext(
-            session_id=context.get("session_id"),
-            correlation_id=context.get("correlation_id"),
-            user_id=context.get("security_context", {}).get("user_id", "system"),
-        )
-
-        # If agent is a UniversalAgent, use its command execution
-        if isinstance(agent, UniversalAgent):
-            result = await _execute_with_universal_agent(agent, operation, context)
-        else:
-            # Fallback for legacy agents
-            if operation == "plan":
-                result = await _execute_planning(agent, agent_context, context)
-            elif operation == "implement":
-                result = await _execute_implementation(agent, agent_context, context)
-            elif operation == "release":
-                result = await _execute_release(agent, agent_context, context)
-            else:
-                raise ValueError(f"Unknown operation: {operation}")
+        # All agents must be UniversalAgent instances
+        if not isinstance(agent, UniversalAgent):
+            raise ValueError(f"Agent must be a UniversalAgent instance, got {type(agent)}")
+        
+        result = await _execute_with_universal_agent(agent, operation, context)
 
         logger.info(
             "Agent activity completed successfully",
@@ -151,108 +135,6 @@ def _determine_next_action(persona_id: str, operation: str) -> str:
         return "complete"
     return "continue"
 
-
-async def _execute_planning(
-    agent: Any, agent_context: AgentContext, context: Dict[str, Any]
-) -> Dict[str, Any]:
-    """Execute planning operation with orchestrator agent."""
-    # Get values for potential future use
-    _ = context.get("working_memory", {}).get("request", "")
-    _ = context.get("working_memory", {}).get("project_context", {})
-
-    # Simulate agent planning (would call actual agent.plan() method)
-    # In real implementation, this would use the OpenAI SDK through the agent
-    await asyncio.sleep(0.5)  # Simulate API call
-
-    plan = {
-        "steps": [
-            "Analyze requirements",
-            "Design solution architecture",
-            "Implement core functionality",
-            "Add tests",
-            "Create documentation",
-        ],
-        "estimated_time": "2 hours",
-        "complexity": "medium",
-    }
-
-    return {
-        "conversation": {
-            "role": "orchestrator",
-            "content": f"I've analyzed the request and created a plan: {json.dumps(plan, indent=2)}",
-            "timestamp": datetime.utcnow().isoformat(),
-        },
-        "confidence": 0.85,
-        "memory_updates": {
-            "plan": plan,
-            "next_step": "implement",
-        },
-        "next_action": "implement",
-    }
-
-
-async def _execute_implementation(
-    agent: Any, agent_context: AgentContext, context: Dict[str, Any]
-) -> Dict[str, Any]:
-    """Execute implementation operation with developer agent."""
-    _ = context.get("working_memory", {}).get("plan", {})
-
-    # Simulate agent implementation (would call actual agent.implement() method)
-    await asyncio.sleep(1.0)  # Simulate code generation
-
-    implementation = {
-        "files_created": [
-            "src/features/new_feature.py",
-            "tests/test_new_feature.py",
-        ],
-        "lines_of_code": 250,
-        "tests_added": 5,
-    }
-
-    return {
-        "conversation": {
-            "role": "developer",
-            "content": f"Implementation complete: {json.dumps(implementation, indent=2)}",
-            "timestamp": datetime.utcnow().isoformat(),
-        },
-        "confidence": 0.9,
-        "memory_updates": {
-            "implementation": implementation,
-            "code_complete": True,
-        },
-        "output": implementation,
-        "needs_release": True,
-    }
-
-
-async def _execute_release(
-    agent: Any, agent_context: AgentContext, context: Dict[str, Any]
-) -> Dict[str, Any]:
-    """Execute release operation with release agent."""
-    _ = context.get("working_memory", {}).get("implementation", {})
-
-    # Simulate release operations
-    await asyncio.sleep(0.5)  # Simulate release process
-
-    release_info = {
-        "version": "1.0.0",
-        "release_notes": "New feature implementation",
-        "deployment_status": "ready",
-    }
-
-    return {
-        "conversation": {
-            "role": "release",
-            "content": f"Release prepared: {json.dumps(release_info, indent=2)}",
-            "timestamp": datetime.utcnow().isoformat(),
-        },
-        "confidence": 0.95,
-        "memory_updates": {
-            "release_info": release_info,
-            "released": True,
-        },
-        "output": release_info,
-    }
 
 
 @activity.defn

@@ -24,6 +24,7 @@ help:
 	@echo "  test-int    - Run integration tests only"
 	@echo "  test-sec    - Run security tests only"
 	@echo "  coverage    - Run tests with coverage report"
+
 	@echo ""
 	@echo "Security:"
 	@echo "  security    - Run security scans (Bandit + Safety)"
@@ -98,8 +99,9 @@ test-sec:
 
 coverage:
 	@echo "📊 Running tests with coverage..."
-	poetry run pytest tests/ --cov=src --cov-report=html --cov-report=term-missing
+	poetry run pytest tests/ --cov=src --cov-report=html --cov-report=term-missing --cov-report=json
 	@echo "📋 Coverage report generated in htmlcov/"
+
 
 # Security
 security: bandit safety

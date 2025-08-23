@@ -24,7 +24,7 @@ class PersonaLoader:
     Loads and manages persona specifications from YAML files.
 
     This loader implements the override precedence system where personas
-    in src/agents/personas/ take precedence over those in .bmad-core/.
+    in src/personas/ take precedence over those in .bmad-core/.
     """
 
     def __init__(self, cache_enabled: bool = True):
@@ -143,16 +143,16 @@ class PersonaLoader:
         identity = PersonaIdentity(
             name=identity_data.get("name", persona_id),
             id=identity_data.get("id", persona_id),
-            title=identity_data.get("title", ""),
-            role=identity_data.get("role", ""),
-            icon=identity_data.get("icon", "🤖"),
-            when_to_use=identity_data.get("when_to_use", ""),
-            style=identity_data.get("style", ""),
-            focus=identity_data.get("focus", ""),
+            title=identity_data.get("title") or "",
+            role=identity_data.get("role") or "",
+            icon=identity_data.get("icon") or "🤖",
+            when_to_use=identity_data.get("when_to_use") or "",
+            style=identity_data.get("style") or "",
+            focus=identity_data.get("focus") or "",
         )
 
         # Parse behavioral contract
-        behavioral_data = data.get("behavioral_contract", {})
+        behavioral_data = data.get("behavioral_contract", {}) or {}
         behavioral_contract = BehavioralContract(
             core_principles=behavioral_data.get("core_principles", []),
             interaction_style=behavioral_data.get(
@@ -164,7 +164,7 @@ class PersonaLoader:
         )
 
         # Parse command interface
-        command_data = data.get("command_interface", {})
+        command_data = data.get("command_interface", {}) or {}
         commands = {}
         for cmd_name, cmd_info in command_data.get("commands", {}).items():
             if isinstance(cmd_info, dict):
@@ -184,7 +184,7 @@ class PersonaLoader:
         )
 
         # Parse resource dependencies
-        resources_data = data.get("resource_dependencies", {})
+        resources_data = data.get("resource_dependencies", {}) or {}
         resource_dependencies = ResourceDependencies(
             knowledge_sources=resources_data.get("knowledge_sources", []),
             tasks=resources_data.get("tasks", []),

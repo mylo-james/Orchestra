@@ -59,11 +59,12 @@ class KnowledgeService:
         self.embedding_service = embedding_service or EmbeddingService()
 
         # Circuit breaker for Qdrant operations
-        self.circuit_breaker = CircuitBreaker(
+        from src.utils.circuit_breaker import CircuitBreakerConfig
+        config = CircuitBreakerConfig(
             failure_threshold=5,
-            recovery_timeout=30,
-            expected_exception=Exception,
+            recovery_timeout=30.0,
         )
+        self.circuit_breaker = CircuitBreaker("qdrant_operations", config)
 
         # In-memory cache for frequently accessed knowledge
         self._cache: Dict[str, Tuple[KnowledgeChunk, float]] = {}
@@ -97,7 +98,6 @@ class KnowledgeService:
             logger.error(f"Failed to initialize Qdrant collection: {e}")
             raise
 
-    @CircuitBreaker(name="qdrant_grab")
     async def grab(
         self,
         document_id: str,
@@ -150,7 +150,6 @@ class KnowledgeService:
             await self._release_lock(lock)
             raise
 
-    @CircuitBreaker(name="qdrant_upsert")
     async def upsert(
         self,
         chunk: KnowledgeChunk,
@@ -181,21 +180,24 @@ class KnowledgeService:
             chunk.embedding = embedding
 
             # Update metadata
-            metadata = KnowledgeMetadata(
-                document_id=chunk.metadata.get("document_id", str(uuid.uuid4())),
-                version=chunk.version,
-                agent_attribution=agent_id,
-                updated_at=datetime.utcnow(),
-                confidence_score=chunk.metadata.get("confidence_score", 1.0),
-            )
+            document_id = getattr(chunk.metadata, "document_id", None) or str(uuid.uuid4())
+            metadata_dict = {
+                "document_id": document_id,
+                "version": chunk.version,
+                "agent_attribution": agent_id,
+                "updated_at": datetime.utcnow().isoformat(),
+                "created_at": chunk.created_at.isoformat(),
+                "confidence_score": getattr(chunk.metadata, "confidence_score", 1.0),
+                "knowledge_domain": getattr(chunk.metadata, "knowledge_domain", "general"),
+            }
 
             # Create Qdrant point
             point = PointStruct(
-                id=metadata.document_id,
+                id=document_id,
                 vector=embedding,
                 payload={
                     "content": chunk.content,
-                    "metadata": metadata.to_dict(),
+                    "metadata": metadata_dict,
                     "version": chunk.version,
                 },
             )
@@ -207,7 +209,7 @@ class KnowledgeService:
             )
 
             # Update cache
-            self._cache[metadata.document_id] = (chunk, time.time())
+            self._cache[metadata_dict["document_id"]] = (chunk, time.time())
 
             # Release lock if held
             if lock:
@@ -228,7 +230,6 @@ class KnowledgeService:
                 await self._release_lock(lock)
             return False
 
-    @CircuitBreaker(name="qdrant_query")
     async def query(
         self,
         query: KnowledgeQuery,
@@ -258,7 +259,7 @@ class KnowledgeService:
                 filter_conditions.append(
                     FieldCondition(
                         key="metadata.knowledge_domain",
-                        match=MatchValue(any=domain_values),
+                        match=MatchValue(value=domain_values[0]),  # Use first domain for now
                     )
                 )
 
@@ -394,23 +395,37 @@ class KnowledgeService:
 
     def _point_to_chunk(self, point: Any) -> KnowledgeChunk:
         """Convert a Qdrant point to a KnowledgeChunk."""
+        from src.models.knowledge import KnowledgeMetadata, KnowledgeDomain, SecurityClassification
+        
         payload = point.payload if hasattr(point, "payload") else point
+        metadata_dict = payload.get("metadata", {})
+        
+        # Create proper KnowledgeMetadata object
+        metadata = KnowledgeMetadata(
+            domain=KnowledgeDomain.GENERAL,  # Default domain
+            tags=[],
+            source="qdrant",
+            confidence=metadata_dict.get("confidence_score", 0.0),
+            security_classification=SecurityClassification.PUBLIC,
+            document_id=metadata_dict.get("document_id"),
+            agent_attribution=metadata_dict.get("agent_attribution"),
+            confidence_score=metadata_dict.get("confidence_score"),
+            knowledge_domain=metadata_dict.get("knowledge_domain")
+        )
 
         return KnowledgeChunk(
+            id=metadata_dict.get("document_id", str(uuid.uuid4())),
             content=payload.get("content", ""),
-            metadata=payload.get("metadata", {}),
+            metadata=metadata,
             embedding=point.vector if hasattr(point, "vector") else None,
             version=payload.get("version", 1),
             created_at=datetime.fromisoformat(
-                payload.get("metadata", {}).get(
-                    "created_at", datetime.utcnow().isoformat()
-                )
+                str(metadata_dict.get("created_at", datetime.utcnow().isoformat()))
             ),
             updated_at=datetime.fromisoformat(
-                payload.get("metadata", {}).get(
-                    "updated_at", datetime.utcnow().isoformat()
-                )
+                str(metadata_dict.get("updated_at", datetime.utcnow().isoformat()))
             ),
+            author=metadata_dict.get("agent_attribution", "system"),
         )
 
     def clear_cache(self) -> None:

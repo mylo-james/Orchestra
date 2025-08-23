@@ -81,7 +81,7 @@ ignore = ["E501"]  # line too long, handled by black
 # Pytest configuration
 [tool.pytest.ini_options]
 minversion = "7.0"
-addopts = "-ra -q --cov=src --cov-fail-under=70 --cov-report=term-missing --cov-report=html --disable-warnings"
+addopts = "-ra -q --cov=src --cov-fail-under=80 --cov-report=term-missing --cov-report=html --cov-report=json --disable-warnings"
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 asyncio_mode = "auto"
