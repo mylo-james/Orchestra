@@ -42,12 +42,12 @@ repos:
         args: ['-c', 'bandit.yaml', '--skip', 'B101'] # Skip assert_used in dev
         files: ^src/.*\.py$
 
-  # Code coverage gate (progressive: 55% → 60% → 80%)
+  # Code coverage gate (progressive: 70% → 80% → 90%)
   - repo: local
     hooks:
       - id: coverage-check
-        name: Coverage check (minimum 70%)
-        entry: poetry run pytest --cov=src --cov-fail-under=70 --cov-report=term-missing
+        name: Coverage check (minimum 90%)
+        entry: poetry run pytest --cov=src --cov-fail-under=90 --cov-report=term-missing
         language: system
         pass_filenames: false
         files: ^(src/.*\.py|tests/.*\.py)$

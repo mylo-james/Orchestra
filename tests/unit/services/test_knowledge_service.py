@@ -116,7 +116,7 @@ class TestKnowledgeServiceInitialization:
         mock_collection.name = "orchestra_knowledge"
         mock_client.get_collections.return_value.collections = [mock_collection]
 
-        service = KnowledgeService()
+        KnowledgeService()
 
         # Should not create new collection
         mock_client.create_collection.assert_not_called()
@@ -131,7 +131,7 @@ class TestKnowledgeServiceInitialization:
         mock_qdrant_client.return_value = mock_client
         mock_client.get_collections.return_value.collections = []
 
-        service = KnowledgeService()
+        KnowledgeService()
 
         # Should create new collection
         mock_client.create_collection.assert_called_once()

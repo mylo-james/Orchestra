@@ -1,158 +1,171 @@
 # Testing Strategy
 
-## Testing Pyramid
+## Current Implementation (v0.1.0)
+
+Orchestra implements a comprehensive testing strategy with **90% minimum coverage requirement** [[memory:6992838]].
+
+### Test Organization
 
 ```
-           E2E Tests (Playwright)
-          /                    \
-     Integration Tests (pytest + Testing Library)
-    /                                           \
-Backend Unit (pytest)                    Frontend Unit (Vitest)
+tests/
+├── unit/           # Component-level isolated tests
+├── integration/    # Multi-component interaction tests
+├── security/       # Security validation and audit tests
+└── conftest.py     # Shared test fixtures and configuration
 ```
 
-## Test Organization
+### Test Coverage Requirements
 
-### Frontend Tests
+- **Overall Project**: 90% minimum coverage
+- **New Code**: 95% target coverage
+- **Test Failure Threshold**: 2% coverage drop allowed
+- **Framework**: pytest with async support and comprehensive markers
 
-```
-apps/web/tests/
-├── __tests__/                  # Component tests
-│   ├── components/
-│   ├── hooks/
-│   └── pages/
-├── e2e/                        # End-to-end tests
-│   ├── workflow.spec.ts
-│   ├── chat.spec.ts
-│   └── auth.spec.ts
-└── setup/                      # Test configuration
-    ├── jest.config.js
-    └── test-utils.tsx
-```
+### Test Types
 
-### Backend Tests
+#### 1. Unit Tests (`tests/unit/`)
 
-```
-apps/backend/tests/
-├── unit/                       # Unit tests
-│   ├── agents/
-│   ├── services/
-│   └── utils/
-├── integration/                # Integration tests
-│   ├── test_workflows.py
-│   ├── test_knowledge.py
-│   └── test_github_integration.py
-├── fixtures/                   # Test data
-└── conftest.py                 # Pytest configuration
-```
+- **CLI Tests**: Command parsing, output formatting, error handling
+- **System Tests**: Agent, loader, factory, and specification classes
+- **Service Tests**: Embedding, knowledge, and external service clients
+- **Workflow Tests**: Temporal activities and development workflows
+- **Security Tests**: AI agent validation and monitoring
+- **Utils Tests**: Circuit breaker and logging utilities
 
-### E2E Tests
+#### 2. Integration Tests (`tests/integration/`)
 
-```
-tests/e2e/
-├── workflow-complete.spec.ts   # Full user journey
-├── agent-handoffs.spec.ts      # Multi-agent coordination
-├── error-handling.spec.ts      # Failure scenarios
-└── knowledge-evolution.spec.ts # Knowledge base updates
+- **System Integration**: Full system workflow testing
+- **Service Integration**: Multi-service interaction validation
+- **Database Integration**: Qdrant and PostgreSQL connectivity
+
+#### 3. Security Tests (`tests/security/`)
+
+- **Input Validation**: Malformed data and injection attacks
+- **Output Scanning**: Generated code security validation
+- **Audit Logging**: Security event tracking verification
+- **Authentication**: API key and service validation
+
+### Test Configuration
+
+#### pytest Configuration (`pytest.ini` & `pyproject.toml`)
+
+```ini
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q --cov=src --cov-fail-under=90 --cov-report=term-missing --cov-report=html --cov-report=json"
+testpaths = ["tests"]
+asyncio_mode = "auto"
 ```
 
-## Test Examples
+#### Test Markers
 
-### Frontend Component Test
+- `unit` - Fast isolated component tests
+- `integration` - Multi-component tests
+- `security` - Security-focused tests
+- `slow` - Long-running tests (excluded in fast runs)
 
-```typescript
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { ChatInterface } from '@/components/chat/ChatInterface';
-import { workflowService } from '@/services/workflow';
+### Testing Workflow [[memory:6992838]]
 
-jest.mock('@/services/workflow');
+For systematic test coverage improvement:
 
-describe('ChatInterface', () => {
-  it('should start workflow on message submit', async () => {
-    const mockStartWorkflow = jest.fn().mockResolvedValue({
-      workflow_id: 'test-id',
-      status: 'started',
-    });
-    (workflowService.startWorkflow as jest.Mock) = mockStartWorkflow;
+1. **Pick a file** to test
+2. **Read the PRD** for requirements context
+3. **Review implementation** to understand behavior
+4. **Write tests** for expected behavior
+5. **Update implementation** to get tests passing (green)
+6. **Evaluate improvements** and type reuse opportunities
+7. **Refactor** for better design
+8. **Repeat cycle** for comprehensive coverage
 
-    render(<ChatInterface />);
+### Quality Gates
 
-    const input = screen.getByPlaceholderText(/describe your feature/i);
-    const submitButton = screen.getByRole('button', { name: /send/i });
+#### Pre-commit Hooks
 
-    fireEvent.change(input, { target: { value: 'Add user authentication' } });
-    fireEvent.click(submitButton);
+- Code formatting (Black, isort)
+- Linting (Ruff)
+- Type checking (MyPy)
+- Basic test execution
 
-    await waitFor(() => {
-      expect(mockStartWorkflow).toHaveBeenCalledWith('Add user authentication');
-    });
-  });
-});
-```
+#### CI/CD Pipeline
 
-### Backend API Test
+- Full test suite execution
+- Coverage reporting to Codecov
+- Security scanning with Bandit
+- Docker container testing
 
-```python
-import pytest
-from fastapi.testclient import TestClient
-from unittest.mock import AsyncMock, patch
+### Test Utilities
 
-@pytest.mark.asyncio
-async def test_start_workflow_endpoint(client: TestClient, mock_auth):
-    """Test workflow creation endpoint."""
-    request_data = {
-        "request": "Add OAuth authentication",
-        "repository_url": "https://github.com/test/repo"
-    }
+#### Fixtures (`tests/conftest.py`)
 
-    with patch('src.services.orchestrator_service.OrchestratorService.process_user_request') as mock_service:
-        mock_service.return_value = {
-            "workflow_id": "test-workflow-id",
-            "status": "started"
-        }
+- Mock OpenAI clients
+- Temporary directories
+- Database connections
+- Configuration overrides
 
-        response = client.post("/api/workflows", json=request_data)
+#### Test Helpers [[memory:6963790]]
 
-        assert response.status_code == 201
-        assert response.json()["workflow_id"] == "test-workflow-id"
-        mock_service.assert_called_once()
-```
+- Existing test packages for common patterns
+- Shared mocking utilities
+- Security validation helpers
 
-### E2E Test
+### Performance Testing
 
-```typescript
-import { test, expect } from '@playwright/test';
+#### Load Testing
 
-test('complete feature implementation workflow', async ({ page }) => {
-  // Login
-  await page.goto('/');
-  await page.click('text=Sign in with GitHub');
-  // ... OAuth flow simulation
+- Multi-agent workflow performance
+- Database query optimization
+- Vector search performance
+- Memory usage profiling
 
-  // Submit feature request
-  await page.fill(
-    '[placeholder*="describe your feature"]',
-    'Add user profile editing'
-  );
-  await page.click('button:has-text("Send")');
+#### Benchmarking
 
-  // Wait for orchestrator response
-  await expect(
-    page.locator("text=I'll implement user profile editing")
-  ).toBeVisible();
+- CLI command execution time
+- Agent initialization performance
+- Temporal workflow latency
 
-  // Monitor workflow progress
-  await expect(page.locator('text=Planning complete')).toBeVisible({
-    timeout: 30000,
-  });
-  await expect(page.locator('text=Code generation in progress')).toBeVisible({
-    timeout: 60000,
-  });
-  await expect(page.locator('text=Pull Request created')).toBeVisible({
-    timeout: 120000,
-  });
+### Security Testing
 
-  // Verify PR link
-  const prLink = page.locator('a[href*="github.com"][href*="/pull/"]');
-  await expect(prLink).toBeVisible();
-});
-```
+#### Validation Tests
+
+- Input sanitization verification
+- Output scanning effectiveness
+- Audit trail completeness
+
+#### Penetration Testing
+
+- API security validation
+- Configuration security
+- Secret management verification
+
+## Future Testing Strategy (v2 Roadmap)
+
+Planned enhancements for the resource-driven platform:
+
+- **Schema Validation**: Tests for personas, overlays, and resources
+- **End-to-End Flows**: Natural language CLI disambiguation testing
+- **Load Testing**: Multi-project isolation and cascade performance
+- **Safety Testing**: Sandboxing, approval workflows, and rollback procedures
+- **Resource Testing**: Task engines, template processors, and checklist engines
+
+## Best Practices
+
+### Test Design
+
+- Follow AAA pattern (Arrange, Act, Assert)
+- Use descriptive test names that explain the scenario
+- Keep tests focused on single behaviors
+- Use proper mocking to isolate components
+
+### Coverage Strategy
+
+- Prioritize critical path coverage
+- Test error conditions and edge cases
+- Validate security-critical functions thoroughly
+- Use integration tests for workflow validation
+
+### Maintenance
+
+- Regular test review and cleanup
+- Update tests with feature changes
+- Monitor coverage trends and regressions
+- Refactor tests alongside production code

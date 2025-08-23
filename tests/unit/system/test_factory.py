@@ -190,6 +190,7 @@ class TestGlobalRegistry:
         global _global_registry
         _global_registry = None
 
+    @patch("src.system.factory._global_registry", None)
     @patch("src.system.factory.AgentRegistry")
     @patch("src.system.factory.logger")
     def test_get_registry_first_call(self, mock_logger, mock_agent_registry):

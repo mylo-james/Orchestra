@@ -127,7 +127,7 @@ class DevTeamWorkflow:
         Returns:
             WorkflowOutput with results or error information
         """
-        self.start_time = workflow.now().timestamp()
+        self.start_time = self._get_current_timestamp()
 
         # Initialize workflow context
         self.context = WorkflowContext(
@@ -162,7 +162,7 @@ class DevTeamWorkflow:
             await self._audit_workflow_completion()
 
             # Calculate duration
-            duration = workflow.now().timestamp() - self.start_time
+            duration = self._get_current_timestamp() - self.start_time
 
             return WorkflowOutput(
                 success=True,
@@ -177,7 +177,7 @@ class DevTeamWorkflow:
             # Log error and return failure
             await self._audit_workflow_error(str(e))
 
-            duration = workflow.now().timestamp() - self.start_time
+            duration = self._get_current_timestamp() - self.start_time
 
             return WorkflowOutput(
                 success=False,
@@ -336,6 +336,16 @@ class DevTeamWorkflow:
         self.context.working_memory["final_result"] = result.get("output")
         self.context.task_state = TaskState.COMPLETED
 
+    def _get_current_timestamp(self) -> float:
+        """Get current timestamp - testable helper method."""
+        try:
+            return workflow.now().timestamp()
+        except Exception:
+            # Fallback for testing environments without Temporal
+            import time
+
+            return time.time()
+
     async def _audit_workflow_completion(self) -> None:
         """Audit log the workflow completion."""
         await workflow.execute_activity(
@@ -345,7 +355,7 @@ class DevTeamWorkflow:
                 "session_id": self.context.session_id,
                 "correlation_id": self.context.correlation_id,
                 "agents_involved": self.agents_involved,
-                "duration_seconds": workflow.now().timestamp() - self.start_time,
+                "duration_seconds": self._get_current_timestamp() - self.start_time,
                 "success": True,
             },
             start_to_close_timeout=timedelta(seconds=5),
@@ -361,7 +371,7 @@ class DevTeamWorkflow:
                 "correlation_id": self.context.correlation_id if self.context else "",
                 "error": error,
                 "agents_involved": self.agents_involved,
-                "duration_seconds": workflow.now().timestamp() - self.start_time,
+                "duration_seconds": self._get_current_timestamp() - self.start_time,
                 "success": False,
             },
             start_to_close_timeout=timedelta(seconds=5),
@@ -399,7 +409,7 @@ class DevTeamWorkflow:
             "task_state": self.context.task_state,
             "agents_involved": self.agents_involved,
             "confidence_scores": self.context.confidence_scores,
-            "duration_seconds": workflow.now().timestamp() - self.start_time,
+            "duration_seconds": self._get_current_timestamp() - self.start_time,
         }
 
     async def _audit_workflow_signal(

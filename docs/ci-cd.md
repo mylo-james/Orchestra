@@ -138,15 +138,15 @@ python scripts/fix_code_quality.py
 
 ### Testing
 - **pytest**: Testing framework with async support
-- **Coverage**: Minimum 80% code coverage
+- **Coverage**: Minimum 90% code coverage
 - **Markers**: `unit`, `integration`, `security`, `slow`
 
 ## Coverage Requirements
 
 | Type | Target | Threshold |
 |------|---------|-----------|
-| Overall Project | 80% | 2% drop allowed |
-| New Code (Patches) | 85% | 5% drop allowed |
+| Overall Project | 90% | 2% drop allowed |
+| New Code (Patches) | 95% | 5% drop allowed |
 
 ### Coverage Exclusions
 - Test files (`tests/`)

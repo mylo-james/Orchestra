@@ -40,7 +40,7 @@ jobs:
         run: |
           poetry install --no-interaction
           echo "🧪 Running final test validation..."
-          poetry run pytest --cov=src --cov-fail-under=70 -x
+          poetry run pytest --cov=src --cov-fail-under=90 -x
           echo "✅ Release validation passed!"
 
       - name: Create GitHub release
@@ -68,7 +68,7 @@ jobs:
             ```
 
             ## Coverage & Quality
-            - ✅ 70%+ test coverage maintained
+            - ✅ 90%+ test coverage maintained
             - ✅ Security scans passing
             - ✅ Code quality gates enforced
 

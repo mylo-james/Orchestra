@@ -578,7 +578,7 @@ class TestEmbeddingServiceRealExecution:
         """Test _hash_text method with real execution - no mocking."""
         # Create service with minimal mocking for just the external dependencies
         with (
-            patch("src.services.embedding_service.AsyncOpenAI") as mock_openai,
+            patch("src.services.embedding_service.AsyncOpenAI"),
             patch("src.services.embedding_service.get_settings") as mock_settings,
         ):
 
@@ -606,7 +606,7 @@ class TestEmbeddingServiceRealExecution:
     def test_cache_management_real_execution(self):
         """Test cache operations with real code execution."""
         with (
-            patch("src.services.embedding_service.AsyncOpenAI") as mock_openai,
+            patch("src.services.embedding_service.AsyncOpenAI"),
             patch("src.services.embedding_service.get_settings") as mock_settings,
         ):
 

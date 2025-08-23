@@ -31,7 +31,7 @@ temporalio = "^1.7.0"
 # Vector Database
 qdrant-client = "^1.7.0"
 pip-audit = "^2.7.0"
-openai-agents = "^0.2.9"
+# openai-agents removed - using universal persona model
 
 [tool.poetry.group.dev.dependencies]
 # Testing
@@ -51,6 +51,7 @@ pre-commit = "^4.3.0"
 # safety = "^3.2.0"  # Has dependency conflicts, use pip-audit instead
 # detect-secrets = "^1.5.0"
 # semgrep = "^1.45.0"
+pytest-timeout = "^2.4.0"
 
 [tool.poetry.scripts]
 orchestra = "src.cli.main:app"
@@ -81,7 +82,7 @@ ignore = ["E501"]  # line too long, handled by black
 # Pytest configuration
 [tool.pytest.ini_options]
 minversion = "7.0"
-addopts = "-ra -q --cov=src --cov-fail-under=80 --cov-report=term-missing --cov-report=html --cov-report=json --disable-warnings"
+addopts = "-ra -q --cov=src --cov-fail-under=90 --cov-report=term-missing --cov-report=html --cov-report=json --disable-warnings"
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 asyncio_mode = "auto"
@@ -89,8 +90,7 @@ log_cli = false
 log_cli_level = "CRITICAL"
 log_cli_format = "%(asctime)s [%(levelname)8s] %(name)s: %(message)s"
 filterwarnings = [
-    "ignore::DeprecationWarning:agents.*",
-    "ignore::UserWarning:agents.*",
+# agents package filters removed - using universal persona model
     "ignore:.*I/O operation on closed file.*",
     "ignore:.*Shutting down trace provider.*",
     "ignore:.*trace processor.*",

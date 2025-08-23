@@ -7,8 +7,8 @@ from pathlib import Path
 
 
 def main():
-    """Run coverage check with 60% minimum threshold."""
-    print("🔍 Checking code coverage (minimum 60%)...")
+    """Run coverage check with 90% minimum threshold."""
+    print("🔍 Checking code coverage (minimum 90%)...")
 
     try:
         # Run pytest with coverage (redirect stderr to eliminate SDK logging noise)
@@ -18,7 +18,7 @@ def main():
                 "run",
                 "pytest",
                 "--cov=src",
-                "--cov-fail-under=60",
+                "--cov-fail-under=90",
                 "--cov-report=term-missing",
                 "--quiet",
             ],
@@ -29,7 +29,7 @@ def main():
         )
 
         if result.returncode == 0:
-            print("✅ Coverage check passed (≥60%)")
+            print("✅ Coverage check passed (≥90%)")
 
             # Extract coverage percentage from output
             for line in result.stdout.split("\n"):
@@ -38,7 +38,7 @@ def main():
 
             return 0
         else:
-            print("❌ Coverage check failed (<60%)")
+            print("❌ Coverage check failed (<90%)")
             print("\nCoverage report:")
             print(result.stdout)
 

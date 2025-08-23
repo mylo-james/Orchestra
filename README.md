@@ -14,23 +14,32 @@ Orchestra is a sophisticated AI agent system designed to orchestrate complex dev
 
 ## 🏗️ Architecture
 
-Orchestra follows a modular architecture with clear separation of concerns:
+Orchestra follows a modular architecture with a unique persona-based agent system:
 
 ```
 src/
 ├── cli/                    # Command-line interface
-├── agents/                 # Agent implementations
-│   ├── base/              # Base agent classes
-│   ├── orchestrator/      # Orchestrator agent
-│   ├── developer/         # Developer agent
-│   └── release/           # Release agent
+├── personas/               # YAML persona definitions
+│   ├── orchestrator.yaml  # Orchestrator persona (Brendan)
+│   ├── dev.yaml           # Developer persona (Alex)
+│   └── release.yaml       # Release persona (Riley)
+├── system/                 # Agent system implementation
+│   ├── agent.py           # UniversalAgent class
+│   ├── loader.py          # PersonaLoader
+│   └── specs.py           # Persona specifications
 ├── workflows/              # Temporal workflows
 ├── services/               # Business logic services
-├── models/                 # Data models with validation
 ├── security/               # Security framework
 ├── config/                 # Configuration management
 └── utils/                  # Shared utilities
 ```
+
+### Core Architecture Principles
+
+- **UniversalAgent**: Single agent class that embodies different personas through YAML configuration
+- **Persona-Based System**: Identity, behavior, and capabilities defined in YAML files
+- **Command-Driven Interface**: Each persona has specific commands with execution patterns
+- **Security-First**: Comprehensive validation, audit logging, and security monitoring
 
 ## 🚀 Quick Start
 
@@ -350,11 +359,11 @@ poetry run pytest -m "not slow"     # Exclude slow tests
 | `orchestra config <subcommand>` | Configuration management |
 | `orchestra dev <subcommand>` | Development tools |
 
-### Agent Types
+### Available Personas
 
-- **Orchestrator**: Coordinates workflows and manages agent handoffs
-- **Developer**: Handles code generation, testing, and validation
-- **Release**: Manages deployments and GitHub integration
+- **Orchestrator (Brendan)**: Strategic planner and workflow coordinator who analyzes user requests and creates implementation plans
+- **Developer (Alex)**: Expert Python/Temporal developer specializing in implementation, testing, and refactoring
+- **Release (Riley)**: Release management specialist handling deployments, PRs, and version control
 
 ## 🔍 Troubleshooting
 

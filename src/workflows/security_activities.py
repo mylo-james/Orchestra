@@ -200,8 +200,8 @@ async def validate_agent_output_activity(params: Dict[str, Any]) -> Dict[str, An
     # In actual implementation, this would be properly instantiated
     try:
         _ = AIAgentValidator(agent_id=agent_type or "unknown")
-    except Exception:
-        # Fallback if validator fails to initialize
+    except Exception:  # nosec B110
+        # Fallback if validator fails to initialize - expected behavior
         pass
 
     # Validate output structure

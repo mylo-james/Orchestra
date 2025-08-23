@@ -3,6 +3,7 @@
 from unittest.mock import Mock, patch
 
 import pytest
+import typer
 from typer.testing import CliRunner
 
 from src.cli.main import app, main, run_async_command
@@ -35,11 +36,21 @@ class TestMainAppBasic:
 
     @patch("src.cli.main.display_success")
     @patch("src.cli.main.logger")
-    def test_serve_command_basic(self, mock_logger, mock_display_success, runner):
+    @patch("time.sleep")  # Mock the infinite loop
+    def test_serve_command_basic(
+        self, mock_sleep, mock_logger, mock_display_success, runner
+    ):
         """Test serve command basic functionality."""
-        # Simulate Ctrl+C to stop the server
-        result = runner.invoke(app, ["serve"], input="\x03")
+        # Mock sleep to raise KeyboardInterrupt immediately (simulating Ctrl+C)
+        mock_sleep.side_effect = KeyboardInterrupt()
+
+        result = runner.invoke(app, ["serve"])
+
+        # Should exit cleanly with code 0 when KeyboardInterrupt is caught
+        assert result.exit_code == 0
         mock_display_success.assert_called_once()
+        # Verify the sleep was called (meaning we entered the server loop)
+        mock_sleep.assert_called_once()
 
     @patch("src.utils.circuit_breaker.circuit_breaker_health_check")
     @patch("src.cli.main.security_health_check")
@@ -328,7 +339,8 @@ class TestMainCallback:
         # Mock exception
         mock_get_settings.side_effect = Exception("Settings error")
 
-        with pytest.raises(SystemExit) as exc_info:
+        # typer.Exit is different from SystemExit - it's click.exceptions.Exit
+        with pytest.raises(typer.Exit) as exc_info:
             main(
                 mock_context,
                 verbose=False,
@@ -337,7 +349,7 @@ class TestMainCallback:
                 correlation_id=None,
             )
 
-        assert exc_info.value.code == 1
+        assert exc_info.value.exit_code == 1
         mock_display_error.assert_called_once()
         mock_logger.error.assert_called_once()
 
@@ -366,15 +378,23 @@ class TestServeCommand:
 
     @patch("src.cli.main.display_success")
     @patch("src.cli.main.logger")
-    def test_serve_command_with_params(self, mock_logger, mock_display_success, runner):
+    @patch("time.sleep")  # Mock the infinite loop
+    def test_serve_command_with_params(
+        self, mock_sleep, mock_logger, mock_display_success, runner
+    ):
         """Test serve command with custom parameters."""
+        # Mock sleep to raise KeyboardInterrupt immediately (simulating Ctrl+C)
+        mock_sleep.side_effect = KeyboardInterrupt()
+
         result = runner.invoke(
-            app,
-            ["serve", "--host", "0.0.0.0", "--port", "9000", "--reload"],
-            input="\x03",
+            app, ["serve", "--host", "0.0.0.0", "--port", "9000", "--reload"]
         )
 
+        # Should exit cleanly with code 0 when KeyboardInterrupt is caught
+        assert result.exit_code == 0
         mock_display_success.assert_called_once()
+        # Verify the sleep was called (meaning we entered the server loop)
+        mock_sleep.assert_called_once()
         # Check that reload logging was called
         assert any(
             "auto-reload" in str(call) for call in mock_logger.info.call_args_list

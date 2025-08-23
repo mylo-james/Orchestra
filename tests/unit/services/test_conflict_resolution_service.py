@@ -150,7 +150,7 @@ class TestConflictDetection:
         )
 
         with patch.object(service, "_calculate_similarity", return_value=0.92):
-            conflict = await service.detect_conflict(existing, proposed)
+            await service.detect_conflict(existing, proposed)
 
         assert service.embedding_service.generate_embedding.call_count == 2
         assert existing.embedding == [0.1, 0.2, 0.3]
@@ -337,7 +337,7 @@ class TestConflictResolution:
             ) as mock_conservative,
         ):
 
-            result = await service._merge_hybrid(sample_conflict)
+            await service._merge_hybrid(sample_conflict)
 
             # Should add to escalation queue and use conservative fallback
             assert len(service.escalation_queue) == 1

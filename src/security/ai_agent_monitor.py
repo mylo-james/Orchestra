@@ -42,6 +42,30 @@ class SecuritySeverity(Enum):
     HIGH = "high"
     CRITICAL = "critical"
 
+    def __lt__(self, other):
+        if self.__class__ is other.__class__:
+            order = {"low": 1, "medium": 2, "high": 3, "critical": 4}
+            return order[self.value] < order[other.value]
+        return NotImplemented
+
+    def __le__(self, other):
+        if self.__class__ is other.__class__:
+            order = {"low": 1, "medium": 2, "high": 3, "critical": 4}
+            return order[self.value] <= order[other.value]
+        return NotImplemented
+
+    def __gt__(self, other):
+        if self.__class__ is other.__class__:
+            order = {"low": 1, "medium": 2, "high": 3, "critical": 4}
+            return order[self.value] > order[other.value]
+        return NotImplemented
+
+    def __ge__(self, other):
+        if self.__class__ is other.__class__:
+            order = {"low": 1, "medium": 2, "high": 3, "critical": 4}
+            return order[self.value] >= order[other.value]
+        return NotImplemented
+
 
 class AIAgentSecurityMonitor:
     """
@@ -135,6 +159,8 @@ class AIAgentSecurityMonitor:
             "timestamp": timestamp,
             "agent_id": agent_id,
             "operation_type": operation_type,
+            "input_data": input_data,
+            "output_data": output_data,
             "input_hash": self._hash_content(input_data),
             "output_hash": self._hash_content(output_data) if output_data else None,
             "metadata": metadata or {},
@@ -144,6 +170,14 @@ class AIAgentSecurityMonitor:
 
         # Write to audit log
         with open(self.audit_log, "a") as f:
+            f.write(json.dumps(audit_record) + "\n")
+
+        # Also write to agent operations JSONL file for easy querying
+        operations_jsonl = (
+            self.log_directory
+            / f"agent_operations_{datetime.utcnow().strftime('%Y%m%d')}.jsonl"
+        )
+        with open(operations_jsonl, "a") as f:
             f.write(json.dumps(audit_record) + "\n")
 
         # Update metrics
@@ -224,7 +258,7 @@ class AIAgentSecurityMonitor:
             "action": (
                 "block"
                 if severity in [SecuritySeverity.HIGH, SecuritySeverity.CRITICAL]
-                else "allow"
+                else "warn" if len(violations) > 0 else "allow"
             ),
         }
 
@@ -299,7 +333,11 @@ class AIAgentSecurityMonitor:
             "is_safe": len(violations) == 0,
             "violations": violations,
             "severity": severity.value,
-            "action": "block" if severity == SecuritySeverity.CRITICAL else "warn",
+            "action": (
+                "block"
+                if severity == SecuritySeverity.CRITICAL
+                else "warn" if len(violations) > 0 else "allow"
+            ),
         }
 
     def log_security_event(
@@ -309,7 +347,7 @@ class AIAgentSecurityMonitor:
         description: str,
         severity: SecuritySeverity = SecuritySeverity.MEDIUM,
         additional_data: Optional[Dict[str, Any]] = None,
-    ) -> None:
+    ) -> str:
         """
         Log a security event.
 
@@ -319,19 +357,33 @@ class AIAgentSecurityMonitor:
             description: Human-readable description
             severity: Event severity
             additional_data: Additional event data
+
+        Returns:
+            Event ID for this security event
         """
+        # Generate unique event ID
+        event_id = self._generate_operation_id(agent_id, f"security_{event_type.value}")
         timestamp = datetime.utcnow().isoformat()
 
         event_record = {
+            "event_id": event_id,
             "timestamp": timestamp,
             "event_type": event_type.value,
             "agent_id": agent_id,
-            "description": description,
+            "message": description,
             "severity": severity.value,
-            "additional_data": additional_data or {},
+            "metadata": additional_data or {},
         }
 
-        # Write to security events log
+        # Write to security events log (JSONL format for easy parsing)
+        security_events_jsonl = (
+            self.log_directory
+            / f"security_events_{datetime.utcnow().strftime('%Y%m%d')}.jsonl"
+        )
+        with open(security_events_jsonl, "a") as f:
+            f.write(json.dumps(event_record) + "\n")
+
+        # Also write to the original log for backward compatibility
         with open(self.security_events_log, "a") as f:
             f.write(json.dumps(event_record) + "\n")
 
@@ -350,6 +402,8 @@ class AIAgentSecurityMonitor:
             logger.warning(f"Security concern: {description} (Agent: {agent_id})")
         else:
             logger.info(f"Security event: {description} (Agent: {agent_id})")
+
+        return event_id
 
     def get_agent_metrics(self, agent_id: str) -> Dict[str, Any]:
         """
@@ -579,3 +633,237 @@ class AIAgentSecurityMonitor:
             recommendations.append("No immediate security concerns detected")
 
         return recommendations
+
+    def get_security_events(
+        self,
+        agent_id: Optional[str] = None,
+        min_severity: Optional[SecuritySeverity] = None,
+        event_type: Optional[SecurityEventType] = None,
+        limit: Optional[int] = None,
+    ) -> List[Dict[str, Any]]:
+        """
+        Get security events with optional filtering.
+
+        Args:
+            agent_id: Filter by agent ID
+            min_severity: Filter by minimum severity level
+            event_type: Filter by event type
+            limit: Maximum number of events to return
+
+        Returns:
+            List of security events matching the filters
+        """
+        events = []
+        seen_event_ids = set()
+
+        try:
+            # Read from both JSONL files and the main log
+            event_files = list(self.log_directory.glob("security_events_*.jsonl"))
+            if self.security_events_log.exists():
+                event_files.append(self.security_events_log)
+
+            for file_path in event_files:
+                with open(file_path, "r") as f:
+                    for line in f:
+                        try:
+                            event = json.loads(line.strip())
+
+                            # Skip duplicates based on event_id
+                            event_id = event.get("event_id")
+                            if event_id and event_id in seen_event_ids:
+                                continue
+                            if event_id:
+                                seen_event_ids.add(event_id)
+
+                            # Apply filters
+                            if agent_id and event.get("agent_id") != agent_id:
+                                continue
+                            if (
+                                event_type
+                                and event.get("event_type") != event_type.value
+                            ):
+                                continue
+                            if min_severity:
+                                event_severity = event.get("severity", "low")
+                                severity_order = {
+                                    "low": 1,
+                                    "medium": 2,
+                                    "high": 3,
+                                    "critical": 4,
+                                }
+                                if severity_order.get(
+                                    event_severity, 0
+                                ) < severity_order.get(min_severity.value, 0):
+                                    continue
+
+                            events.append(event)
+                        except json.JSONDecodeError:
+                            continue
+        except Exception as e:
+            logger.error(f"Error reading security events: {e}")
+
+        # Sort by timestamp (newest first)
+        events.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
+
+        # Apply limit
+        if limit:
+            events = events[:limit]
+
+        return events
+
+    def get_agent_operations(
+        self,
+        agent_id: Optional[str] = None,
+        operation_type: Optional[str] = None,
+        limit: Optional[int] = None,
+    ) -> List[Dict[str, Any]]:
+        """
+        Get agent operations with optional filtering.
+
+        Args:
+            agent_id: Filter by agent ID
+            operation_type: Filter by operation type
+            limit: Maximum number of operations to return
+
+        Returns:
+            List of operations matching the filters
+        """
+        operations = []
+        seen_operation_ids = set()
+
+        try:
+            # Read from both JSONL files and the main audit log
+            operation_files = list(self.log_directory.glob("agent_operations_*.jsonl"))
+            if self.audit_log.exists():
+                operation_files.append(self.audit_log)
+
+            for file_path in operation_files:
+                with open(file_path, "r") as f:
+                    for line in f:
+                        try:
+                            operation = json.loads(line.strip())
+
+                            # Skip duplicates based on operation_id
+                            operation_id = operation.get("operation_id")
+                            if operation_id and operation_id in seen_operation_ids:
+                                continue
+                            if operation_id:
+                                seen_operation_ids.add(operation_id)
+
+                            # Apply filters
+                            if agent_id and operation.get("agent_id") != agent_id:
+                                continue
+                            if (
+                                operation_type
+                                and operation.get("operation_type") != operation_type
+                            ):
+                                continue
+
+                            operations.append(operation)
+                        except json.JSONDecodeError:
+                            continue
+        except Exception as e:
+            logger.error(f"Error reading agent operations: {e}")
+
+        # Sort by timestamp (newest first)
+        operations.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
+
+        # Apply limit
+        if limit:
+            operations = operations[:limit]
+
+        return operations
+
+    def get_security_summary(self) -> Dict[str, Any]:
+        """
+        Get a summary of security events and statistics.
+
+        Returns:
+            Dictionary containing security summary statistics
+        """
+        all_events = self.get_security_events()
+
+        # Count events by severity
+        severity_counts = {"low": 0, "medium": 0, "high": 0, "critical": 0}
+        for event in all_events:
+            severity = event.get("severity", "low")
+            if severity in severity_counts:
+                severity_counts[severity] += 1
+
+        # Count events by type
+        type_counts = {}
+        for event in all_events:
+            event_type = event.get("event_type", "unknown")
+            type_counts[event_type] = type_counts.get(event_type, 0) + 1
+
+        # Get unique agents
+        unique_agents = list(
+            set(event.get("agent_id") for event in all_events if event.get("agent_id"))
+        )
+
+        return {
+            "total_events": len(all_events),
+            "events_by_severity": severity_counts,
+            "events_by_type": type_counts,
+            "agents_monitored": unique_agents,  # List of agent IDs for membership checks
+            "agent_count": len(unique_agents),  # Count of unique agents
+            "summary_timestamp": datetime.utcnow().isoformat(),
+        }
+
+    def analyze_agent_behavior(self, agent_id: str) -> Dict[str, Any]:
+        """
+        Analyze behavior patterns for a specific agent.
+
+        Args:
+            agent_id: ID of the agent to analyze
+
+        Returns:
+            Dictionary containing behavior analysis results
+        """
+        # Get operations and security events for this agent
+        operations = self.get_agent_operations(agent_id=agent_id)
+        security_events = self.get_security_events(agent_id=agent_id)
+
+        # Calculate risk score based on security events
+        risk_score = 0
+        severity_weights = {"low": 1, "medium": 3, "high": 7, "critical": 15}
+
+        for event in security_events:
+            severity = event.get("severity", "low")
+            risk_score += severity_weights.get(severity, 1)
+
+        # Generate recommendations based on analysis
+        recommendations = []
+
+        if len(security_events) > 10:
+            recommendations.append(
+                "High number of security events - consider additional monitoring"
+            )
+
+        critical_events = [
+            e for e in security_events if e.get("severity") == "critical"
+        ]
+        if critical_events:
+            recommendations.append(
+                f"Found {len(critical_events)} critical security events - immediate review needed"
+            )
+
+        # Calculate violation rate
+        violation_rate = len(security_events) / max(len(operations), 1)
+        if violation_rate > 0.1:
+            recommendations.append(
+                f"High violation rate ({violation_rate:.1%}) - consider retraining"
+            )
+
+        if not recommendations:
+            recommendations.append("No immediate security concerns detected")
+
+        return {
+            "agent_id": agent_id,
+            "total_operations": len(operations),
+            "security_events": len(security_events),
+            "risk_score": risk_score,
+            "violation_rate": violation_rate,
+            "recommendations": recommendations,
+            "analysis_timestamp": datetime.utcnow().isoformat(),
+        }

@@ -16,10 +16,10 @@ from src.utils.circuit_breaker import CircuitBreaker
 from src.utils.logging import get_logger
 
 # Create Typer apps for command groups
-agent_cmd = typer.Typer()
-workflow_cmd = typer.Typer()
-config_cmd = typer.Typer()
-dev_cmd = typer.Typer()
+agent_cmd = typer.Typer(name="agent", help="Agent management commands")
+workflow_cmd = typer.Typer(name="workflow", help="Workflow management commands")
+config_cmd = typer.Typer(name="config", help="Configuration management commands")
+dev_cmd = typer.Typer(name="dev", help="Development and testing commands")
 
 logger = get_logger(__name__)
 console = Console()
@@ -245,7 +245,7 @@ def test_security() -> None:
         return f"Processed: {prompt}"
 
     try:
-        result = test_function("Test prompt")
+        test_function("Test prompt")
         console.print(success_panel("✓ AI Agent Validator: Working"))
     except Exception as e:
         console.print(error_panel(f"✗ AI Agent Validator: {e}"))
@@ -299,8 +299,8 @@ def test_circuit_breaker() -> None:
         for i in range(3):
             try:
                 test_function(should_fail=True)
-            except Exception:
-                pass
+            except Exception:  # nosec B110
+                pass  # Expected exception for validation testing
 
         # Circuit should be open now
         try:
