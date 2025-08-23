@@ -21,7 +21,7 @@ pydantic-settings = "^2.10.0"
 # HTTP Client
 httpx = "^0.27.0"
 # Configuration and Logging
-structlog = "^24.4.0"
+structlog = "^25.4.0"
 # Security Framework
 cryptography = "^44.0.0"
 # Database
