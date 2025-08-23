@@ -1,8 +1,8 @@
 """Tests for system base module."""
 
+from unittest.mock import Mock
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock
-from datetime import datetime
 
 from src.system.base import AgentContext, ModelConfig, SecureAgent
 
@@ -15,9 +15,9 @@ class TestAgentContext:
         context = AgentContext(
             correlation_id="test-123",
             agent_name="test-agent",
-            session_data={"key": "value"}
+            session_data={"key": "value"},
         )
-        
+
         assert context.correlation_id == "test-123"
         assert context.agent_name == "test-agent"
         assert context.session_data == {"key": "value"}
@@ -25,7 +25,7 @@ class TestAgentContext:
     def test_initialization_defaults(self):
         """Test AgentContext initialization with defaults."""
         context = AgentContext()
-        
+
         assert context.correlation_id is None
         assert context.agent_name is None
         assert context.session_data == {}
@@ -34,7 +34,7 @@ class TestAgentContext:
         """Test session data initialization."""
         context = AgentContext()
         assert context.session_data == {}
-        
+
         context = AgentContext(session_data={"key": "value"})
         assert context.session_data == {"key": "value"}
 
@@ -44,12 +44,8 @@ class TestModelConfig:
 
     def test_initialization(self):
         """Test ModelConfig initialization."""
-        config = ModelConfig(
-            model="gpt-4",
-            temperature=0.7,
-            max_tokens=1000
-        )
-        
+        config = ModelConfig(model="gpt-4", temperature=0.7, max_tokens=1000)
+
         assert config.model == "gpt-4"
         assert config.temperature == 0.7
         assert config.max_tokens == 1000
@@ -57,12 +53,8 @@ class TestModelConfig:
     def test_initialization_required_fields(self):
         """Test ModelConfig requires all fields."""
         # ModelConfig requires all fields to be provided
-        config = ModelConfig(
-            model="gpt-4",
-            temperature=0.7,
-            max_tokens=1000
-        )
-        
+        config = ModelConfig(model="gpt-4", temperature=0.7, max_tokens=1000)
+
         assert config.model == "gpt-4"
         assert config.temperature == 0.7
         assert config.max_tokens == 1000
@@ -91,7 +83,7 @@ class TestSecureAgent:
         """Test adding tools to agent."""
         mock_tool = Mock()
         secure_agent.add_tool(mock_tool)
-        
+
         # Verify tool was added to agent's tools
         assert mock_tool in secure_agent.agent.tools
 
@@ -101,7 +93,7 @@ class TestSecureAgent:
         # Test start
         await secure_agent.start()
         assert secure_agent.session is not None
-        
+
         # Test stop
         await secure_agent.stop()
         # Note: stop doesn't clear session, just closes it

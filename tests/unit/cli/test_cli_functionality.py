@@ -207,7 +207,9 @@ class TestCLICommandGroupFunctionality:
         # Test that list command actually executes and provides feedback
         result = runner.invoke(test_group, ["list"])
         assert result.exit_code == 0
-        assert "available commands" in result.stdout.lower()  # Updated to match actual output
+        assert (
+            "available commands" in result.stdout.lower()
+        )  # Updated to match actual output
 
         # Test that status command actually executes
         result = runner.invoke(test_group, ["status"])

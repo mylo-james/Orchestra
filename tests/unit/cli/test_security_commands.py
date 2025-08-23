@@ -27,7 +27,7 @@ class TestSecurityApp:
         """Test that security app is properly configured."""
         assert security_app is not None
         # For Typer sub-apps, check if it has the info structure instead of name
-        assert hasattr(security_app, 'info')
+        assert hasattr(security_app, "info")
         assert "AI Agent Security Monitoring Commands" in security_app.info.help
 
 

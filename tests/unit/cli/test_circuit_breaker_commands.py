@@ -26,7 +26,7 @@ class TestCircuitBreakerApp:
         """Test that circuit breaker app is properly configured."""
         assert cb_app is not None
         # For Typer sub-apps, check if it has the info structure instead of name
-        assert hasattr(cb_app, 'info')
+        assert hasattr(cb_app, "info")
         assert "External Service Circuit Breaker Commands" in cb_app.info.help
 
 

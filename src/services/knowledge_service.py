@@ -60,6 +60,7 @@ class KnowledgeService:
 
         # Circuit breaker for Qdrant operations
         from src.utils.circuit_breaker import CircuitBreakerConfig
+
         config = CircuitBreakerConfig(
             failure_threshold=5,
             recovery_timeout=30.0,
@@ -180,7 +181,9 @@ class KnowledgeService:
             chunk.embedding = embedding
 
             # Update metadata
-            document_id = getattr(chunk.metadata, "document_id", None) or str(uuid.uuid4())
+            document_id = getattr(chunk.metadata, "document_id", None) or str(
+                uuid.uuid4()
+            )
             metadata_dict = {
                 "document_id": document_id,
                 "version": chunk.version,
@@ -188,7 +191,9 @@ class KnowledgeService:
                 "updated_at": datetime.utcnow().isoformat(),
                 "created_at": chunk.created_at.isoformat(),
                 "confidence_score": getattr(chunk.metadata, "confidence_score", 1.0),
-                "knowledge_domain": getattr(chunk.metadata, "knowledge_domain", "general"),
+                "knowledge_domain": getattr(
+                    chunk.metadata, "knowledge_domain", "general"
+                ),
             }
 
             # Create Qdrant point
@@ -259,7 +264,9 @@ class KnowledgeService:
                 filter_conditions.append(
                     FieldCondition(
                         key="metadata.knowledge_domain",
-                        match=MatchValue(value=domain_values[0]),  # Use first domain for now
+                        match=MatchValue(
+                            value=domain_values[0]
+                        ),  # Use first domain for now
                     )
                 )
 
@@ -395,11 +402,14 @@ class KnowledgeService:
 
     def _point_to_chunk(self, point: Any) -> KnowledgeChunk:
         """Convert a Qdrant point to a KnowledgeChunk."""
-        from src.models.knowledge import KnowledgeMetadata, KnowledgeDomain, SecurityClassification
-        
+        from src.models.knowledge import (
+            KnowledgeDomain,
+            SecurityClassification,
+        )
+
         payload = point.payload if hasattr(point, "payload") else point
         metadata_dict = payload.get("metadata", {})
-        
+
         # Create proper KnowledgeMetadata object
         metadata = KnowledgeMetadata(
             domain=KnowledgeDomain.GENERAL,  # Default domain
@@ -410,7 +420,7 @@ class KnowledgeService:
             document_id=metadata_dict.get("document_id"),
             agent_attribution=metadata_dict.get("agent_attribution"),
             confidence_score=metadata_dict.get("confidence_score"),
-            knowledge_domain=metadata_dict.get("knowledge_domain")
+            knowledge_domain=metadata_dict.get("knowledge_domain"),
         )
 
         return KnowledgeChunk(
