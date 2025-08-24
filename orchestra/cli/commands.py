@@ -1,406 +1,266 @@
-"""CLI command implementations."""
+"""Orchestra CLI Commands."""
 
 import asyncio
-import sys
+import json
+from pathlib import Path
+from typing import Optional
 
 import typer
 from rich.console import Console
 from rich.table import Table
 
-from orchestra.cli.output import error_panel, info_panel, success_panel
-from orchestra.security.ai_agent_monitor import AIAgentSecurityMonitor as AIAgentMonitor
-from orchestra.security.ai_agent_validator import AIAgentValidator
+from orchestra.cli.output import (
+    error_panel,
+    info_panel,
+    success_panel,
+    warning_panel,
+)
+from orchestra.system.bmad_inventory import BmadContentInventory
 from orchestra.system.factory import get_registry
-from orchestra.system.loader import PersonaLoader
-from orchestra.utils.circuit_breaker import CircuitBreaker
 from orchestra.utils.logging import get_logger
-
-# Create Typer apps for command groups
-agent_cmd = typer.Typer(name="agent", help="Agent management commands")
-workflow_cmd = typer.Typer(name="workflow", help="Workflow management commands")
-config_cmd = typer.Typer(name="config", help="Configuration management commands")
-dev_cmd = typer.Typer(name="dev", help="Development and testing commands")
 
 logger = get_logger(__name__)
 console = Console()
 
-
-def create_basic_command_group(
-    name: str = "basic", help_text: str = "Basic commands"
-) -> typer.Typer:
-    """
-    Create a basic command group with common commands.
-
-    Args:
-        name: Name of the command group
-        help_text: Help text for the command group
-
-    Returns:
-        Typer app with basic commands
-    """
-    app = typer.Typer(name=name, help=help_text)
-
-    @app.command("version")
-    def version():
-        """Show version information."""
-        console.print("Orchestra AI Agent System v0.1.0")
-
-    @app.command("status")
-    def status():
-        """Show system status."""
-        console.print("System status: Ready")
-
-    @app.command("list")
-    def list_commands():
-        """List available commands."""
-        console.print("Available commands: version, status, list")
-
-    return app
-
-
-@agent_cmd.command("start")
-def start_agent(persona_id: str) -> None:
-    """
-    Start an agent with the specified persona.
-
-    Args:
-        persona_id: ID of the persona to use
-    """
-    try:
-        registry = get_registry()
-
-        console.print(info_panel(f"Starting agent with persona: {persona_id}"))
-        agent = registry.create(persona_id)
-
-        # Display agent information
-        if hasattr(agent, "describe"):
-            console.print(agent.describe())
-
-        console.print(success_panel("Agent started successfully"))
-
-    except KeyError as e:
-        console.print(error_panel(f"Agent not found: {e}"))
-        sys.exit(1)
-    except Exception as e:
-        console.print(error_panel(f"Failed to start agent: {e}"))
-        logger.error(f"Agent start failed: {e}", exc_info=True)
-        sys.exit(1)
+# Create command groups
+agent_cmd = typer.Typer(help="Agent management commands")
+workflow_cmd = typer.Typer(help="Workflow orchestration commands")
+config_cmd = typer.Typer(help="Configuration management commands")
+dev_cmd = typer.Typer(help="Development tools and utilities")
+bmad_cmd = typer.Typer(help="BMad content management commands")
 
 
 @agent_cmd.command("list")
-def list_agents() -> None:
-    """List all available agent personas."""
+def list_agents():
+    """List all available agents."""
     try:
         registry = get_registry()
-
-        # Get all personas
-        personas = registry.list_personas()
-
-        # Create table
-        table = Table(title="Available Agent Personas")
-        table.add_column("Persona ID", style="cyan")
-        table.add_column("Name", style="green")
-        table.add_column("Description", style="yellow")
-
-        # Add personas
-        for persona_id in personas:
-            spec = registry.get_persona_spec(persona_id)
-            if spec:
-                table.add_row(
-                    persona_id,
-                    f"{spec.identity.icon} {spec.identity.name}",
-                    spec.identity.title,
-                )
-
-        console.print(table)
-
-    except Exception as e:
-        console.print(error_panel(f"Failed to list agents: {e}"))
-        logger.error(f"List agents failed: {e}", exc_info=True)
-        sys.exit(1)
-
-
-@agent_cmd.command("personas")
-def list_personas() -> None:
-    """List all available personas."""
-    try:
-        loader = PersonaLoader()
-        personas = loader.list_personas()
-
-        if not personas:
-            console.print(info_panel("No personas found"))
+        agents = registry.list_agents()
+        
+        if not agents:
+            console.print(warning_panel("No agents found"))
             return
-
-        # Create detailed table
-        table = Table(title="Available Personas")
-        table.add_column("ID", style="cyan")
-        table.add_column("Name", style="green")
-        table.add_column("Role", style="yellow")
-        table.add_column("Icon", style="blue")
-
-        for persona_id in personas:
-            spec = loader.load_persona(persona_id)
-            if spec:
-                table.add_row(
-                    persona_id,
-                    spec.identity.name,
-                    (
-                        spec.identity.role[:50] + "..."
-                        if len(spec.identity.role) > 50
-                        else spec.identity.role
-                    ),
-                    spec.identity.icon,
-                )
-
+        
+        table = Table(title="Available Agents")
+        table.add_column("Name", style="cyan")
+        table.add_column("Status", style="green")
+        table.add_column("Description", style="white")
+        
+        for agent in agents:
+            table.add_row(agent.name, "Active", agent.description or "No description")
+        
         console.print(table)
-
+        console.print(success_panel(f"Found {len(agents)} agents"))
+        
     except Exception as e:
-        console.print(error_panel(f"Failed to list personas: {e}"))
-        logger.error(f"List personas failed: {e}", exc_info=True)
-        sys.exit(1)
+        logger.error(f"Failed to list agents: {e}")
+        console.print(error_panel(f"Failed to list agents: {e}"))
+        raise typer.Exit(1)
 
 
-@agent_cmd.command("validate")
-def validate_persona(persona_id: str) -> None:
-    """
-    Validate a persona specification.
-
-    Args:
-        persona_id: ID of the persona to validate
-    """
-    try:
-        loader = PersonaLoader()
-
-        # Try to load the persona
-        spec = loader.load_persona(persona_id)
-
-        if not spec:
-            console.print(error_panel(f"Persona not found: {persona_id}"))
-            sys.exit(1)
-
-        # Validate the spec
-        errors = spec.validate()
-
-        if errors:
-            console.print(error_panel(f"Validation failed for {persona_id}:"))
-            for error in errors:
-                console.print(f"  - {error}")
-            sys.exit(1)
-        else:
-            console.print(success_panel(f"Persona '{persona_id}' is valid"))
-
-            # Show persona details
-            table = Table(title=f"Persona: {spec.display_name}")
-            table.add_column("Property", style="cyan")
-            table.add_column("Value", style="yellow")
-
-            table.add_row("ID", spec.identity.id)
-            table.add_row("Name", spec.identity.name)
-            table.add_row("Title", spec.identity.title)
-            table.add_row("Role", spec.identity.role)
-            table.add_row("Version", spec.version)
-            table.add_row("Commands", str(len(spec.command_interface.commands)))
-            table.add_row("Tools", ", ".join(spec.resource_dependencies.tools))
-            table.add_row("Enabled", "Yes" if spec.enabled else "No")
-            table.add_row("Experimental", "Yes" if spec.experimental else "No")
-
-            console.print(table)
-
-    except Exception as e:
-        console.print(error_panel(f"Validation error: {e}"))
-        logger.error(f"Persona validation failed: {e}", exc_info=True)
-        sys.exit(1)
-
-
-@agent_cmd.command("reload")
-def reload_personas() -> None:
-    """Reload all personas from disk."""
+@agent_cmd.command("status")
+def agent_status(name: str):
+    """Get status of a specific agent."""
     try:
         registry = get_registry()
-        registry.reload_personas()
-
-        console.print(success_panel("Personas reloaded successfully"))
-
-        # Show count
-        personas = registry.list_personas()
-        console.print(info_panel(f"Loaded {len(personas)} personas"))
-
+        agent = registry.get_agent(name)
+        
+        if not agent:
+            console.print(error_panel(f"Agent '{name}' not found"))
+            raise typer.Exit(1)
+        
+        console.print(info_panel(f"Agent '{name}' is active"))
+        
     except Exception as e:
-        console.print(error_panel(f"Failed to reload personas: {e}"))
-        logger.error(f"Persona reload failed: {e}", exc_info=True)
-        sys.exit(1)
-
-
-@dev_cmd.command("test-security")
-def test_security() -> None:
-    """Test security components."""
-    console.print(info_panel("Testing security components..."))
-
-    # Test validator
-    validator = AIAgentValidator("test-agent")
-
-    # Test validation using the validate_operation decorator
-    @validator.validate_operation("test_operation")
-    def test_function(prompt: str):
-        return f"Processed: {prompt}"
-
-    try:
-        test_function("Test prompt")
-        console.print(success_panel("✓ AI Agent Validator: Working"))
-    except Exception as e:
-        console.print(error_panel(f"✗ AI Agent Validator: {e}"))
-
-    # Test monitor
-    monitor = AIAgentMonitor()
-    monitor.log_agent_operation("test_agent", "test_action", "test data")
-
-    # Test security checks
-    input_check = monitor.check_input_security(
-        "test_agent", "test_operation", "Test input"
-    )
-    output_check = monitor.check_output_security(
-        "test_agent", "test_operation", "Test output"
-    )
-
-    if input_check["is_safe"] and output_check["is_safe"]:
-        console.print(success_panel("✓ AI Agent Monitor: Working"))
-    else:
-        console.print(error_panel("✗ AI Agent Monitor: Issues detected"))
-
-    console.print(success_panel("Security components test completed"))
-
-
-@dev_cmd.command("test-circuit-breaker")
-def test_circuit_breaker() -> None:
-    """Test circuit breaker functionality."""
-    console.print(info_panel("Testing circuit breaker..."))
-
-    from orchestra.utils.circuit_breaker import CircuitBreakerConfig
-
-    config = CircuitBreakerConfig(
-        failure_threshold=3, recovery_timeout=5.0, request_timeout=30.0
-    )
-
-    breaker = CircuitBreaker("test-circuit-breaker", config)
-
-    # Test normal operation
-    @breaker
-    def test_function(should_fail: bool = False):
-        if should_fail:
-            raise Exception("Test failure")
-        return "Success"
-
-    try:
-        # Should work
-        result = test_function(should_fail=False)
-        console.print(success_panel(f"✓ Normal operation: {result}"))
-
-        # Simulate failures
-        for i in range(3):
-            try:
-                test_function(should_fail=True)
-            except Exception:  # nosec B110
-                pass  # Expected exception for validation testing
-
-        # Circuit should be open now
-        try:
-            test_function(should_fail=False)
-            console.print(error_panel("✗ Circuit breaker did not open"))
-        except Exception as e:
-            if "Circuit breaker is OPEN" in str(e):
-                console.print(success_panel("✓ Circuit breaker opened correctly"))
-            else:
-                console.print(error_panel(f"✗ Unexpected error: {e}"))
-
-    except Exception as e:
-        console.print(error_panel(f"Circuit breaker test failed: {e}"))
-
-
-async def run_workflow(workflow_name: str) -> None:
-    """Run a Temporal workflow."""
-    console.print(info_panel(f"Running workflow: {workflow_name}"))
-
-    # TODO: Implement actual workflow execution
-    await asyncio.sleep(1)
-
-    console.print(success_panel(f"Workflow {workflow_name} completed"))
-
-
-@workflow_cmd.command("start")
-def start_workflow(workflow_name: str = "dev-team") -> None:
-    """Start a workflow."""
-    console.print(info_panel(f"Starting workflow: {workflow_name}"))
-    # Placeholder for workflow execution
-    console.print(success_panel(f"Workflow {workflow_name} started"))
+        logger.error(f"Failed to get agent status: {e}")
+        console.print(error_panel(f"Failed to get agent status: {e}"))
+        raise typer.Exit(1)
 
 
 @workflow_cmd.command("list")
-def list_workflows() -> None:
-    """List available workflows."""
-    console.print(info_panel("Available workflows:"))
-    console.print("- dev-team: Development team workflow")
-    console.print("- release: Release workflow")
+def list_workflows():
+    """List all available workflows."""
+    console.print(info_panel("Workflow listing not yet implemented"))
+
+
+@workflow_cmd.command("status")
+def workflow_status():
+    """Get workflow system status."""
+    console.print(info_panel("Workflow status not yet implemented"))
 
 
 @config_cmd.command("show")
-def show_config() -> None:
+def show_config():
     """Show current configuration."""
-    console.print(info_panel("Current configuration"))
-    # Placeholder for config display
-    console.print("Configuration loaded from environment")
+    console.print(info_panel("Configuration display not yet implemented"))
 
 
 @config_cmd.command("validate")
-def validate_config() -> None:
-    """Validate configuration."""
-    console.print(info_panel("Validating configuration..."))
-    console.print(success_panel("Configuration is valid"))
+def validate_config():
+    """Validate current configuration."""
+    console.print(info_panel("Configuration validation not yet implemented"))
 
 
-@dev_cmd.command("health")
-def health_check() -> None:
-    """Perform a health check of the system."""
-    console.print(info_panel("Performing health check..."))
+@dev_cmd.command("test")
+def run_tests():
+    """Run development tests."""
+    console.print(info_panel("Test runner not yet implemented"))
 
-    checks = {
-        "Logging": True,
-        "Security": True,
-        "Circuit Breaker": True,
-        "Agent Registry": True,
-        "Persona Loader": True,
-    }
 
-    # Test each component
+@dev_cmd.command("lint")
+def run_linting():
+    """Run code linting."""
+    console.print(info_panel("Linting not yet implemented"))
+
+
+@bmad_cmd.command("inventory")
+def bmad_inventory(
+    output_file: Optional[str] = typer.Option(
+        None, "--output", "-o", help="Output file for inventory report (JSON format)"
+    ),
+    base_path: Optional[str] = typer.Option(
+        ".bmad-core", "--base-path", "-b", help="Base path to BMad content directory"
+    ),
+    verbose: bool = typer.Option(
+        False, "--verbose", "-v", help="Enable verbose output"
+    )
+):
+    """Generate BMad content inventory and conversion strategy report."""
     try:
-        # Test logging
-        logger.info("Health check test")
-
-        # Test agent registry
-        registry = get_registry()
-        _ = registry.list_personas()
-
-        # Test persona loader
-        loader = PersonaLoader()
-        _ = loader.list_personas()
-
+        console.print(info_panel(f"Starting BMad content inventory scan from {base_path}"))
+        
+        # Create inventory instance
+        inventory = BmadContentInventory(base_path=Path(base_path))
+        
+        # Perform full scan
+        inventory.scan_all()
+        
+        # Generate report
+        report = inventory.generate_report()
+        
+        # Display summary
+        summary = report["summary"]
+        console.print(success_panel(f"Inventory scan completed: {summary['total_items']} items found"))
+        
+        # Create summary table
+        table = Table(title="BMad Content Inventory Summary")
+        table.add_column("Content Type", style="cyan")
+        table.add_column("Count", style="green", justify="right")
+        
+        for content_type, count in summary["by_type"].items():
+            table.add_row(content_type.title(), str(count))
+        
+        console.print(table)
+        
+        if verbose:
+            # Show detailed breakdown
+            console.print("\n[bold]Detailed Breakdown:[/bold]")
+            
+            for category in ["personas", "tasks", "templates", "checklists"]:
+                items = report[category]
+                if items:
+                    console.print(f"\n[bold cyan]{category.title()}:[/bold cyan]")
+                    for item in items[:5]:  # Show first 5 items
+                        console.print(f"  • {item['name']}")
+                    if len(items) > 5:
+                        console.print(f"  ... and {len(items) - 5} more")
+        
+        # Save report if output file specified
+        if output_file:
+            output_path = Path(output_file)
+            inventory.save_report(output_path)
+            console.print(success_panel(f"Inventory report saved to {output_path}"))
+        
+        # Display conversion strategy information
+        strategy = inventory.conversion_strategy
+        validation_rules = strategy.get_validation_rules()
+        
+        console.print(info_panel("Conversion Strategy Generated"))
+        console.print(f"• JSON Schemas: {len(validation_rules['json_schemas'])} types")
+        console.print(f"• CI Checks: {len(validation_rules['ci_checks'])} validations")
+        
+        # Display directory structure plan
+        structure_plan = strategy.plan_directory_structure()
+        console.print(info_panel("Directory Structure Plan"))
+        for directory, description in structure_plan.items():
+            console.print(f"• {directory}: {len(description)} components")
+        
     except Exception as e:
-        logger.error(f"Health check failed: {e}")
-        checks["Agent Registry"] = False
+        logger.error(f"BMad inventory failed: {e}")
+        console.print(error_panel(f"BMad inventory failed: {e}"))
+        raise typer.Exit(1)
 
-    # Display results
-    table = Table(title="System Health Check")
-    table.add_column("Component", style="cyan")
-    table.add_column("Status", style="green")
 
-    for component, status in checks.items():
-        status_text = "✓ Healthy" if status else "✗ Unhealthy"
-        status_style = "green" if status else "red"
-        table.add_row(component, f"[{status_style}]{status_text}[/{status_style}]")
-
-    console.print(table)
-
-    if all(checks.values()):
-        console.print(success_panel("All systems operational"))
-    else:
-        console.print(error_panel("Some systems are experiencing issues"))
-        sys.exit(1)
+@bmad_cmd.command("convert-persona")
+def convert_persona(
+    persona_name: str = typer.Argument(..., help="Name of the BMad persona to convert (e.g., 'dev.md')"),
+    output_file: Optional[str] = typer.Option(
+        None, "--output", "-o", help="Output file for converted persona YAML"
+    ),
+    base_path: Optional[str] = typer.Option(
+        ".bmad-core", "--base-path", "-b", help="Base path to BMad content directory"
+    )
+):
+    """Convert a specific BMad persona to Orchestra YAML format."""
+    try:
+        console.print(info_panel(f"Converting BMad persona: {persona_name}"))
+        
+        # Create inventory and scan agents
+        inventory = BmadContentInventory(base_path=Path(base_path))
+        agents = inventory.scan_agents()
+        
+        # Find the specified persona
+        target_persona = None
+        for agent in agents:
+            if agent.name == persona_name:
+                target_persona = agent
+                break
+        
+        if not target_persona:
+            available_personas = [agent.name for agent in agents]
+            console.print(error_panel(f"Persona '{persona_name}' not found"))
+            console.print(f"Available personas: {', '.join(available_personas)}")
+            raise typer.Exit(1)
+        
+        # Convert to Orchestra schema
+        strategy = inventory.conversion_strategy
+        orchestra_schema = strategy.convert_persona(target_persona)
+        
+        # Display conversion results
+        console.print(success_panel(f"Successfully converted persona: {persona_name}"))
+        console.print(f"• Schema Type: {orchestra_schema.schema_type}")
+        console.print(f"• Version: {orchestra_schema.version}")
+        console.print(f"• Valid: {orchestra_schema.is_valid()}")
+        
+        if not orchestra_schema.is_valid():
+            errors = orchestra_schema.get_validation_errors()
+            console.print(warning_panel("Validation errors found:"))
+            for error in errors:
+                console.print(f"  • {error}")
+        
+        # Save converted schema if output file specified
+        if output_file:
+            output_path = Path(output_file)
+            
+            # Convert to YAML format for saving
+            import yaml
+            yaml_content = yaml.dump(orchestra_schema.schema_definition, default_flow_style=False, sort_keys=False)
+            
+            with open(output_path, 'w', encoding='utf-8') as f:
+                f.write(yaml_content)
+            
+            console.print(success_panel(f"Converted persona saved to {output_path}"))
+        else:
+            # Display schema structure
+            console.print("\n[bold]Schema Structure:[/bold]")
+            schema_def = orchestra_schema.schema_definition
+            for section, content in schema_def.items():
+                if isinstance(content, dict):
+                    console.print(f"• {section}: {len(content)} fields")
+                else:
+                    console.print(f"• {section}: {content}")
+        
+    except Exception as e:
+        logger.error(f"Persona conversion failed: {e}")
+        console.print(error_panel(f"Persona conversion failed: {e}"))
+        raise typer.Exit(1)

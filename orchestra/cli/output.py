@@ -25,6 +25,11 @@ def success_panel(message: str) -> Panel:
     return Panel(f"✅ {message}", title="Success", border_style="green")
 
 
+def warning_panel(message: str) -> Panel:
+    """Create a warning panel."""
+    return Panel(f"⚠️ {message}", title="Warning", border_style="yellow")
+
+
 def display_banner(console: Console, version: str) -> None:
     """Display the Orchestra banner."""
     banner_text = f"""
