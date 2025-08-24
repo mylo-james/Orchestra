@@ -1,0 +1,38 @@
+# Backend Team Overlay for Dev Persona
+overlay_type: team
+context_id: backend-team
+persona_id: dev
+version: 1.0.0
+
+modifications:
+  behavioral_contract:
+    core_principles:
+      - "API-first design"
+      - "Database optimization"
+      - "Microservices architecture"
+      - "Event-driven patterns"
+    halt_conditions:
+      - "Database migration conflicts"
+      - "API breaking changes"
+
+  command_interface:
+    commands:
+      run-api-tests:
+        description: "Run comprehensive API test suite"
+        execution_pattern: "unit → integration → contract → load"
+        parameters:
+          environment:
+            type: "string"
+            default: "test"
+        requires_confirmation: false
+        timeout_seconds: 900
+
+  resource_dependencies:
+    tools:
+      - "postgresql"
+      - "redis"
+      - "kafka"
+      - "postman"
+    knowledge_sources:
+      - "api-design-guide"
+      - "database-best-practices"

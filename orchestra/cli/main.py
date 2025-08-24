@@ -9,7 +9,7 @@ from rich.console import Console
 from rich.traceback import install
 
 from orchestra.cli.circuit_breaker_commands import cb_app
-from orchestra.cli.commands import agent_cmd, bmad_cmd, config_cmd, dev_cmd, workflow_cmd
+from orchestra.cli.commands import agent_cmd, bmad_cmd, config_cmd, dev_cmd, workflow_cmd, overlay_cmd
 from orchestra.cli.output import display_banner, display_error, display_success
 from orchestra.cli.security_commands import security_app, security_health_check
 from orchestra.config.settings import get_settings
@@ -32,6 +32,7 @@ app = typer.Typer(
 
 # Add command groups
 app.add_typer(agent_cmd, name="agent", help="👥 Agent management commands")
+app.add_typer(overlay_cmd, name="overlays", help="🎨 Persona overlay management commands")
 app.add_typer(workflow_cmd, name="workflow", help="🔄 Workflow orchestration commands")
 app.add_typer(config_cmd, name="config", help="⚙️ Configuration management commands")
 app.add_typer(dev_cmd, name="dev", help="🛠️ Development and debugging commands")

@@ -17,8 +17,9 @@ from orchestra.cli.output import (
     success_panel,
     warning_panel,
 )
-from orchestra.system.bmad_inventory import BmadContentInventory
-from orchestra.system.bmad_persona_converter import BmadPersonaConverter
+# BMad imports moved to tools/bmad-conversion/
+# from orchestra.system.bmad_inventory import BmadContentInventory
+# from orchestra.system.bmad_persona_converter import BmadPersonaConverter
 from orchestra.system.resource_loader import ResourceLoader, ResourceType
 from orchestra.system.task_engine import TaskEngine
 from orchestra.system.template_processor import TemplateProcessor
@@ -33,6 +34,9 @@ console = Console()
 
 # Create command groups
 agent_cmd = typer.Typer(help="Agent management commands")
+
+# Create overlay management command group  
+overlay_cmd = typer.Typer(help="Persona overlay management commands")
 workflow_cmd = typer.Typer(help="Workflow orchestration commands")
 config_cmd = typer.Typer(help="Configuration management commands")
 dev_cmd = typer.Typer(help="Development tools and utilities")
@@ -337,13 +341,24 @@ def search_personas(keyword: str):
 
 
 @agent_cmd.command("activate")
-def activate_persona(persona_id: str):
-    """Activate a persona for the current session."""
+def activate_persona(
+    persona_id: str,
+    team: Optional[str] = typer.Option(None, "--team", "-t", help="Team context for persona overlay"),
+    project: Optional[str] = typer.Option(None, "--project", "-p", help="Project context for persona overlay")
+):
+    """Activate a persona for the current session with optional team/project context."""
     try:
-        console.print(info_panel(f"Activating persona: {persona_id}"))
+        context_info = []
+        if team:
+            context_info.append(f"team={team}")
+        if project:
+            context_info.append(f"project={project}")
+        
+        context_str = f" ({', '.join(context_info)})" if context_info else ""
+        console.print(info_panel(f"Activating persona: {persona_id}{context_str}"))
         
         loader = get_persona_loader()
-        persona_spec = loader.load_persona(persona_id)
+        persona_spec = loader.load_persona(persona_id, team_id=team, project_id=project)
         
         if not persona_spec:
             console.print(error_panel(f"Persona '{persona_id}' not found"))
@@ -365,11 +380,17 @@ def activate_persona(persona_id: str):
             "Persona activated",
             persona_id=persona_id,
             persona_name=persona_spec.identity.name,
-            persona_role=persona_spec.identity.role
+            persona_role=persona_spec.identity.role,
+            team_id=team,
+            project_id=project
         )
         
-        console.print(success_panel(f"Activated persona: {persona_spec.identity.name}"))
+        console.print(success_panel(f"✅ Activated persona: {persona_spec.identity.name}"))
         console.print(f"Role: {persona_spec.identity.role}")
+        if team:
+            console.print(f"Team context: {team}")
+        if project:
+            console.print(f"Project context: {project}")
         
         if persona_spec.command_interface.commands:
             console.print(f"Available commands: {len(persona_spec.command_interface.commands)}")
@@ -1539,4 +1560,126 @@ def execute_checklist(
     except Exception as e:
         logger.error(f"Checklist execution failed: {e}")
         console.print(error_panel(f"Checklist execution failed: {e}"))
+        raise typer.Exit(1)
+
+
+# Overlay Management Commands
+@overlay_cmd.command("preview")
+def preview_merged_persona(
+    persona_id: str,
+    team: Optional[str] = typer.Option(None, "--team", "-t", help="Team context"),
+    project: Optional[str] = typer.Option(None, "--project", "-p", help="Project context")
+):
+    """Preview merged persona with overlays applied."""
+    try:
+        loader = get_persona_loader()
+        persona_spec = loader.load_persona(persona_id, team_id=team, project_id=project)
+        
+        if not persona_spec:
+            console.print(error_panel(f"Persona '{persona_id}' not found"))
+            raise typer.Exit(1)
+        
+        console.print(f"\n[bold blue]Merged Persona Preview: {persona_spec.identity.name}[/bold blue]")
+        console.print(f"[dim]ID: {persona_spec.identity.id}[/dim]")
+        if team:
+            console.print(f"[dim]Team: {team}[/dim]")
+        if project:
+            console.print(f"[dim]Project: {project}[/dim]")
+        
+        # Show core principles
+        if persona_spec.behavioral_contract.core_principles:
+            console.print(f"\n[bold]Core Principles:[/bold]")
+            for principle in persona_spec.behavioral_contract.core_principles:
+                console.print(f"  • {principle}")
+        
+        # Show commands
+        if persona_spec.command_interface.commands:
+            console.print(f"\n[bold]Available Commands:[/bold]")
+            for cmd_name, cmd_def in persona_spec.command_interface.commands.items():
+                description = cmd_def.description if hasattr(cmd_def, 'description') else "No description"
+                console.print(f"  • [cyan]{cmd_name}[/cyan]: {description}")
+        
+        # Show tools
+        if persona_spec.resource_dependencies.tools:
+            console.print(f"\n[bold]Tools:[/bold]")
+            tools_str = ", ".join(persona_spec.resource_dependencies.tools)
+            console.print(f"  {tools_str}")
+        
+    except Exception as e:
+        logger.error(f"Failed to preview persona: {e}")
+        console.print(error_panel(f"Failed to preview persona: {e}"))
+        raise typer.Exit(1)
+
+
+@overlay_cmd.command("list")
+def list_overlays(
+    persona_id: Optional[str] = typer.Option(None, "--persona", "-p", help="Filter by persona ID")
+):
+    """List available overlay files."""
+    try:
+        from pathlib import Path
+        
+        console.print(info_panel("Discovering overlay files..."))
+        
+        overlays = []
+        
+        # Scan team overlays
+        teams_path = Path("teams")
+        if teams_path.exists():
+            for team_dir in teams_path.iterdir():
+                if team_dir.is_dir():
+                    personas_dir = team_dir / "personas"
+                    if personas_dir.exists():
+                        for overlay_file in personas_dir.glob("*.yaml"):
+                            if not persona_id or overlay_file.stem == persona_id:
+                                overlays.append({
+                                    "type": "team",
+                                    "context": team_dir.name,
+                                    "persona": overlay_file.stem,
+                                    "path": str(overlay_file)
+                                })
+        
+        # Scan project overlays
+        projects_path = Path("projects")
+        if projects_path.exists():
+            for project_dir in projects_path.iterdir():
+                if project_dir.is_dir():
+                    personas_dir = project_dir / "personas"
+                    if personas_dir.exists():
+                        for overlay_file in personas_dir.glob("*.yaml"):
+                            if not persona_id or overlay_file.stem == persona_id:
+                                overlays.append({
+                                    "type": "project",
+                                    "context": project_dir.name,
+                                    "persona": overlay_file.stem,
+                                    "path": str(overlay_file)
+                                })
+        
+        if not overlays:
+            console.print(warning_panel("No overlay files found"))
+            return
+        
+        # Display overlays in a table
+        from rich.table import Table
+        
+        table = Table(title="Available Overlays")
+        table.add_column("Type", style="cyan")
+        table.add_column("Context", style="green")
+        table.add_column("Persona", style="yellow")
+        table.add_column("Path", style="dim")
+        
+        for overlay in sorted(overlays, key=lambda x: (x["type"], x["context"], x["persona"])):
+            table.add_row(
+                overlay["type"].title(),
+                overlay["context"],
+                overlay["persona"],
+                overlay["path"]
+            )
+        
+        console.print(table)
+        console.print(success_panel(f"Found {len(overlays)} overlay files"))
+        
+    except Exception as e:
+        logger.error(f"Failed to list overlays: {e}")
+        console.print(error_panel(f"Failed to list overlays: {e}"))
         raise typer.Exit(1)
