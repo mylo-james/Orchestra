@@ -16,6 +16,7 @@ from orchestra.cli.output import (
     warning_panel,
 )
 from orchestra.system.bmad_inventory import BmadContentInventory
+from orchestra.system.bmad_persona_converter import BmadPersonaConverter
 from orchestra.system.factory import get_registry
 from orchestra.utils.logging import get_logger
 
@@ -263,4 +264,209 @@ def convert_persona(
     except Exception as e:
         logger.error(f"Persona conversion failed: {e}")
         console.print(error_panel(f"Persona conversion failed: {e}"))
+        raise typer.Exit(1)
+
+
+@bmad_cmd.command("convert-all-personas")
+def convert_all_personas(
+    output_dir: Optional[str] = typer.Option(
+        "orchestra/personas/bmad", "--output-dir", "-d", help="Output directory for converted personas"
+    ),
+    base_path: Optional[str] = typer.Option(
+        ".bmad-core", "--base-path", "-b", help="Base path to BMad content directory"
+    ),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Show what would be converted without actually converting"
+    ),
+    force: bool = typer.Option(
+        False, "--force", help="Overwrite existing files"
+    )
+):
+    """Convert all BMad personas to Orchestra YAML format (Story 1.2)."""
+    try:
+        console.print(info_panel(f"Starting batch conversion of BMad personas from {base_path}"))
+        
+        # Create inventory and converter
+        inventory = BmadContentInventory(base_path=Path(base_path))
+        converter = BmadPersonaConverter(output_directory=Path(output_dir))
+        
+        # Scan for BMad personas
+        bmad_personas = inventory.scan_agents()
+        target_personas = converter.identify_target_personas(bmad_personas)
+        
+        console.print(success_panel(f"Found {len(target_personas)} BMad personas to convert"))
+        
+        # Show what will be converted
+        table = Table(title="BMad Personas to Convert")
+        table.add_column("Persona", style="cyan")
+        table.add_column("File", style="white")
+        table.add_column("Status", style="green")
+        
+        for persona in target_personas:
+            status = "✓ Ready" if persona.path.exists() else "✗ Missing"
+            table.add_row(
+                persona.name.replace('.md', ''),
+                str(persona.path.name),
+                status
+            )
+        
+        console.print(table)
+        
+        if dry_run:
+            console.print(info_panel("Dry run completed - no files were converted"))
+            return
+        
+        # Check if output directory exists and has files
+        output_path = Path(output_dir)
+        if output_path.exists() and list(output_path.glob("*.yaml")) and not force:
+            console.print(warning_panel(f"Output directory {output_dir} contains YAML files"))
+            console.print("Use --force to overwrite existing files")
+            raise typer.Exit(1)
+        
+        # Perform conversion
+        console.print(info_panel("Converting personas..."))
+        results = converter.convert_and_save_all(target_personas)
+        
+        # Display results
+        successful_results = [r for r in results if r.success]
+        failed_results = [r for r in results if not r.success]
+        
+        console.print(success_panel(f"Conversion completed: {len(successful_results)}/{len(results)} successful"))
+        
+        if successful_results:
+            console.print("\n[bold green]Successfully Converted:[/bold green]")
+            for result in successful_results:
+                console.print(f"  ✓ {result.persona_id}.yaml")
+        
+        if failed_results:
+            console.print("\n[bold red]Failed Conversions:[/bold red]")
+            for result in failed_results:
+                console.print(f"  ✗ {result.persona_id or 'unknown'}")
+                for error in result.validation_errors:
+                    console.print(f"    • {error}")
+        
+        # Performance summary
+        console.print(f"\n[bold]Output Directory:[/bold] {output_path}")
+        yaml_files = list(output_path.glob("*.yaml"))
+        console.print(f"[bold]Total Files:[/bold] {len(yaml_files)}")
+        
+        if len(successful_results) == len(target_personas):
+            console.print(success_panel("All BMad personas successfully converted to Orchestra format!"))
+        else:
+            console.print(warning_panel(f"{len(failed_results)} conversions failed - check errors above"))
+            raise typer.Exit(1)
+        
+    except Exception as e:
+        logger.error(f"Batch persona conversion failed: {e}")
+        console.print(error_panel(f"Batch persona conversion failed: {e}"))
+        raise typer.Exit(1)
+
+
+@bmad_cmd.command("validate-converted-personas")
+def validate_converted_personas(
+    personas_dir: str = typer.Argument(..., help="Directory containing converted persona YAML files"),
+    verbose: bool = typer.Option(
+        False, "--verbose", "-v", help="Show detailed validation results"
+    )
+):
+    """Validate converted persona YAML files against Orchestra schema."""
+    try:
+        personas_path = Path(personas_dir)
+        
+        if not personas_path.exists():
+            console.print(error_panel(f"Directory not found: {personas_dir}"))
+            raise typer.Exit(1)
+        
+        console.print(info_panel(f"Validating converted personas in {personas_dir}"))
+        
+        # Find all YAML files
+        yaml_files = list(personas_path.glob("*.yaml"))
+        
+        if not yaml_files:
+            console.print(warning_panel("No YAML files found in directory"))
+            return
+        
+        console.print(f"Found {len(yaml_files)} YAML files to validate")
+        
+        # Create converter for validation
+        converter = BmadPersonaConverter()
+        
+        # Validate each file
+        validation_results = []
+        
+        for yaml_file in yaml_files:
+            try:
+                # Load YAML content
+                with open(yaml_file, 'r') as f:
+                    yaml_content = f.read()
+                
+                # Parse YAML to create PersonaSpec
+                import yaml
+                parsed_yaml = yaml.safe_load(yaml_content)
+                
+                # Create a minimal PersonaSpec for validation
+                from orchestra.system.specs import PersonaIdentity, PersonaSpec, BehavioralContract, CommandInterface, ResourceDependencies
+                
+                identity = PersonaIdentity(
+                    name=parsed_yaml['identity']['name'],
+                    id=parsed_yaml['identity']['id'],
+                    title=parsed_yaml['identity']['title'],
+                    role=parsed_yaml['identity']['role'],
+                    icon=parsed_yaml['identity'].get('icon', '🤖'),
+                    when_to_use=parsed_yaml['identity'].get('when_to_use', ''),
+                    style=parsed_yaml['identity'].get('style', ''),
+                    focus=parsed_yaml['identity'].get('focus', '')
+                )
+                
+                behavioral_contract = BehavioralContract()
+                command_interface = CommandInterface()
+                resource_dependencies = ResourceDependencies()
+                
+                persona_spec = PersonaSpec(
+                    identity=identity,
+                    behavioral_contract=behavioral_contract,
+                    command_interface=command_interface,
+                    resource_dependencies=resource_dependencies,
+                    version=parsed_yaml.get('version', '1.0.0')
+                )
+                
+                # Validate the spec
+                validation_result = converter.validate_persona_schema(persona_spec)
+                validation_results.append((yaml_file.name, validation_result))
+                
+            except Exception as e:
+                validation_results.append((yaml_file.name, type('ValidationResult', (), {
+                    'is_valid': False,
+                    'errors': [f"Validation error: {str(e)}"]
+                })()))
+        
+        # Display results
+        valid_count = len([r for _, r in validation_results if r.is_valid])
+        invalid_count = len(validation_results) - valid_count
+        
+        if valid_count == len(validation_results):
+            console.print(success_panel(f"All {len(validation_results)} persona files are valid!"))
+        else:
+            console.print(warning_panel(f"Validation completed: {valid_count} valid, {invalid_count} invalid"))
+        
+        # Show detailed results if requested or if there are errors
+        if verbose or invalid_count > 0:
+            table = Table(title="Validation Results")
+            table.add_column("File", style="cyan")
+            table.add_column("Status", style="white")
+            table.add_column("Errors", style="red")
+            
+            for filename, result in validation_results:
+                status = "✓ Valid" if result.is_valid else "✗ Invalid"
+                errors = "; ".join(result.errors) if not result.is_valid else ""
+                table.add_row(filename, status, errors)
+            
+            console.print(table)
+        
+        if invalid_count > 0:
+            raise typer.Exit(1)
+        
+    except Exception as e:
+        logger.error(f"Persona validation failed: {e}")
+        console.print(error_panel(f"Persona validation failed: {e}"))
         raise typer.Exit(1)

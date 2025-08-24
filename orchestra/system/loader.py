@@ -259,6 +259,27 @@ class PersonaLoader:
         except Exception as e:
             return [f"Validation error: {e}"]
 
+    def load_persona_from_file(self, file_path: Path) -> Optional[PersonaSpec]:
+        """
+        Load a persona from a specific file path.
+        
+        Args:
+            file_path: Path to the YAML file to load
+            
+        Returns:
+            PersonaSpec if successful, None otherwise
+        """
+        try:
+            with open(file_path, "r") as f:
+                data = yaml.safe_load(f)
+            
+            persona_id = file_path.stem
+            return self._parse_persona_data(data, persona_id)
+            
+        except Exception as e:
+            logger.error(f"Failed to load persona from {file_path}: {e}")
+            return None
+
     def clear_cache(self) -> None:
         """Clear the persona cache."""
         self._cache.clear()
