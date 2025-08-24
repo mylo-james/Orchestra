@@ -176,10 +176,10 @@ class TemplateProcessor:
 
         try:
             # Try to parse the template
-            template = self.env.from_string(content)
+            self.env.from_string(content)
 
             # Try to get the AST to catch more syntax issues
-            ast = self.env.parse(content)
+            self.env.parse(content)
 
         except TemplateError as e:
             errors.append(f"Template syntax error: {str(e)}")
@@ -343,7 +343,7 @@ class TemplateProcessor:
                     return obj.get(key, default)
                 else:
                     return getattr(obj, key, default)
-            except:
+            except Exception:
                 return default
 
         # Register filters

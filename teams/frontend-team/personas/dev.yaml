@@ -40,7 +40,7 @@ modifications:
             required: true
         requires_confirmation: false
         timeout_seconds: 600
-      
+
       build-storybook:
         description: "Build and deploy Storybook documentation"
         execution_pattern: "build → test → deploy"
@@ -50,7 +50,7 @@ modifications:
             default: "staging"
         requires_confirmation: false
         timeout_seconds: 300
-      
+
       audit-accessibility:
         description: "Run accessibility audit using axe-core"
         execution_pattern: "scan → report → fix"

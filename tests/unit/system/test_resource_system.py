@@ -5,7 +5,9 @@ from unittest.mock import patch
 
 import pytest
 
-from orchestra.system.bmad_inventory import BmadContentInventory
+import sys
+sys.path.append(str(Path(__file__).parent.parent.parent.parent / "tools" / "bmad-conversion"))
+from bmad_inventory import BmadContentInventory
 from orchestra.system.checklist_engine import ChecklistEngine, ChecklistExecutionResult
 from orchestra.system.resource_loader import (
     ResourceLoader,
@@ -175,7 +177,6 @@ class TestResourceLoader:
         result = resource_loader.load_resource(task_id, ResourceType.TASK)
 
         assert result.success is True
-        original_version = result.metadata.version
 
         # Simulate file change (mock file modification time)
         with patch("pathlib.Path.stat") as mock_stat:
@@ -561,7 +562,7 @@ class TestChecklistEngine:
 - [ ] Code coverage > 90%
 - [ ] Documentation updated
 
-## Optional Items  
+## Optional Items
 - [ ] Performance benchmarks run
 - [ ] Security scan completed
 """

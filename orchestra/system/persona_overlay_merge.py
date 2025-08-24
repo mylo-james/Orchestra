@@ -246,8 +246,6 @@ class OverlayMergeEngine:
         overlay_type: OverlayType,
     ) -> tuple[Any, List[MergeConflict]]:
         """Merge a specific section (e.g., behavioral_contract, command_interface)."""
-        conflicts = []
-
         if section_name == "behavioral_contract":
             return self._merge_behavioral_contract(
                 base_section, overlay_data, overlay_type
@@ -293,13 +291,13 @@ class OverlayMergeEngine:
 
         # Handle scalar fields (project wins)
         scalar_fields = ["interaction_style", "decision_framework"]
-        for field in scalar_fields:
-            if field in overlay_data:
-                old_value = getattr(base_contract, field, None)
-                new_value = overlay_data[field]
+        for field_name in scalar_fields:
+            if field_name in overlay_data:
+                old_value = getattr(base_contract, field_name, None)
+                new_value = overlay_data[field_name]
                 if old_value != new_value and old_value is not None:
                     conflict = MergeConflict(
-                        field_path=f"behavioral_contract.{field}",
+                        field_path=f"behavioral_contract.{field_name}",
                         base_value=old_value,
                         team_value=(
                             new_value if overlay_type == OverlayType.TEAM else None
@@ -310,19 +308,19 @@ class OverlayMergeEngine:
                         resolution=ConflictResolution.PROJECT_WINS,
                         resolved_value=new_value,
                     )
-                    conflicts.append(conflict)
-                setattr(base_contract, field, new_value)
+                    conflicts.append(conflict                    )
+                setattr(base_contract, field_name, new_value)
 
         # Handle list fields (merge)
         list_fields = ["halt_conditions", "escalation_triggers"]
-        for field in list_fields:
-            if field in overlay_data:
-                base_list = getattr(base_contract, field, []) or []
-                overlay_list = overlay_data[field]
+        for field_name in list_fields:
+            if field_name in overlay_data:
+                base_list = getattr(base_contract, field_name, []) or []
+                overlay_list = overlay_data[field_name]
                 merged_list = list(base_list) + list(overlay_list)
                 # Remove duplicates
                 unique_list = list(dict.fromkeys(merged_list))
-                setattr(base_contract, field, unique_list)
+                setattr(base_contract, field_name, unique_list)
 
         return base_contract, conflicts
 
@@ -400,14 +398,14 @@ class OverlayMergeEngine:
             "required_services",
         ]
 
-        for field in list_fields:
-            if field in overlay_data:
-                base_list = getattr(base_deps, field, []) or []
-                overlay_list = overlay_data[field]
+        for field_name in list_fields:
+            if field_name in overlay_data:
+                base_list = getattr(base_deps, field_name, []) or []
+                overlay_list = overlay_data[field_name]
                 merged_list = list(base_list) + list(overlay_list)
                 # Remove duplicates while preserving order
                 unique_list = list(dict.fromkeys(merged_list))
-                setattr(base_deps, field, unique_list)
+                setattr(base_deps, field_name, unique_list)
 
         return base_deps, conflicts
 
@@ -424,13 +422,13 @@ class OverlayMergeEngine:
         # But we can allow certain fields like style, focus
         allowed_fields = ["style", "focus", "when_to_use"]
 
-        for field in allowed_fields:
-            if field in overlay_data:
-                old_value = getattr(base_identity, field, None)
-                new_value = overlay_data[field]
+        for field_name in allowed_fields:
+            if field_name in overlay_data:
+                old_value = getattr(base_identity, field_name, None)
+                new_value = overlay_data[field_name]
                 if old_value != new_value and old_value is not None:
                     conflict = MergeConflict(
-                        field_path=f"identity.{field}",
+                        field_path=f"identity.{field_name}",
                         base_value=old_value,
                         team_value=(
                             new_value if overlay_type == OverlayType.TEAM else None
@@ -442,7 +440,7 @@ class OverlayMergeEngine:
                         resolved_value=new_value,
                     )
                     conflicts.append(conflict)
-                setattr(base_identity, field, new_value)
+                setattr(base_identity, field_name, new_value)
 
         return base_identity, conflicts
 
@@ -641,9 +639,9 @@ class OverlayMergeEngine:
         """Validate overlay schema structure."""
         required_fields = ["overlay_type", "context_id", "persona_id", "modifications"]
 
-        for field in required_fields:
-            if field not in overlay_data:
-                raise OverlayValidationError(f"Missing required field: {field}")
+        for field_name in required_fields:
+            if field_name not in overlay_data:
+                raise OverlayValidationError(f"Missing required field: {field_name}")
 
         if not overlay_data["context_id"]:
             raise OverlayValidationError("context_id cannot be empty")

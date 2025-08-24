@@ -45,7 +45,7 @@ modifications:
             required: true
         requires_confirmation: true
         timeout_seconds: 1800
-      
+
       run-security-scan:
         description: "Run comprehensive security vulnerability scan"
         execution_pattern: "scan → analyze → report → remediate"
@@ -56,7 +56,7 @@ modifications:
             options: ["full", "payment", "auth", "api"]
         requires_confirmation: false
         timeout_seconds: 900
-      
+
       sync-inventory:
         description: "Synchronize inventory across all channels"
         execution_pattern: "validate → sync → verify → notify"
@@ -69,7 +69,7 @@ modifications:
             default: false
         requires_confirmation: true
         timeout_seconds: 600
-      
+
       process-payment:
         description: "Process payment with fraud detection"
         execution_pattern: "validate → fraud-check → process → confirm"

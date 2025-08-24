@@ -338,7 +338,7 @@ class TestOverlayMergeEngine:
 
     def test_audit_trail_generation(self, merge_engine, base_persona, team_overlay):
         """Test audit trail generation (AC: 3)."""
-        result = merge_engine.merge_persona(
+        merge_engine.merge_persona(
             base_persona=base_persona, team_overlay=team_overlay, project_overlay=None
         )
 

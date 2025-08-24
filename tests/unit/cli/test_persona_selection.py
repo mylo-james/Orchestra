@@ -566,7 +566,7 @@ class TestAuditAndSecurity:
                 mock_logger_instance = Mock()
                 mock_logger.return_value = mock_logger_instance
 
-                result = runner.invoke(app, ["agent", "activate", "dev"])
+                runner.invoke(app, ["agent", "activate", "dev"])
 
                 # Should have audit log entries
                 mock_logger_instance.info.assert_called()
@@ -601,7 +601,7 @@ class TestAuditAndSecurity:
                         "status": "success"
                     }
 
-                    result = runner.invoke(app, ["agent", "exec", "test"])
+                    runner.invoke(app, ["agent", "exec", "test"])
 
                     # Should have audit log entries for command execution
                     mock_logger_instance.info.assert_called()
@@ -619,7 +619,7 @@ class TestAuditAndSecurity:
                 mock_loader.load_persona.return_value = Mock()
                 mock_loader_class.return_value = mock_loader
 
-                result = runner.invoke(app, ["agent", "activate", "dev"])
+                runner.invoke(app, ["agent", "activate", "dev"])
 
                 # Security monitoring should be notified
                 # This would be implemented in the actual command handlers
