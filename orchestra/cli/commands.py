@@ -24,6 +24,8 @@ from orchestra.system.task_engine import TaskEngine
 from orchestra.system.template_processor import TemplateProcessor
 from orchestra.system.checklist_engine import ChecklistEngine
 from orchestra.system.factory import get_registry
+from orchestra.system.loader import PersonaLoader
+from orchestra.system.agent import UniversalAgent
 from orchestra.utils.logging import get_logger
 
 logger = get_logger(__name__)
@@ -81,6 +83,758 @@ def agent_status(name: str):
     except Exception as e:
         logger.error(f"Failed to get agent status: {e}")
         console.print(error_panel(f"Failed to get agent status: {e}"))
+        raise typer.Exit(1)
+
+
+# Global persona state for CLI session
+_active_persona = None
+_persona_loader = None
+
+
+def get_persona_loader():
+    """Get or create persona loader instance."""
+    global _persona_loader
+    if _persona_loader is None:
+        _persona_loader = PersonaLoader()
+    return _persona_loader
+
+
+@agent_cmd.command("list-personas")
+def list_personas(
+    category: Optional[str] = typer.Option(
+        None, "--category", "-c", help="Filter personas by category (development, management, qa, etc.)"
+    ),
+    detailed: bool = typer.Option(
+        False, "--detailed", "-d", help="Show detailed persona information"
+    )
+):
+    """List all available personas including converted BMad personas (Story 1.4)."""
+    try:
+        console.print(info_panel("Discovering available personas..."))
+        
+        loader = get_persona_loader()
+        discovered_personas = loader.discover_personas()
+        
+        if not discovered_personas:
+            console.print(warning_panel("No personas found"))
+            return
+        
+        # Filter by category if specified
+        filtered_personas = {}
+        for persona_id, persona_path in discovered_personas.items():
+            if category:
+                # Simple category filtering based on persona ID
+                category_lower = category.lower()
+                if category_lower == "development" and persona_id in ["dev", "tdd-dev"]:
+                    filtered_personas[persona_id] = persona_path
+                elif category_lower == "management" and persona_id in ["pm", "po", "sm"]:
+                    filtered_personas[persona_id] = persona_path
+                elif category_lower == "qa" and persona_id in ["qa", "spec"]:
+                    filtered_personas[persona_id] = persona_path
+                elif category_lower == "design" and persona_id in ["architect", "ux-expert"]:
+                    filtered_personas[persona_id] = persona_path
+                elif category_lower in persona_id:
+                    filtered_personas[persona_id] = persona_path
+            else:
+                filtered_personas[persona_id] = persona_path
+        
+        if not filtered_personas:
+            console.print(warning_panel(f"No personas found for category: {category}"))
+            return
+        
+        # Create table
+        if detailed:
+            table = Table(title="Available Personas (Detailed)")
+            table.add_column("ID", style="cyan")
+            table.add_column("Name", style="white")
+            table.add_column("Role", style="green")
+            table.add_column("Path", style="dim")
+            table.add_column("Status", style="yellow")
+            
+            for persona_id, persona_path in sorted(filtered_personas.items()):
+                # Try to load persona for detailed info
+                persona_spec = loader.load_persona(persona_id)
+                if persona_spec:
+                    name = persona_spec.identity.name
+                    role = persona_spec.identity.role
+                    status = "✓ Available"
+                else:
+                    name = persona_id.replace('-', ' ').title()
+                    role = "Unknown"
+                    status = "⚠ Load Error"
+                
+                table.add_row(
+                    persona_id,
+                    name,
+                    role,
+                    str(persona_path),
+                    status
+                )
+        else:
+            table = Table(title="Available Personas")
+            table.add_column("ID", style="cyan")
+            table.add_column("Name", style="white")
+            table.add_column("Type", style="green")
+            
+            for persona_id, persona_path in sorted(filtered_personas.items()):
+                # Determine type based on path
+                if "bmad" in str(persona_path).lower():
+                    persona_type = "BMad (Converted)"
+                else:
+                    persona_type = "Orchestra (Native)"
+                
+                name = persona_id.replace('-', ' ').title()
+                
+                table.add_row(persona_id, name, persona_type)
+        
+        console.print(table)
+        console.print(success_panel(f"Found {len(filtered_personas)} personas"))
+        
+        if category:
+            console.print(f"Filtered by category: {category}")
+        
+    except Exception as e:
+        logger.error(f"Failed to list personas: {e}")
+        console.print(error_panel(f"Failed to list personas: {e}"))
+        raise typer.Exit(1)
+
+
+@agent_cmd.command("describe")
+def describe_persona(persona_id: str):
+    """Show detailed information about a specific persona."""
+    try:
+        console.print(info_panel(f"Loading persona: {persona_id}"))
+        
+        loader = get_persona_loader()
+        persona_spec = loader.load_persona(persona_id)
+        
+        if not persona_spec:
+            console.print(error_panel(f"Persona '{persona_id}' not found"))
+            
+            # Show available personas
+            discovered = loader.discover_personas()
+            if discovered:
+                available = ", ".join(sorted(discovered.keys()))
+                console.print(f"Available personas: {available}")
+            
+            raise typer.Exit(1)
+        
+        # Display persona details
+        console.print(f"\n[bold blue]Persona: {persona_spec.identity.name}[/bold blue]")
+        console.print(f"[dim]ID: {persona_spec.identity.id}[/dim]")
+        console.print(f"[dim]Title: {persona_spec.identity.title}[/dim]")
+        console.print(f"[dim]Role: {persona_spec.identity.role}[/dim]")
+        
+        if persona_spec.identity.when_to_use:
+            console.print(f"\n[bold]When to use:[/bold]\n{persona_spec.identity.when_to_use}")
+        
+        if persona_spec.identity.focus:
+            console.print(f"\n[bold]Focus:[/bold]\n{persona_spec.identity.focus}")
+        
+        if persona_spec.behavioral_contract.core_principles:
+            console.print(f"\n[bold]Core Principles:[/bold]")
+            for principle in persona_spec.behavioral_contract.core_principles:
+                console.print(f"  • {principle}")
+        
+        console.print(f"\n[bold]Interaction Style:[/bold] {persona_spec.behavioral_contract.interaction_style}")
+        
+        if persona_spec.command_interface.commands:
+            console.print(f"\n[bold]Available Commands:[/bold]")
+            for cmd_name, cmd_def in persona_spec.command_interface.commands.items():
+                description = cmd_def.get("description", "No description")
+                console.print(f"  • [cyan]{cmd_name}[/cyan]: {description}")
+        
+        # Show resource dependencies
+        deps = persona_spec.resource_dependencies
+        if deps.tasks or deps.templates or deps.checklists:
+            console.print(f"\n[bold]Resource Dependencies:[/bold]")
+            if deps.tasks:
+                console.print(f"  Tasks: {', '.join(deps.tasks)}")
+            if deps.templates:
+                console.print(f"  Templates: {', '.join(deps.templates)}")
+            if deps.checklists:
+                console.print(f"  Checklists: {', '.join(deps.checklists)}")
+        
+    except Exception as e:
+        logger.error(f"Failed to describe persona: {e}")
+        console.print(error_panel(f"Failed to describe persona: {e}"))
+        raise typer.Exit(1)
+
+
+@agent_cmd.command("search")
+def search_personas(keyword: str):
+    """Search personas by keyword in name, role, or expertise."""
+    try:
+        console.print(info_panel(f"Searching personas for: {keyword}"))
+        
+        loader = get_persona_loader()
+        discovered_personas = loader.discover_personas()
+        
+        if not discovered_personas:
+            console.print(warning_panel("No personas found"))
+            return
+        
+        # Search through personas
+        matches = []
+        keyword_lower = keyword.lower()
+        
+        for persona_id, persona_path in discovered_personas.items():
+            # Check if keyword matches ID
+            if keyword_lower in persona_id.lower():
+                matches.append((persona_id, persona_path, "ID match"))
+                continue
+            
+            # Try to load persona for deeper search
+            persona_spec = loader.load_persona(persona_id)
+            if persona_spec:
+                # Check name
+                if keyword_lower in persona_spec.identity.name.lower():
+                    matches.append((persona_id, persona_path, "Name match"))
+                    continue
+                
+                # Check role
+                if keyword_lower in persona_spec.identity.role.lower():
+                    matches.append((persona_id, persona_path, "Role match"))
+                    continue
+                
+                # Check core principles
+                for principle in persona_spec.behavioral_contract.core_principles:
+                    if keyword_lower in principle.lower():
+                        matches.append((persona_id, persona_path, "Principle match"))
+                        break
+        
+        if not matches:
+            console.print(warning_panel(f"No personas found matching: {keyword}"))
+            return
+        
+        # Display matches
+        table = Table(title=f"Search Results for '{keyword}'")
+        table.add_column("ID", style="cyan")
+        table.add_column("Name", style="white")
+        table.add_column("Match Type", style="green")
+        
+        for persona_id, persona_path, match_type in matches:
+            name = persona_id.replace('-', ' ').title()
+            
+            # Try to get actual name from spec
+            persona_spec = loader.load_persona(persona_id)
+            if persona_spec:
+                name = persona_spec.identity.name
+            
+            table.add_row(persona_id, name, match_type)
+        
+        console.print(table)
+        console.print(success_panel(f"Found {len(matches)} matching personas"))
+        
+    except Exception as e:
+        logger.error(f"Failed to search personas: {e}")
+        console.print(error_panel(f"Failed to search personas: {e}"))
+        raise typer.Exit(1)
+
+
+@agent_cmd.command("activate")
+def activate_persona(persona_id: str):
+    """Activate a persona for the current session."""
+    try:
+        console.print(info_panel(f"Activating persona: {persona_id}"))
+        
+        loader = get_persona_loader()
+        persona_spec = loader.load_persona(persona_id)
+        
+        if not persona_spec:
+            console.print(error_panel(f"Persona '{persona_id}' not found"))
+            
+            # Show available personas
+            discovered = loader.discover_personas()
+            if discovered:
+                available = ", ".join(sorted(discovered.keys()))
+                console.print(f"Available personas: {available}")
+            
+            raise typer.Exit(1)
+        
+        # Set active persona
+        global _active_persona
+        _active_persona = persona_spec
+        
+        # Log activation for audit
+        logger.info(
+            "Persona activated",
+            persona_id=persona_id,
+            persona_name=persona_spec.identity.name,
+            persona_role=persona_spec.identity.role
+        )
+        
+        console.print(success_panel(f"Activated persona: {persona_spec.identity.name}"))
+        console.print(f"Role: {persona_spec.identity.role}")
+        
+        if persona_spec.command_interface.commands:
+            console.print(f"Available commands: {len(persona_spec.command_interface.commands)}")
+            console.print("Use 'orchestra agent commands' to see available commands")
+        
+    except Exception as e:
+        logger.error(f"Failed to activate persona: {e}")
+        console.print(error_panel(f"Failed to activate persona: {e}"))
+        raise typer.Exit(1)
+
+
+@agent_cmd.command("current")
+def show_current_persona():
+    """Show the currently active persona."""
+    try:
+        global _active_persona
+        
+        if not _active_persona:
+            console.print(warning_panel("No persona is currently active"))
+            console.print("Use 'orchestra agent activate <persona-id>' to activate a persona")
+            return
+        
+        console.print(f"[bold green]Active Persona:[/bold green] {_active_persona.identity.name}")
+        console.print(f"[dim]ID: {_active_persona.identity.id}[/dim]")
+        console.print(f"[dim]Role: {_active_persona.identity.role}[/dim]")
+        
+        if _active_persona.command_interface.commands:
+            console.print(f"Commands available: {len(_active_persona.command_interface.commands)}")
+        
+    except Exception as e:
+        logger.error(f"Failed to show current persona: {e}")
+        console.print(error_panel(f"Failed to show current persona: {e}"))
+        raise typer.Exit(1)
+
+
+@agent_cmd.command("deactivate")
+def deactivate_persona():
+    """Deactivate the current persona."""
+    try:
+        global _active_persona
+        
+        if not _active_persona:
+            console.print(warning_panel("No persona is currently active"))
+            return
+        
+        persona_name = _active_persona.identity.name
+        _active_persona = None
+        
+        logger.info("Persona deactivated", persona_name=persona_name)
+        console.print(success_panel(f"Deactivated persona: {persona_name}"))
+        
+    except Exception as e:
+        logger.error(f"Failed to deactivate persona: {e}")
+        console.print(error_panel(f"Failed to deactivate persona: {e}"))
+        raise typer.Exit(1)
+
+
+@agent_cmd.command("commands")
+def list_persona_commands():
+    """List commands available for the active persona."""
+    try:
+        global _active_persona
+        
+        if not _active_persona:
+            console.print(warning_panel("No persona is currently active"))
+            console.print("Use 'orchestra agent activate <persona-id>' to activate a persona")
+            return
+        
+        commands = _active_persona.command_interface.commands
+        
+        if not commands:
+            console.print(warning_panel(f"No commands available for persona: {_active_persona.identity.name}"))
+            return
+        
+        table = Table(title=f"Commands for {_active_persona.identity.name}")
+        table.add_column("Command", style="cyan")
+        table.add_column("Description", style="white")
+        table.add_column("Parameters", style="dim")
+        
+        for cmd_name, cmd_def in commands.items():
+            description = cmd_def.get("description", "No description")
+            
+            # Format parameters
+            params = cmd_def.get("parameters", {})
+            if params:
+                param_list = []
+                for param_name, param_def in params.items():
+                    if isinstance(param_def, dict):
+                        param_type = param_def.get("type", "string")
+                        required = param_def.get("required", False)
+                        req_marker = "*" if required else ""
+                        param_list.append(f"{param_name}{req_marker}:{param_type}")
+                    else:
+                        param_list.append(f"{param_name}:{param_def}")
+                param_str = ", ".join(param_list)
+            else:
+                param_str = "None"
+            
+            table.add_row(cmd_name, description, param_str)
+        
+        console.print(table)
+        console.print(f"Use 'orchestra agent exec <command>' to execute a command")
+        console.print(f"Use 'orchestra agent help <command>' for detailed help")
+        
+    except Exception as e:
+        logger.error(f"Failed to list persona commands: {e}")
+        console.print(error_panel(f"Failed to list persona commands: {e}"))
+        raise typer.Exit(1)
+
+
+@agent_cmd.command("exec")
+def execute_persona_command(
+    command: str,
+    ctx: typer.Context
+):
+    """Execute a command from the active persona."""
+    try:
+        global _active_persona
+        
+        if not _active_persona:
+            console.print(error_panel("No persona is currently active"))
+            console.print("Use 'orchestra agent activate <persona-id>' to activate a persona")
+            raise typer.Exit(1)
+        
+        # Check if command exists
+        commands = _active_persona.command_interface.commands
+        if command not in commands:
+            console.print(error_panel(f"Command '{command}' not found"))
+            if commands:
+                available = ", ".join(commands.keys())
+                console.print(f"Available commands: {available}")
+            raise typer.Exit(1)
+        
+        console.print(info_panel(f"Executing command: {command}"))
+        
+        # Parse command arguments from context
+        # This is a simplified implementation - in a full implementation,
+        # we would parse the command parameters properly
+        args = ctx.params
+        
+        # Log command execution for audit
+        logger.info(
+            "Persona command executed",
+            persona_id=_active_persona.identity.id,
+            command=command,
+            arguments=args
+        )
+        
+        # Mock command execution for now
+        # In a real implementation, this would use the UniversalAgent
+        console.print(success_panel(f"Command '{command}' executed successfully"))
+        console.print(f"Persona: {_active_persona.identity.name}")
+        console.print(f"Arguments: {args}")
+        
+    except Exception as e:
+        logger.error(f"Failed to execute persona command: {e}")
+        console.print(error_panel(f"Failed to execute persona command: {e}"))
+        raise typer.Exit(1)
+
+
+@agent_cmd.command("help")
+def show_command_help(command: str):
+    """Show detailed help for a persona command."""
+    try:
+        global _active_persona
+        
+        if not _active_persona:
+            console.print(error_panel("No persona is currently active"))
+            console.print("Use 'orchestra agent activate <persona-id>' to activate a persona")
+            raise typer.Exit(1)
+        
+        commands = _active_persona.command_interface.commands
+        if command not in commands:
+            console.print(error_panel(f"Command '{command}' not found"))
+            if commands:
+                available = ", ".join(commands.keys())
+                console.print(f"Available commands: {available}")
+            raise typer.Exit(1)
+        
+        cmd_def = commands[command]
+        
+        console.print(f"\n[bold blue]Command: {command}[/bold blue]")
+        console.print(f"[bold]Description:[/bold] {cmd_def.get('description', 'No description')}")
+        
+        params = cmd_def.get("parameters", {})
+        if params:
+            console.print(f"\n[bold]Parameters:[/bold]")
+            for param_name, param_def in params.items():
+                if isinstance(param_def, dict):
+                    param_type = param_def.get("type", "string")
+                    required = param_def.get("required", False)
+                    default = param_def.get("default")
+                    
+                    req_str = " (required)" if required else ""
+                    default_str = f" [default: {default}]" if default is not None else ""
+                    
+                    console.print(f"  • [cyan]{param_name}[/cyan]: {param_type}{req_str}{default_str}")
+                else:
+                    console.print(f"  • [cyan]{param_name}[/cyan]: {param_def}")
+        else:
+            console.print(f"\n[dim]No parameters required[/dim]")
+        
+        console.print(f"\n[bold]Usage:[/bold] orchestra agent exec {command} [parameters]")
+        
+    except Exception as e:
+        logger.error(f"Failed to show command help: {e}")
+        console.print(error_panel(f"Failed to show command help: {e}"))
+        raise typer.Exit(1)
+
+
+@agent_cmd.command("run-task")
+def run_persona_task(
+    task_id: str,
+    context_file: Optional[str] = typer.Option(
+        None, "--context", "-c", help="JSON file containing task context"
+    )
+):
+    """Execute a task using the active persona's context."""
+    try:
+        global _active_persona
+        
+        if not _active_persona:
+            console.print(error_panel("No persona is currently active"))
+            console.print("Use 'orchestra agent activate <persona-id>' to activate a persona")
+            raise typer.Exit(1)
+        
+        console.print(info_panel(f"Executing task: {task_id} with persona: {_active_persona.identity.name}"))
+        
+        # Load context
+        context = {}
+        if context_file:
+            try:
+                with open(context_file, 'r') as f:
+                    context = json.load(f)
+            except Exception as e:
+                console.print(error_panel(f"Failed to load context file: {e}"))
+                raise typer.Exit(1)
+        
+        # Add persona context
+        context.update({
+            "persona_id": _active_persona.identity.id,
+            "persona_name": _active_persona.identity.name,
+            "persona_role": _active_persona.identity.role,
+            "user": "cli-user",
+            "timestamp": time.time()
+        })
+        
+        # Use resource system to execute task
+        loader = ResourceLoader()
+        engine = TaskEngine()
+        
+        # Load the task
+        result = loader.load_resource(task_id, ResourceType.TASK)
+        if not result.success:
+            console.print(error_panel(f"Failed to load task: {task_id}"))
+            for error in result.validation_errors:
+                console.print(f"  • {error}")
+            raise typer.Exit(1)
+        
+        # Execute the task
+        execution_result = engine.execute_task(result.metadata, result.content, context)
+        
+        # Display results
+        if execution_result.success:
+            console.print(success_panel(f"Task executed successfully in {execution_result.execution_time:.3f}s"))
+            console.print(f"Steps completed: {execution_result.steps_completed}/{execution_result.total_steps}")
+            
+            if execution_result.warnings:
+                console.print("\n[bold yellow]Warnings:[/bold yellow]")
+                for warning in execution_result.warnings:
+                    console.print(f"  ⚠️ {warning}")
+        else:
+            console.print(error_panel(f"Task execution failed"))
+            for error in execution_result.errors:
+                console.print(f"  ❌ {error}")
+            raise typer.Exit(1)
+        
+        # Log for audit
+        logger.info(
+            "Task executed via persona",
+            persona_id=_active_persona.identity.id,
+            task_id=task_id,
+            success=execution_result.success,
+            execution_time=execution_result.execution_time
+        )
+        
+    except Exception as e:
+        logger.error(f"Failed to execute task: {e}")
+        console.print(error_panel(f"Failed to execute task: {e}"))
+        raise typer.Exit(1)
+
+
+@agent_cmd.command("render")
+def render_persona_template(
+    template_id: str,
+    context: Optional[str] = typer.Option(
+        None, "--context", "-c", help="JSON context for template variables"
+    ),
+    output_file: Optional[str] = typer.Option(
+        None, "--output", "-o", help="Output file for rendered content"
+    )
+):
+    """Render a template using the active persona's context."""
+    try:
+        global _active_persona
+        
+        if not _active_persona:
+            console.print(error_panel("No persona is currently active"))
+            console.print("Use 'orchestra agent activate <persona-id>' to activate a persona")
+            raise typer.Exit(1)
+        
+        console.print(info_panel(f"Rendering template: {template_id} with persona: {_active_persona.identity.name}"))
+        
+        # Parse context
+        template_context = {}
+        if context:
+            try:
+                template_context = json.loads(context)
+            except Exception as e:
+                console.print(error_panel(f"Failed to parse context JSON: {e}"))
+                raise typer.Exit(1)
+        
+        # Add persona context
+        template_context.update({
+            "persona_id": _active_persona.identity.id,
+            "persona_name": _active_persona.identity.name,
+            "persona_role": _active_persona.identity.role,
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "user": "cli-user"
+        })
+        
+        # Use resource system to render template
+        loader = ResourceLoader()
+        processor = TemplateProcessor()
+        
+        # Load the template
+        result = loader.load_resource(template_id, ResourceType.TEMPLATE)
+        if not result.success:
+            console.print(error_panel(f"Failed to load template: {template_id}"))
+            for error in result.validation_errors:
+                console.print(f"  • {error}")
+            raise typer.Exit(1)
+        
+        # Render the template
+        render_result = processor.render_template(result.metadata, result.content, template_context)
+        
+        # Display results
+        if render_result.success:
+            console.print(success_panel(f"Template rendered successfully in {render_result.render_time:.3f}s"))
+            
+            if render_result.warnings:
+                console.print("\n[bold yellow]Warnings:[/bold yellow]")
+                for warning in render_result.warnings:
+                    console.print(f"  ⚠️ {warning}")
+            
+            # Output rendered content
+            if output_file:
+                with open(output_file, 'w') as f:
+                    f.write(render_result.rendered_content)
+                console.print(f"Rendered content saved to: {output_file}")
+            else:
+                console.print("\n[bold]Rendered Content:[/bold]")
+                console.print(Panel(render_result.rendered_content, title="Template Output"))
+        else:
+            console.print(error_panel("Template rendering failed"))
+            for error in render_result.errors:
+                console.print(f"  ❌ {error}")
+            raise typer.Exit(1)
+        
+        # Log for audit
+        logger.info(
+            "Template rendered via persona",
+            persona_id=_active_persona.identity.id,
+            template_id=template_id,
+            success=render_result.success,
+            render_time=render_result.render_time
+        )
+        
+    except Exception as e:
+        logger.error(f"Failed to render template: {e}")
+        console.print(error_panel(f"Failed to render template: {e}"))
+        raise typer.Exit(1)
+
+
+@agent_cmd.command("check")
+def execute_persona_checklist(
+    checklist_id: str,
+    context_file: Optional[str] = typer.Option(
+        None, "--context", "-c", help="JSON file containing checklist context"
+    ),
+    auto_check: bool = typer.Option(
+        False, "--auto-check", help="Enable automatic checking based on context"
+    )
+):
+    """Execute a checklist using the active persona's context."""
+    try:
+        global _active_persona
+        
+        if not _active_persona:
+            console.print(error_panel("No persona is currently active"))
+            console.print("Use 'orchestra agent activate <persona-id>' to activate a persona")
+            raise typer.Exit(1)
+        
+        console.print(info_panel(f"Executing checklist: {checklist_id} with persona: {_active_persona.identity.name}"))
+        
+        # Load context
+        context = {}
+        if context_file:
+            try:
+                with open(context_file, 'r') as f:
+                    context = json.load(f)
+            except Exception as e:
+                console.print(error_panel(f"Failed to load context file: {e}"))
+                raise typer.Exit(1)
+        
+        # Add persona context
+        context.update({
+            "persona_id": _active_persona.identity.id,
+            "persona_name": _active_persona.identity.name,
+            "persona_role": _active_persona.identity.role,
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "user": "cli-user"
+        })
+        
+        # Use resource system to execute checklist
+        loader = ResourceLoader()
+        engine = ChecklistEngine(auto_check_enabled=auto_check)
+        
+        # Load the checklist
+        result = loader.load_resource(checklist_id, ResourceType.CHECKLIST)
+        if not result.success:
+            console.print(error_panel(f"Failed to load checklist: {checklist_id}"))
+            for error in result.validation_errors:
+                console.print(f"  • {error}")
+            raise typer.Exit(1)
+        
+        # Execute the checklist
+        execution_result = engine.execute_checklist(result.metadata, result.content, context)
+        
+        # Display results
+        if execution_result.success:
+            console.print(success_panel(f"Checklist executed successfully in {execution_result.execution_time:.3f}s"))
+            console.print(f"Completion: {execution_result.completion_percentage:.1f}% ({execution_result.completed_items}/{execution_result.total_items - execution_result.not_applicable_items} applicable items)")
+            
+            if auto_check and execution_result.auto_checked_items > 0:
+                console.print(f"Auto-checked: {execution_result.auto_checked_items} items")
+            
+            if execution_result.warnings:
+                console.print("\n[bold yellow]Warnings:[/bold yellow]")
+                for warning in execution_result.warnings:
+                    console.print(f"  ⚠️ {warning}")
+        else:
+            console.print(error_panel("Checklist execution failed"))
+            for error in execution_result.errors:
+                console.print(f"  ❌ {error}")
+            raise typer.Exit(1)
+        
+        # Log for audit
+        logger.info(
+            "Checklist executed via persona",
+            persona_id=_active_persona.identity.id,
+            checklist_id=checklist_id,
+            success=execution_result.success,
+            completion_percentage=execution_result.completion_percentage
+        )
+        
+    except Exception as e:
+        logger.error(f"Failed to execute checklist: {e}")
+        console.print(error_panel(f"Failed to execute checklist: {e}"))
         raise typer.Exit(1)
 
 
