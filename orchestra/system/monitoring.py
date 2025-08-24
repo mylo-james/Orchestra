@@ -13,7 +13,7 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from typing import AsyncIterator, Optional
 
-from src.utils.logging import get_logger
+from orchestra.utils.logging import get_logger
 
 logger = get_logger(__name__)
 

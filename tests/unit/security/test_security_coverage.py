@@ -4,13 +4,13 @@
 # Test what actually exists first
 def test_security_module_imports():
     """Test security module imports."""
-    import src.security
-    import src.security.ai_agent_monitor
-    import src.security.ai_agent_validator
+    import orchestra.security
+    import orchestra.security.ai_agent_monitor
+    import orchestra.security.ai_agent_validator
 
-    assert src.security is not None
-    assert src.security.ai_agent_monitor is not None
-    assert src.security.ai_agent_validator is not None
+    assert orchestra.security is not None
+    assert orchestra.security.ai_agent_monitor is not None
+    assert orchestra.security.ai_agent_validator is not None
 
 
 class TestAIAgentMonitor:
@@ -18,20 +18,20 @@ class TestAIAgentMonitor:
 
     def test_monitor_class_import(self):
         """Test monitor class import."""
-        from src.security.ai_agent_monitor import AIAgentSecurityMonitor
+        from orchestra.security.ai_agent_monitor import AIAgentSecurityMonitor
 
         assert AIAgentSecurityMonitor is not None
 
     def test_monitor_creation(self):
         """Test monitor creation."""
-        from src.security.ai_agent_monitor import AIAgentSecurityMonitor
+        from orchestra.security.ai_agent_monitor import AIAgentSecurityMonitor
 
         monitor = AIAgentSecurityMonitor()
         assert monitor is not None
 
     def test_monitor_has_basic_functionality(self):
         """Test monitor has basic functionality."""
-        from src.security.ai_agent_monitor import AIAgentSecurityMonitor
+        from orchestra.security.ai_agent_monitor import AIAgentSecurityMonitor
 
         monitor = AIAgentSecurityMonitor()
 
@@ -40,7 +40,7 @@ class TestAIAgentMonitor:
 
     def test_monitor_validation_basic(self):
         """Test basic monitor validation."""
-        from src.security.ai_agent_monitor import AIAgentSecurityMonitor
+        from orchestra.security.ai_agent_monitor import AIAgentSecurityMonitor
 
         monitor = AIAgentSecurityMonitor()
 
@@ -55,7 +55,7 @@ class TestAIAgentMonitor:
 
     def test_monitor_output_security_check(self):
         """Test monitor output security check."""
-        from src.security.ai_agent_monitor import AIAgentSecurityMonitor
+        from orchestra.security.ai_agent_monitor import AIAgentSecurityMonitor
 
         monitor = AIAgentSecurityMonitor()
 
@@ -69,7 +69,7 @@ class TestAIAgentMonitor:
 
     def test_monitor_timing_functionality(self):
         """Test monitor timing functionality."""
-        from src.security.ai_agent_monitor import AIAgentSecurityMonitor
+        from orchestra.security.ai_agent_monitor import AIAgentSecurityMonitor
 
         monitor = AIAgentSecurityMonitor()
 
@@ -88,20 +88,20 @@ class TestAIAgentValidator:
 
     def test_validator_class_import(self):
         """Test validator class import."""
-        from src.security.ai_agent_validator import AIAgentValidator
+        from orchestra.security.ai_agent_validator import AIAgentValidator
 
         assert AIAgentValidator is not None
 
     def test_validator_creation(self):
         """Test validator creation."""
-        from src.security.ai_agent_validator import AIAgentValidator
+        from orchestra.security.ai_agent_validator import AIAgentValidator
 
         validator = AIAgentValidator("test-agent-id")
         assert validator is not None
 
     def test_validator_has_basic_functionality(self):
         """Test validator has basic functionality."""
-        from src.security.ai_agent_validator import AIAgentValidator
+        from orchestra.security.ai_agent_validator import AIAgentValidator
 
         validator = AIAgentValidator("test-agent")
 
@@ -110,7 +110,7 @@ class TestAIAgentValidator:
 
     def test_validator_input_validation(self):
         """Test validator input validation."""
-        from src.security.ai_agent_validator import AIAgentValidator
+        from orchestra.security.ai_agent_validator import AIAgentValidator
 
         validator = AIAgentValidator("test-agent")
 
@@ -124,7 +124,7 @@ class TestAIAgentValidator:
 
     def test_validator_output_validation(self):
         """Test validator output validation."""
-        from src.security.ai_agent_validator import AIAgentValidator
+        from orchestra.security.ai_agent_validator import AIAgentValidator
 
         validator = AIAgentValidator("test-agent")
 
@@ -138,7 +138,7 @@ class TestAIAgentValidator:
 
     def test_validator_safety_check(self):
         """Test validator safety check."""
-        from src.security.ai_agent_validator import AIAgentValidator
+        from orchestra.security.ai_agent_validator import AIAgentValidator
 
         validator = AIAgentValidator("test-agent")
 
@@ -152,7 +152,7 @@ class TestAIAgentValidator:
 
     def test_multiple_validators(self):
         """Test creating multiple validators."""
-        from src.security.ai_agent_validator import AIAgentValidator
+        from orchestra.security.ai_agent_validator import AIAgentValidator
 
         validator1 = AIAgentValidator("agent-1")
         validator2 = AIAgentValidator("agent-2")
@@ -167,14 +167,14 @@ class TestSecurityEnums:
 
     def test_security_event_type_enum(self):
         """Test SecurityEventType enum."""
-        from src.security.ai_agent_monitor import SecurityEventType
+        from orchestra.security.ai_agent_monitor import SecurityEventType
 
         # Test that enum exists and has values
         assert SecurityEventType is not None
 
     def test_security_severity_enum(self):
         """Test SecuritySeverity enum."""
-        from src.security.ai_agent_monitor import SecuritySeverity
+        from orchestra.security.ai_agent_monitor import SecuritySeverity
 
         # Test that enum values exist
         assert SecuritySeverity.LOW is not None

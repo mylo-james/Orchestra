@@ -52,7 +52,7 @@ tests/
 ```ini
 [tool.pytest.ini_options]
 minversion = "7.0"
-addopts = "-ra -q --cov=src --cov-fail-under=90 --cov-report=term-missing --cov-report=html --cov-report=json"
+addopts = "-ra -q --cov=orchestra --cov-fail-under=90 --cov-report=term-missing --cov-report=html --cov-report=json"
 testpaths = ["tests"]
 asyncio_mode = "auto"
 ```

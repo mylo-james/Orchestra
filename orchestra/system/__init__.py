@@ -1,11 +1,11 @@
 """Orchestra System - Core persona-based agent system."""
 
-from src.system.agent import UniversalAgent
-from src.system.base import AgentContext, SecureAgent
-from src.system.factory import create_agent, get_registry, list_personas
-from src.system.loader import PersonaLoader
-from src.system.monitoring import AgentMonitor
-from src.system.specs import (
+from orchestra.system.agent import UniversalAgent
+from orchestra.system.base import AgentContext, SecureAgent
+from orchestra.system.factory import create_agent, get_registry, list_personas
+from orchestra.system.loader import PersonaLoader
+from orchestra.system.monitoring import AgentMonitor
+from orchestra.system.specs import (
     BehavioralContract,
     CommandDefinition,
     CommandInterface,
@@ -14,7 +14,7 @@ from src.system.specs import (
     PersonaSpec,
     ResourceDependencies,
 )
-from src.system.tools import create_github_pr_tool, list_repositories_tool
+from orchestra.system.tools import create_github_pr_tool, list_repositories_tool
 
 __all__ = [
     # Core classes

@@ -13,7 +13,7 @@ from typing import Any, Dict
 import httpx
 import openai
 
-from src.utils.circuit_breaker import (
+from orchestra.utils.circuit_breaker import (
     CircuitBreakerError,
     get_circuit_breaker_stats,
     get_failing_services,

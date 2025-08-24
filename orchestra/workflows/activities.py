@@ -7,9 +7,9 @@ from typing import Any, Dict
 
 from temporalio import activity
 
-from src.system.agent import UniversalAgent
-from src.system.factory import get_registry
-from src.utils.logging import get_logger
+from orchestra.system.agent import UniversalAgent
+from orchestra.system.factory import get_registry
+from orchestra.utils.logging import get_logger
 
 logger = get_logger(__name__)
 

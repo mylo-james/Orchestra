@@ -74,13 +74,13 @@ def fix_formatting() -> bool:
 
     # Run Black to fix formatting
     black_success, _ = run_command(
-        ["poetry", "run", "black", "src/", "tests/"], "Black code formatting"
+        ["poetry", "run", "black", "orchestra/", "tests/"], "Black code formatting"
     )
     success = success and black_success
 
     # Run isort to fix import sorting
     isort_success, _ = run_command(
-        ["poetry", "run", "isort", "src/", "tests/"], "isort import sorting"
+        ["poetry", "run", "isort", "orchestra/", "tests/"], "isort import sorting"
     )
     success = success and isort_success
 
@@ -93,7 +93,8 @@ def fix_linting() -> bool:
 
     # Run Ruff with --fix to auto-fix issues
     success, _ = run_command(
-        ["poetry", "run", "ruff", "check", "--fix", "src/", "tests/"], "Ruff auto-fix"
+        ["poetry", "run", "ruff", "check", "--fix", "orchestra/", "tests/"],
+        "Ruff auto-fix",
     )
 
     return success
@@ -129,7 +130,7 @@ def check_remaining_issues() -> Tuple[bool, List[str]]:
 
     # Check Black formatting
     black_success, black_output = run_command(
-        ["poetry", "run", "black", "--check", "src/", "tests/"],
+        ["poetry", "run", "black", "--check", "orchestra/", "tests/"],
         "Check Black formatting",
     )
     if not black_success:
@@ -137,21 +138,22 @@ def check_remaining_issues() -> Tuple[bool, List[str]]:
 
     # Check isort
     isort_success, isort_output = run_command(
-        ["poetry", "run", "isort", "--check-only", "src/", "tests/"], "Check isort"
+        ["poetry", "run", "isort", "--check-only", "orchestra/", "tests/"],
+        "Check isort",
     )
     if not isort_success:
         issues.append("Import sorting issues remain")
 
     # Check Ruff
     ruff_success, ruff_output = run_command(
-        ["poetry", "run", "ruff", "check", "src/", "tests/"], "Check Ruff linting"
+        ["poetry", "run", "ruff", "check", "orchestra/", "tests/"], "Check Ruff linting"
     )
     if not ruff_success:
         issues.append("Ruff linting issues remain")
 
     # Check MyPy (informational only)
     mypy_success, mypy_output = run_command(
-        ["poetry", "run", "mypy", "src/"], "Check MyPy type hints"
+        ["poetry", "run", "mypy", "orchestra/"], "Check MyPy type hints"
     )
     if not mypy_success:
         issues.append("MyPy type checking issues (may require manual fixes)")

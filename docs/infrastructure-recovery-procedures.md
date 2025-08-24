@@ -182,7 +182,7 @@ def backup_temporal_workflows():
    ```bash
    # Test all external service connections
    poetry run python -c "
-   from src.config.settings import get_settings
+   from orchestra.config.settings import get_settings
    settings = get_settings()
    print('✅ Configuration loaded successfully')
    "

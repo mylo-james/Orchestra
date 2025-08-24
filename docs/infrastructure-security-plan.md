@@ -29,7 +29,7 @@ Based on comprehensive infrastructure assessment, Orchestra AI Agent System curr
 # .github/workflows/ci.yml - REMOVE continue-on-error
 - name: Run Security Scans
   run: |
-    poetry run bandit -r src/ -c bandit.yaml
+    poetry run bandit -r orchestra/ -c bandit.yaml
     poetry run safety check
   # REMOVE: continue-on-error: true
 ```
@@ -258,7 +258,7 @@ security_alerts:
 ```bash
 # Example: Automated Security Testing
 # 1. SAST (Static Application Security Testing)
-poetry run bandit -r src/ -f json
+poetry run bandit -r orchestra/ -f json
 
 # 2. DAST (Dynamic Application Security Testing)
 zap-baseline.py -t http://localhost:8000

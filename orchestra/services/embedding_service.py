@@ -6,9 +6,9 @@ from typing import Dict, List
 
 from openai import AsyncOpenAI
 
-from src.config.settings import get_settings
-from src.utils.circuit_breaker import CircuitBreaker
-from src.utils.logging import get_logger
+from orchestra.config.settings import get_settings
+from orchestra.utils.circuit_breaker import CircuitBreaker
+from orchestra.utils.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -33,7 +33,7 @@ class EmbeddingService:
         self.model = model
 
         # Circuit breaker for OpenAI API calls
-        from src.utils.circuit_breaker import CircuitBreakerConfig
+        from orchestra.utils.circuit_breaker import CircuitBreakerConfig
 
         config = CircuitBreakerConfig(
             failure_threshold=3,

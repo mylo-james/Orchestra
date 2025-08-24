@@ -6,8 +6,8 @@ from typing import Any, Dict
 
 from temporalio import activity
 
-from src.security.ai_agent_validator import AIAgentValidator
-from src.utils.logging import get_logger
+from orchestra.security.ai_agent_validator import AIAgentValidator
+from orchestra.utils.logging import get_logger
 
 logger = get_logger(__name__)
 

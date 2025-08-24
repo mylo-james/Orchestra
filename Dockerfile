@@ -38,7 +38,7 @@ RUN poetry config virtualenvs.create false \
     && rm -rf $POETRY_CACHE_DIR
 
 # Copy application code
-COPY src/ ./src/
+COPY orchestra/ ./orchestra/
 COPY scripts/ ./scripts/
 COPY tests/ ./tests/
 
@@ -55,7 +55,7 @@ EXPOSE 8000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD python -c "import src; print('Orchestra is healthy')" || exit 1
+    CMD python -c "import orchestra; print('Orchestra is healthy')" || exit 1
 
 # Default command
-CMD ["python", "-m", "src.cli.main", "--help"]
+CMD ["python", "-m", "orchestra.cli.main", "--help"]

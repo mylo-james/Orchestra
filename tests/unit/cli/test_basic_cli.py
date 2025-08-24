@@ -6,33 +6,33 @@ class TestCLIImports:
 
     def test_cli_main_import(self):
         """Test CLI main module import."""
-        import src.cli.main
+        import orchestra.cli.main
 
-        assert src.cli.main is not None
+        assert orchestra.cli.main is not None
 
     def test_cli_commands_import(self):
         """Test CLI commands module import."""
-        import src.cli.commands
+        import orchestra.cli.commands
 
-        assert src.cli.commands is not None
+        assert orchestra.cli.commands is not None
 
     def test_cli_output_import(self):
         """Test CLI output module import."""
-        import src.cli.output
+        import orchestra.cli.output
 
-        assert src.cli.output is not None
+        assert orchestra.cli.output is not None
 
     def test_cli_security_commands_import(self):
         """Test CLI security commands import."""
-        import src.cli.security_commands
+        import orchestra.cli.security_commands
 
-        assert src.cli.security_commands is not None
+        assert orchestra.cli.security_commands is not None
 
     def test_cli_circuit_breaker_commands_import(self):
         """Test CLI circuit breaker commands import."""
-        import src.cli.circuit_breaker_commands
+        import orchestra.cli.circuit_breaker_commands
 
-        assert src.cli.circuit_breaker_commands is not None
+        assert orchestra.cli.circuit_breaker_commands is not None
 
 
 class TestCLIBasicFunctionality:
@@ -40,7 +40,7 @@ class TestCLIBasicFunctionality:
 
     def test_create_basic_command_group(self):
         """Test basic command group creation."""
-        from src.cli.commands import create_basic_command_group
+        from orchestra.cli.commands import create_basic_command_group
 
         # Should be able to create command group
         group = create_basic_command_group("test", "Test group")
@@ -48,7 +48,7 @@ class TestCLIBasicFunctionality:
 
     def test_output_functions_exist(self):
         """Test that output functions exist."""
-        from src.cli.output import (
+        from orchestra.cli.output import (
             display_banner,
             display_error,
             display_info,
@@ -65,14 +65,14 @@ class TestCLIBasicFunctionality:
 
     def test_main_app_configuration(self):
         """Test main app configuration."""
-        from src.cli.main import app
+        from orchestra.cli.main import app
 
         # App should exist and be configured
         assert app is not None
 
     def test_command_groups_exist(self):
         """Test that command groups exist."""
-        from src.cli.commands import agent_cmd, config_cmd, dev_cmd, workflow_cmd
+        from orchestra.cli.commands import agent_cmd, config_cmd, dev_cmd, workflow_cmd
 
         assert agent_cmd is not None
         assert config_cmd is not None
@@ -81,13 +81,13 @@ class TestCLIBasicFunctionality:
 
     def test_security_app_exists(self):
         """Test security app exists."""
-        from src.cli.security_commands import security_app
+        from orchestra.cli.security_commands import security_app
 
         assert security_app is not None
 
     def test_circuit_breaker_app_exists(self):
         """Test circuit breaker app exists."""
-        from src.cli.circuit_breaker_commands import cb_app
+        from orchestra.cli.circuit_breaker_commands import cb_app
 
         assert cb_app is not None
 
@@ -97,7 +97,7 @@ class TestCLIBasicFunctionality:
 
         from rich.console import Console
 
-        from src.cli.output import display_info, display_success
+        from orchestra.cli.output import display_info, display_success
 
         # Create console with string buffer
         output = StringIO()
@@ -114,14 +114,14 @@ class TestCLIBasicFunctionality:
         """Test typer app creation."""
         import typer
 
-        from src.cli.main import app
+        from orchestra.cli.main import app
 
         # Should be a typer app
         assert isinstance(app, typer.Typer)
 
     def test_command_callbacks(self):
         """Test command callback functions."""
-        from src.cli.commands import create_basic_command_group
+        from orchestra.cli.commands import create_basic_command_group
 
         # Create and test a command group
         test_group = create_basic_command_group("test", "Test command")
@@ -133,21 +133,21 @@ class TestCLIBasicFunctionality:
     def test_basic_imports_work(self):
         """Test that basic imports work without errors."""
         # These should all import successfully
-        import src.cli
-        import src.cli.circuit_breaker_commands
-        import src.cli.commands
-        import src.cli.main
-        import src.cli.output
-        import src.cli.security_commands
+        import orchestra.cli
+        import orchestra.cli.circuit_breaker_commands
+        import orchestra.cli.commands
+        import orchestra.cli.main
+        import orchestra.cli.output
+        import orchestra.cli.security_commands
 
         # All should be importable
         assert all(
             [
-                src.cli,
-                src.cli.main,
-                src.cli.commands,
-                src.cli.output,
-                src.cli.security_commands,
-                src.cli.circuit_breaker_commands,
+                orchestra.cli,
+                orchestra.cli.main,
+                orchestra.cli.commands,
+                orchestra.cli.output,
+                orchestra.cli.security_commands,
+                orchestra.cli.circuit_breaker_commands,
             ]
         )

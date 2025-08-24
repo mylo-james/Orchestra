@@ -9,11 +9,11 @@ import sys
 from pathlib import Path
 from typing import Any, Dict
 
-# Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+# Add orchestra to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent / "orchestra"))
 
-from src.config.settings import get_settings
-from src.utils.logging import SecurityAuditLogger, configure_logging, get_logger
+from orchestra.config.settings import get_settings
+from orchestra.utils.logging import SecurityAuditLogger, configure_logging, get_logger
 
 logger = get_logger(__name__)
 audit_logger = SecurityAuditLogger("orchestra.security.check")
@@ -31,7 +31,7 @@ def run_bandit_scan() -> Dict[str, Any]:
                 "run",
                 "bandit",
                 "-r",
-                "src/",
+                "orchestra/",
                 "-f",
                 "json",
                 "-c",
@@ -181,7 +181,7 @@ def check_secrets_in_code() -> Dict[str, Any]:
 
     try:
         # Scan Python files
-        for py_file in Path("src").rglob("*.py"):
+        for py_file in Path("orchestra").rglob("*.py"):
             if py_file.is_file():
                 content = py_file.read_text()
 
@@ -201,7 +201,7 @@ def check_secrets_in_code() -> Dict[str, Any]:
         audit_logger.log_security_event(
             "secrets_scan_completed",
             {
-                "files_scanned": len(list(Path("src").rglob("*.py"))),
+                "files_scanned": len(list(Path("orchestra").rglob("*.py"))),
                 "secrets_found": len(issues),
             },
         )

@@ -2,7 +2,7 @@
 
 from rich.console import Console
 
-from src.cli.output import (
+from orchestra.cli.output import (
     display_agent_status,
     display_banner,
     display_error,

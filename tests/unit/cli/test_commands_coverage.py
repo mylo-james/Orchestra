@@ -1,6 +1,6 @@
 """Coverage tests for CLI commands."""
 
-from src.cli.commands import agent_cmd, config_cmd, dev_cmd, workflow_cmd
+from orchestra.cli.commands import agent_cmd, config_cmd, dev_cmd, workflow_cmd
 
 
 class TestCommandGroupCoverage:

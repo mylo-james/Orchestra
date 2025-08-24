@@ -77,9 +77,15 @@ services:
     volumes:
       - .:/app
       - /app/.venv # Exclude virtual environment from bind mount
-    command: ['python', '-m', 'src.cli.main', 'serve']
+    command: ['python', '-m', 'orchestra.cli.main', 'serve']
     healthcheck:
-      test: ['CMD', 'python', '-c', "import src; print('Orchestra is healthy')"]
+      test:
+        [
+          'CMD',
+          'python',
+          '-c',
+          "import orchestra; print('Orchestra is healthy')",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3

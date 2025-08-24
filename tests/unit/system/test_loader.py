@@ -8,8 +8,8 @@ import pytest
 import yaml
 
 # Import the module to ensure it's loaded for coverage
-from src.system.loader import PersonaLoader
-from src.system.specs import PersonaSpec
+from orchestra.system.loader import PersonaLoader
+from orchestra.system.specs import PersonaSpec
 
 
 class TestPersonaLoader:
@@ -99,7 +99,7 @@ class TestPersonaLoader:
         assert loader._cache == {}
         assert loader._persona_paths == {}
         assert len(loader.search_paths) == 2
-        assert Path("src/personas") in loader.search_paths
+        assert Path("orchestra/personas") in loader.search_paths
         assert Path(".bmad-core/personas") in loader.search_paths
 
     def test_persona_loader_initialization_custom(self):
@@ -123,35 +123,35 @@ class TestPersonaLoader:
     def test_discover_personas_with_files(self, temp_dir):
         """Test persona discovery with actual files."""
         # Create test directories
-        src_personas = temp_dir / "src" / "personas"
+        orchestra_personas = temp_dir / "orchestra" / "personas"
         bmad_personas = temp_dir / ".bmad-core" / "personas"
-        src_personas.mkdir(parents=True)
+        orchestra_personas.mkdir(parents=True)
         bmad_personas.mkdir(parents=True)
 
         # Create test files
-        (src_personas / "dev.yaml").touch()
-        (src_personas / "security-dev.yaml").touch()
+        (orchestra_personas / "dev.yaml").touch()
+        (orchestra_personas / "security-dev.yaml").touch()
         (bmad_personas / "frontend-dev.yaml").touch()
-        (bmad_personas / "dev.yaml").touch()  # Should be overridden by src
+        (bmad_personas / "dev.yaml").touch()  # Should be overridden by orchestra
 
         # Mock search paths
         loader = PersonaLoader()
         loader.search_paths = [
-            temp_dir / "src" / "personas",
+            temp_dir / "orchestra" / "personas",
             temp_dir / ".bmad-core" / "personas",
         ]
 
         discovered = loader.discover_personas()
 
-        # Should have 3 unique personas (src/dev.yaml overrides bmad/dev.yaml)
+        # Should have 3 unique personas (orchestra/dev.yaml overrides bmad/dev.yaml)
         assert len(discovered) == 3
         assert "dev" in discovered
         assert "security-dev" in discovered
         assert "frontend-dev" in discovered
 
-        # Verify precedence - src should override bmad
-        assert discovered["dev"] == src_personas / "dev.yaml"
-        assert discovered["security-dev"] == src_personas / "security-dev.yaml"
+        # Verify precedence - orchestra should override bmad
+        assert discovered["dev"] == orchestra_personas / "dev.yaml"
+        assert discovered["security-dev"] == orchestra_personas / "security-dev.yaml"
         assert discovered["frontend-dev"] == bmad_personas / "frontend-dev.yaml"
 
     @patch("builtins.open", new_callable=mock_open)
@@ -574,9 +574,9 @@ class TestPersonaLoaderIntegration:
             base_path = Path(tmpdir)
 
             # Create directory structure
-            src_personas = base_path / "src" / "personas"
+            orchestra_personas = base_path / "orchestra" / "personas"
             bmad_personas = base_path / ".bmad-core" / "personas"
-            src_personas.mkdir(parents=True)
+            orchestra_personas.mkdir(parents=True)
             bmad_personas.mkdir(parents=True)
 
             # Create persona files
@@ -613,24 +613,24 @@ class TestPersonaLoaderIntegration:
             }
 
             # Write files
-            with open(src_personas / "dev.yaml", "w") as f:
+            with open(orchestra_personas / "dev.yaml", "w") as f:
                 yaml.dump(override_persona, f)
 
-            with open(src_personas / "security-dev.yaml", "w") as f:
+            with open(orchestra_personas / "security-dev.yaml", "w") as f:
                 yaml.dump(security_persona, f)
 
             with open(bmad_personas / "dev.yaml", "w") as f:
                 yaml.dump(dev_persona, f)
 
-            yield base_path, src_personas, bmad_personas
+            yield base_path, orchestra_personas, bmad_personas
 
     def test_precedence_system(self, temp_persona_structure):
         """Test that precedence system works correctly."""
-        base_path, src_personas, bmad_personas = temp_persona_structure
+        base_path, orchestra_personas, bmad_personas = temp_persona_structure
 
         loader = PersonaLoader()
         loader.search_paths = [
-            base_path / "src" / "personas",
+            base_path / "orchestra" / "personas",
             base_path / ".bmad-core" / "personas",
         ]
 
@@ -642,10 +642,10 @@ class TestPersonaLoaderIntegration:
         assert "dev" in discovered
         assert "security-dev" in discovered
 
-        # dev should come from src (override)
-        assert discovered["dev"] == src_personas / "dev.yaml"
-        # security-dev should come from src
-        assert discovered["security-dev"] == src_personas / "security-dev.yaml"
+        # dev should come from orchestra (override)
+        assert discovered["dev"] == orchestra_personas / "dev.yaml"
+        # security-dev should come from orchestra
+        assert discovered["security-dev"] == orchestra_personas / "security-dev.yaml"
 
         # Load the overridden persona
         dev_persona = loader.load_persona("dev")
@@ -655,11 +655,11 @@ class TestPersonaLoaderIntegration:
 
     def test_full_workflow(self, temp_persona_structure):
         """Test complete workflow: discover -> list -> load -> validate."""
-        base_path, src_personas, bmad_personas = temp_persona_structure
+        base_path, orchestra_personas, bmad_personas = temp_persona_structure
 
         loader = PersonaLoader()
         loader.search_paths = [
-            base_path / "src" / "personas",
+            base_path / "orchestra" / "personas",
             base_path / ".bmad-core" / "personas",
         ]
 
@@ -679,9 +679,9 @@ class TestPersonaLoaderIntegration:
         assert security_persona.identity.name == "Security Developer"
 
         # 3. Validate files
-        dev_errors = loader.validate_persona_file(src_personas / "dev.yaml")
+        dev_errors = loader.validate_persona_file(orchestra_personas / "dev.yaml")
         security_errors = loader.validate_persona_file(
-            src_personas / "security-dev.yaml"
+            orchestra_personas / "security-dev.yaml"
         )
 
         assert dev_errors == []
@@ -699,16 +699,16 @@ class TestPersonaLoaderIntegration:
 
     def test_error_handling_integration(self, temp_persona_structure):
         """Test error handling in integration scenarios."""
-        base_path, src_personas, bmad_personas = temp_persona_structure
+        base_path, orchestra_personas, bmad_personas = temp_persona_structure
 
         # Create invalid YAML file
-        invalid_file = src_personas / "invalid.yaml"
+        invalid_file = orchestra_personas / "invalid.yaml"
         with open(invalid_file, "w") as f:
             f.write("invalid: yaml: content: [")
 
         loader = PersonaLoader()
         loader.search_paths = [
-            base_path / "src" / "personas",
+            base_path / "orchestra" / "personas",
             base_path / ".bmad-core" / "personas",
         ]
 

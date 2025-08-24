@@ -164,7 +164,7 @@ gh pr create --title "Test security failure" --body "This should fail Bandit sca
 
 # Test security scans locally
 poetry install  # Install security tools
-poetry run bandit -r src/
+poetry run bandit -r orchestra/
 poetry run safety scan
 
 # Test full CI pipeline locally

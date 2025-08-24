@@ -1,5 +1,5 @@
 """
-Tests for src/cli/security_commands.py
+Tests for orchestra/cli/security_commands.py
 
 Tests security CLI commands for AI agent security monitoring and management.
 """
@@ -10,7 +10,7 @@ import click
 import pytest
 from typer.testing import CliRunner
 
-from src.cli.security_commands import (
+from orchestra.cli.security_commands import (
     generate_security_report,
     list_agent_metrics,
     security_app,
@@ -34,8 +34,8 @@ class TestSecurityApp:
 class TestSecurityStatus:
     """Test security_status command."""
 
-    @patch("src.cli.security_commands.AIAgentSecurityMonitor")
-    @patch("src.cli.security_commands.console")
+    @patch("orchestra.cli.security_commands.AIAgentSecurityMonitor")
+    @patch("orchestra.cli.security_commands.console")
     def test_status_normal_metrics(self, mock_console, mock_monitor_class):
         """Test status command with normal security metrics."""
         # Mock monitor instance and report
@@ -69,8 +69,8 @@ class TestSecurityStatus:
         # Verify console output
         assert mock_console.print.call_count >= 5
 
-    @patch("src.cli.security_commands.AIAgentSecurityMonitor")
-    @patch("src.cli.security_commands.console")
+    @patch("orchestra.cli.security_commands.AIAgentSecurityMonitor")
+    @patch("orchestra.cli.security_commands.console")
     def test_status_high_violation_rate(self, mock_console, mock_monitor_class):
         """Test status command with high violation rate (alert status)."""
         mock_monitor = MagicMock()
@@ -101,8 +101,8 @@ class TestSecurityStatus:
         mock_monitor_class.assert_called_once()
         mock_monitor.generate_security_report.assert_called_once()
 
-    @patch("src.cli.security_commands.AIAgentSecurityMonitor")
-    @patch("src.cli.security_commands.console")
+    @patch("orchestra.cli.security_commands.AIAgentSecurityMonitor")
+    @patch("orchestra.cli.security_commands.console")
     def test_status_no_security_concerns(self, mock_console, mock_monitor_class):
         """Test status command with no security concerns."""
         mock_monitor = MagicMock()
@@ -129,8 +129,8 @@ class TestSecurityStatus:
             "No security concerns identified" in str(call) for call in printed_calls
         )
 
-    @patch("src.cli.security_commands.AIAgentSecurityMonitor")
-    @patch("src.cli.security_commands.console")
+    @patch("orchestra.cli.security_commands.AIAgentSecurityMonitor")
+    @patch("orchestra.cli.security_commands.console")
     def test_status_exception_handling(self, mock_console, mock_monitor_class):
         """Test status command exception handling."""
         # Mock exception
@@ -150,8 +150,8 @@ class TestSecurityStatus:
 class TestListAgentMetrics:
     """Test list_agent_metrics command."""
 
-    @patch("src.cli.security_commands.AIAgentSecurityMonitor")
-    @patch("src.cli.security_commands.console")
+    @patch("orchestra.cli.security_commands.AIAgentSecurityMonitor")
+    @patch("orchestra.cli.security_commands.console")
     def test_agent_metrics_with_data(self, mock_console, mock_monitor_class):
         """Test agent metrics command with agent data."""
         mock_monitor = MagicMock()
@@ -178,8 +178,8 @@ class TestListAgentMetrics:
         # Verify console output includes agent metrics
         assert mock_console.print.call_count >= 3
 
-    @patch("src.cli.security_commands.AIAgentSecurityMonitor")
-    @patch("src.cli.security_commands.console")
+    @patch("orchestra.cli.security_commands.AIAgentSecurityMonitor")
+    @patch("orchestra.cli.security_commands.console")
     def test_agent_metrics_no_data(self, mock_console, mock_monitor_class):
         """Test agent metrics command with no agent data."""
         mock_monitor = MagicMock()
@@ -198,8 +198,8 @@ class TestListAgentMetrics:
             "No agent activity detected yet" in str(call) for call in printed_calls
         )
 
-    @patch("src.cli.security_commands.AIAgentSecurityMonitor")
-    @patch("src.cli.security_commands.console")
+    @patch("orchestra.cli.security_commands.AIAgentSecurityMonitor")
+    @patch("orchestra.cli.security_commands.console")
     def test_agent_metrics_different_violation_rates(
         self, mock_console, mock_monitor_class
     ):
@@ -235,8 +235,8 @@ class TestListAgentMetrics:
 class TestShowSecurityLogs:
     """Test show_security_logs command."""
 
-    @patch("src.cli.security_commands.AIAgentSecurityMonitor")
-    @patch("src.cli.security_commands.console")
+    @patch("orchestra.cli.security_commands.AIAgentSecurityMonitor")
+    @patch("orchestra.cli.security_commands.console")
     @patch("builtins.open", new_callable=mock_open)
     def test_show_logs_default_options(
         self, mock_file, mock_console, mock_monitor_class
@@ -258,8 +258,8 @@ class TestShowSecurityLogs:
         mock_monitor_class.assert_called_once()
         mock_monitor.security_events_log.exists.assert_called_once()
 
-    @patch("src.cli.security_commands.AIAgentSecurityMonitor")
-    @patch("src.cli.security_commands.console")
+    @patch("orchestra.cli.security_commands.AIAgentSecurityMonitor")
+    @patch("orchestra.cli.security_commands.console")
     @patch("builtins.open", new_callable=mock_open)
     def test_show_logs_with_filters(self, mock_file, mock_console, mock_monitor_class):
         """Test show logs command with filters."""
@@ -280,8 +280,8 @@ class TestShowSecurityLogs:
         mock_monitor_class.assert_called_once()
         mock_monitor.security_events_log.exists.assert_called_once()
 
-    @patch("src.cli.security_commands.AIAgentSecurityMonitor")
-    @patch("src.cli.security_commands.console")
+    @patch("orchestra.cli.security_commands.AIAgentSecurityMonitor")
+    @patch("orchestra.cli.security_commands.console")
     def test_show_logs_no_events(self, mock_console, mock_monitor_class):
         """Test show logs command with no events."""
         mock_monitor = MagicMock()
@@ -300,8 +300,8 @@ class TestShowSecurityLogs:
             for call in printed_calls
         )
 
-    @patch("src.cli.security_commands.AIAgentSecurityMonitor")
-    @patch("src.cli.security_commands.console")
+    @patch("orchestra.cli.security_commands.AIAgentSecurityMonitor")
+    @patch("orchestra.cli.security_commands.console")
     def test_show_logs_exception_handling(self, mock_console, mock_monitor_class):
         """Test show logs command exception handling."""
         # Mock exception during monitor creation
@@ -319,8 +319,8 @@ class TestShowSecurityLogs:
 class TestTestSecurityMonitoring:
     """Test test_security_monitoring command."""
 
-    @patch("src.cli.security_commands.AIAgentSecurityMonitor")
-    @patch("src.cli.security_commands.console")
+    @patch("orchestra.cli.security_commands.AIAgentSecurityMonitor")
+    @patch("orchestra.cli.security_commands.console")
     def test_security_monitoring_test(self, mock_console, mock_monitor_class):
         """Test security monitoring test command."""
         mock_monitor = MagicMock()
@@ -348,8 +348,8 @@ class TestTestSecurityMonitoring:
         assert mock_monitor.check_input_security.call_count >= 2
         assert mock_monitor.check_output_security.call_count >= 1
 
-    @patch("src.cli.security_commands.AIAgentSecurityMonitor")
-    @patch("src.cli.security_commands.console")
+    @patch("orchestra.cli.security_commands.AIAgentSecurityMonitor")
+    @patch("orchestra.cli.security_commands.console")
     def test_security_monitoring_test_exception_handling(
         self, mock_console, mock_monitor_class
     ):
@@ -371,8 +371,8 @@ class TestTestSecurityMonitoring:
 class TestGenerateSecurityReport:
     """Test generate_security_report command."""
 
-    @patch("src.cli.security_commands.AIAgentSecurityMonitor")
-    @patch("src.cli.security_commands.console")
+    @patch("orchestra.cli.security_commands.AIAgentSecurityMonitor")
+    @patch("orchestra.cli.security_commands.console")
     def test_generate_report_no_output_file(self, mock_console, mock_monitor_class):
         """Test generate report command without output file."""
         mock_monitor = MagicMock()
@@ -396,8 +396,8 @@ class TestGenerateSecurityReport:
         # Verify console output (report should be printed)
         assert mock_console.print.call_count >= 3
 
-    @patch("src.cli.security_commands.AIAgentSecurityMonitor")
-    @patch("src.cli.security_commands.console")
+    @patch("orchestra.cli.security_commands.AIAgentSecurityMonitor")
+    @patch("orchestra.cli.security_commands.console")
     @patch("builtins.open", new_callable=mock_open)
     def test_generate_report_with_output_file(
         self, mock_file, mock_console, mock_monitor_class
@@ -422,8 +422,8 @@ class TestGenerateSecurityReport:
         assert str(call_args[0]) == "security_report.json"
         assert call_args[1] == "w"
 
-    @patch("src.cli.security_commands.AIAgentSecurityMonitor")
-    @patch("src.cli.security_commands.console")
+    @patch("orchestra.cli.security_commands.AIAgentSecurityMonitor")
+    @patch("orchestra.cli.security_commands.console")
     def test_generate_report_exception_handling(self, mock_console, mock_monitor_class):
         """Test generate report command exception handling."""
         # Mock exception
@@ -448,7 +448,7 @@ class TestCliIntegration:
         runner = CliRunner()
 
         with patch(
-            "src.cli.security_commands.AIAgentSecurityMonitor"
+            "orchestra.cli.security_commands.AIAgentSecurityMonitor"
         ) as mock_monitor_class:
             mock_monitor = MagicMock()
             mock_monitor_class.return_value = mock_monitor
@@ -475,7 +475,7 @@ class TestCliIntegration:
         runner = CliRunner()
 
         with patch(
-            "src.cli.security_commands.AIAgentSecurityMonitor"
+            "orchestra.cli.security_commands.AIAgentSecurityMonitor"
         ) as mock_monitor_class:
             mock_monitor = MagicMock()
             mock_monitor_class.return_value = mock_monitor
@@ -492,7 +492,7 @@ class TestCliIntegration:
         runner = CliRunner()
 
         with patch(
-            "src.cli.security_commands.AIAgentSecurityMonitor"
+            "orchestra.cli.security_commands.AIAgentSecurityMonitor"
         ) as mock_monitor_class:
             mock_monitor = MagicMock()
             mock_monitor_class.return_value = mock_monitor
@@ -509,7 +509,7 @@ class TestCliIntegration:
         runner = CliRunner()
 
         with patch(
-            "src.cli.security_commands.AIAgentSecurityMonitor"
+            "orchestra.cli.security_commands.AIAgentSecurityMonitor"
         ) as mock_monitor_class:
             mock_monitor = MagicMock()
             mock_monitor_class.return_value = mock_monitor
@@ -527,7 +527,7 @@ class TestCliIntegration:
         runner = CliRunner()
 
         with patch(
-            "src.cli.security_commands.AIAgentSecurityMonitor"
+            "orchestra.cli.security_commands.AIAgentSecurityMonitor"
         ) as mock_monitor_class:
             mock_monitor = MagicMock()
             mock_monitor_class.return_value = mock_monitor
@@ -546,8 +546,8 @@ class TestCliIntegration:
 class TestSecurityCommandsEdgeCases:
     """Test edge cases and boundary conditions."""
 
-    @patch("src.cli.security_commands.AIAgentSecurityMonitor")
-    @patch("src.cli.security_commands.console")
+    @patch("orchestra.cli.security_commands.AIAgentSecurityMonitor")
+    @patch("orchestra.cli.security_commands.console")
     def test_status_division_by_zero_protection(self, mock_console, mock_monitor_class):
         """Test status command handles zero operations gracefully."""
         mock_monitor = MagicMock()
@@ -572,8 +572,8 @@ class TestSecurityCommandsEdgeCases:
         mock_monitor.generate_security_report.assert_called_once()
         assert mock_console.print.call_count >= 3
 
-    @patch("src.cli.security_commands.AIAgentSecurityMonitor")
-    @patch("src.cli.security_commands.console")
+    @patch("orchestra.cli.security_commands.AIAgentSecurityMonitor")
+    @patch("orchestra.cli.security_commands.console")
     def test_status_all_severity_levels(self, mock_console, mock_monitor_class):
         """Test status command with all severity levels."""
         mock_monitor = MagicMock()
@@ -615,7 +615,7 @@ class TestSecurityAppMainExecution:
         assert hasattr(security_app, "__call__")
 
         # Test that the main execution code exists in the module
-        with open("src/cli/security_commands.py", "r") as f:
+        with open("orchestra/cli/security_commands.py", "r") as f:
             content = f.read()
             assert 'if __name__ == "__main__":' in content
             assert "security_app()" in content

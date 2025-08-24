@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from src.services.external_service_client import ExternalServiceClient
+from orchestra.services.external_service_client import ExternalServiceClient
 
 
 class TestExternalServiceAsyncMethods:

@@ -1,5 +1,5 @@
 """
-Enhanced tests for src/cli/security_commands.py to achieve 90%+ coverage.
+Enhanced tests for orchestra/cli/security_commands.py to achieve 90%+ coverage.
 
 Focuses on testing edge cases and error conditions.
 """
@@ -11,7 +11,7 @@ import pytest
 import typer
 from typer.testing import CliRunner
 
-from src.cli.security_commands import (
+from orchestra.cli.security_commands import (
     list_agent_metrics,
     security_app,
     security_health_check,
@@ -22,7 +22,7 @@ from src.cli.security_commands import (
 class TestSecurityHealthCheck:
     """Test the security_health_check function."""
 
-    @patch("src.cli.security_commands.AIAgentSecurityMonitor")
+    @patch("orchestra.cli.security_commands.AIAgentSecurityMonitor")
     def test_health_check_success(self, mock_monitor_class):
         """Test successful health check."""
         mock_monitor = MagicMock()
@@ -46,7 +46,7 @@ class TestSecurityHealthCheck:
         mock_monitor.log_directory.exists.assert_called_once()
         mock_monitor.generate_security_report.assert_called_once()
 
-    @patch("src.cli.security_commands.AIAgentSecurityMonitor")
+    @patch("orchestra.cli.security_commands.AIAgentSecurityMonitor")
     def test_health_check_no_log_directory(self, mock_monitor_class):
         """Test health check when log directory doesn't exist."""
         mock_monitor = MagicMock()
@@ -60,7 +60,7 @@ class TestSecurityHealthCheck:
         result = security_health_check()
         assert result is False
 
-    @patch("src.cli.security_commands.AIAgentSecurityMonitor")
+    @patch("orchestra.cli.security_commands.AIAgentSecurityMonitor")
     def test_health_check_no_report(self, mock_monitor_class):
         """Test health check when report generation fails."""
         mock_monitor = MagicMock()
@@ -73,7 +73,7 @@ class TestSecurityHealthCheck:
         result = security_health_check()
         assert result is False
 
-    @patch("src.cli.security_commands.AIAgentSecurityMonitor")
+    @patch("orchestra.cli.security_commands.AIAgentSecurityMonitor")
     def test_health_check_exception(self, mock_monitor_class):
         """Test health check when an exception occurs."""
         mock_monitor_class.side_effect = Exception("Monitor initialization failed")
@@ -85,8 +85,8 @@ class TestSecurityHealthCheck:
 class TestListAgentMetricsEdgeCases:
     """Test edge cases for list_agent_metrics command."""
 
-    @patch("src.cli.security_commands.AIAgentSecurityMonitor")
-    @patch("src.cli.security_commands.console")
+    @patch("orchestra.cli.security_commands.AIAgentSecurityMonitor")
+    @patch("orchestra.cli.security_commands.console")
     def test_metrics_with_caution_status(self, mock_console, mock_monitor_class):
         """Test metrics display with caution status (10-20% violation rate)."""
         mock_monitor = MagicMock()
@@ -114,8 +114,8 @@ class TestListAgentMetricsEdgeCases:
             word in call_str for word in ["agent", "violations", "status", "15", "100"]
         )
 
-    @patch("src.cli.security_commands.AIAgentSecurityMonitor")
-    @patch("src.cli.security_commands.console")
+    @patch("orchestra.cli.security_commands.AIAgentSecurityMonitor")
+    @patch("orchestra.cli.security_commands.console")
     def test_metrics_exception_handling(self, mock_console, mock_monitor_class):
         """Test metrics command when an exception occurs."""
         mock_monitor_class.side_effect = Exception("Database connection failed")
@@ -138,8 +138,8 @@ class TestListAgentMetricsEdgeCases:
 class TestShowSecurityLogsEdgeCases:
     """Test edge cases for show_security_logs command."""
 
-    @patch("src.cli.security_commands.AIAgentSecurityMonitor")
-    @patch("src.cli.security_commands.console")
+    @patch("orchestra.cli.security_commands.AIAgentSecurityMonitor")
+    @patch("orchestra.cli.security_commands.console")
     def test_logs_with_json_decode_error(self, mock_console, mock_monitor_class):
         """Test logs command when some log lines have invalid JSON."""
         mock_monitor = MagicMock()
@@ -161,8 +161,8 @@ ANOTHER INVALID LINE
         # Should complete without error and show valid events
         assert mock_console.print.call_count >= 3  # Header + events
 
-    @patch("src.cli.security_commands.AIAgentSecurityMonitor")
-    @patch("src.cli.security_commands.console")
+    @patch("orchestra.cli.security_commands.AIAgentSecurityMonitor")
+    @patch("orchestra.cli.security_commands.console")
     def test_logs_with_filters(self, mock_console, mock_monitor_class):
         """Test logs command with agent and severity filters."""
         mock_monitor = MagicMock()
@@ -213,8 +213,8 @@ ANOTHER INVALID LINE
         # Should show filtered results
         assert mock_console.print.call_count >= 1
 
-    @patch("src.cli.security_commands.AIAgentSecurityMonitor")
-    @patch("src.cli.security_commands.console")
+    @patch("orchestra.cli.security_commands.AIAgentSecurityMonitor")
+    @patch("orchestra.cli.security_commands.console")
     def test_logs_with_severity_filter(self, mock_console, mock_monitor_class):
         """Test logs command with severity filter."""
         mock_monitor = MagicMock()
@@ -252,8 +252,8 @@ ANOTHER INVALID LINE
         # Should show filtered results
         assert mock_console.print.call_count >= 1
 
-    @patch("src.cli.security_commands.AIAgentSecurityMonitor")
-    @patch("src.cli.security_commands.console")
+    @patch("orchestra.cli.security_commands.AIAgentSecurityMonitor")
+    @patch("orchestra.cli.security_commands.console")
     def test_logs_with_unknown_severity_color(self, mock_console, mock_monitor_class):
         """Test logs with unknown severity level."""
         mock_monitor = MagicMock()
@@ -284,7 +284,7 @@ ANOTHER INVALID LINE
 class TestMainExecution:
     """Test main execution of the module."""
 
-    @patch("src.cli.security_commands.security_app")
+    @patch("orchestra.cli.security_commands.security_app")
     def test_main_execution(self, mock_app):
         """Test that main execution calls the app."""
         # Import and execute the main block

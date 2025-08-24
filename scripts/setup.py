@@ -120,7 +120,7 @@ def run_health_check():
     print("🏥 Running health check...")
 
     # Run Orchestra health check
-    result = run_command("poetry run python -m src.cli.main health", check=False)
+    result = run_command("poetry run python -m orchestra.cli.main health", check=False)
 
     if result.returncode == 0:
         print("✅ Health check passed")

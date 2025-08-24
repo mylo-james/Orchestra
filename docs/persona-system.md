@@ -8,7 +8,8 @@ Orchestra's persona system is the core innovation that distinguishes it from tra
 
 ### UniversalAgent Architecture
 
-The `UniversalAgent` class (`src/system/agent.py`):
+The `UniversalAgent` class (`orchestra/system/agent.py`):
+
 1. **Loads** persona specifications from YAML files
 2. **Configures** itself based on the persona's behavioral contract
 3. **Executes** commands defined in the persona's command interface
@@ -19,19 +20,21 @@ The `UniversalAgent` class (`src/system/agent.py`):
 Each persona YAML file defines:
 
 #### 1. Identity
+
 ```yaml
 identity:
-  name: 'Alex'                    # Persona name
-  id: 'dev'                      # Unique identifier
-  title: 'Orchestra Developer'   # Display title
+  name: 'Alex' # Persona name
+  id: 'dev' # Unique identifier
+  title: 'Orchestra Developer' # Display title
   role: 'Expert Python developer' # Primary role
-  icon: '💻'                     # Visual identifier
+  icon: '💻' # Visual identifier
   when_to_use: 'Code implementation, debugging...'
   style: 'Concise, pragmatic, security-conscious'
   focus: 'Executing story tasks with precision'
 ```
 
 #### 2. Behavioral Contract
+
 ```yaml
 behavioral_contract:
   core_principles:
@@ -46,6 +49,7 @@ behavioral_contract:
 ```
 
 #### 3. Command Interface
+
 ```yaml
 command_interface:
   execution_model: 'sequential'
@@ -61,6 +65,7 @@ command_interface:
 ```
 
 #### 4. Resource Dependencies
+
 ```yaml
 resource_dependencies:
   knowledge_sources:
@@ -77,14 +82,17 @@ resource_dependencies:
 ## Current Personas
 
 ### 1. Orchestrator (Brendan)
-**File**: `src/personas/orchestrator.yaml`
+
+**File**: `orchestra/personas/orchestrator.yaml`
 
 **Role**: Strategic planner and workflow coordinator
+
 - Analyzes user requests and creates implementation plans
 - Coordinates handoffs between specialized personas
 - Manages workflow orchestration through Temporal
 
 **Key Commands**:
+
 - `plan` - Analyze request and create detailed implementation plan
 - `clarify` - Ask targeted clarifying questions
 - `coordinate` - Initiate and coordinate Temporal workflows
@@ -93,14 +101,17 @@ resource_dependencies:
 **When to Use**: Complex requests requiring planning, multi-step workflows, unclear requirements
 
 ### 2. Developer (Alex)
-**File**: `src/personas/dev.yaml`
+
+**File**: `orchestra/personas/dev.yaml`
 
 **Role**: Expert Python/Temporal developer specializing in implementation
+
 - Handles code generation, testing, and validation
 - Follows TDD principles and security best practices
 - Implements story tasks with comprehensive test coverage
 
 **Key Commands**:
+
 - `implement-story` - Full story implementation workflow
 - `implement-feature` - Specific feature development
 - `fix-bug` - Debug and resolve issues
@@ -110,14 +121,17 @@ resource_dependencies:
 **When to Use**: Code implementation, debugging, refactoring, test creation
 
 ### 3. Release (Riley)
-**File**: `src/personas/release.yaml`
+
+**File**: `orchestra/personas/release.yaml`
 
 **Role**: Release management and deployment specialist
+
 - Manages Git workflows and branch protection
 - Creates pull requests and releases
 - Handles deployment coordination
 
 **Key Commands**:
+
 - `create-pr` - Create pull request with documentation
 - `create-release` - Version releases with proper tagging
 - `merge-pr` - Safe merge with validation
@@ -156,6 +170,7 @@ The system allows dynamic switching between personas based on task requirements:
 ### Command Execution Patterns
 
 Each persona command defines an execution pattern:
+
 - `→` separates sequential steps
 - Steps map to actual operations in the UniversalAgent
 - Patterns support parallel execution (planned)
@@ -164,16 +179,19 @@ Each persona command defines an execution pattern:
 ## Security Integration
 
 ### Validation
+
 - All persona configurations validated against schema
 - Input sanitization for command parameters
 - Security scanning of generated outputs
 
 ### Audit Logging
+
 - Persona loading and switching events
 - Command execution with correlation IDs
 - Agent handoff tracking
 
 ### Behavioral Constraints
+
 - Halt conditions prevent unsafe operations
 - Escalation triggers for critical issues
 - Security-first principles enforced
@@ -182,7 +200,7 @@ Each persona command defines an execution pattern:
 
 ### Adding New Personas
 
-1. Create new YAML file in `src/personas/`
+1. Create new YAML file in `orchestra/personas/`
 2. Define identity, behavioral contract, and commands
 3. Implement command handlers in UniversalAgent
 4. Add persona to CLI registration
@@ -203,18 +221,21 @@ Each persona command defines an execution pattern:
 ## Best Practices
 
 ### Persona Design
+
 - Keep personas focused on specific domains
 - Define clear when-to-use guidelines
 - Maintain consistent interaction styles
 - Include comprehensive halt conditions
 
 ### Command Design
+
 - Use descriptive execution patterns
 - Include proper timeout values
 - Add confirmation for destructive operations
 - Implement idempotent operations
 
 ### Security Considerations
+
 - Include security principles in behavioral contract
 - Implement proper input validation
 - Add audit logging for all operations
@@ -223,6 +244,7 @@ Each persona command defines an execution pattern:
 ## Future Enhancements
 
 The persona system is designed for extension:
+
 - **Resource System**: Task engines, template processors
 - **Learning**: Persona behavior adaptation over time
 - **Collaboration**: Multi-persona coordination patterns

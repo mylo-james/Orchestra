@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "AI Agent System for Development Team Orchestration"
 authors = ["Orchestra Development Team"]
 readme = "README.md"
-packages = [{include = "src"}]
+packages = [{include = "orchestra"}]
 
 [tool.poetry.dependencies]
 python = "^3.13.0"
@@ -54,7 +54,7 @@ pre-commit = "^4.3.0"
 pytest-timeout = "^2.4.0"
 
 [tool.poetry.scripts]
-orchestra = "src.cli.main:app"
+orchestra = "orchestra.cli.main:app"
 
 [build-system]
 requires = ["poetry-core", "setuptools>=78.1.1"]
@@ -82,7 +82,7 @@ ignore = ["E501"]  # line too long, handled by black
 # Pytest configuration
 [tool.pytest.ini_options]
 minversion = "7.0"
-addopts = "-ra -q --cov=src --cov-fail-under=90 --cov-report=term-missing --cov-report=html --cov-report=json --disable-warnings"
+addopts = "-ra -q --cov=orchestra --cov-fail-under=90 --cov-report=term-missing --cov-report=html --cov-report=json --disable-warnings"
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 asyncio_mode = "auto"
@@ -118,9 +118,9 @@ show_error_codes = true
 # Only ignore truly problematic modules that need extensive refactoring
 [[tool.mypy.overrides]]
 module = [
-    "src.utils.circuit_breaker",
-    "src.security.*",
-    "src.services.external_service_client"
+    "orchestra.utils.circuit_breaker",
+    "orchestra.security.*",
+    "orchestra.services.external_service_client"
 ]
 warn_return_any = false
 disallow_untyped_defs = false

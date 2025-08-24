@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from src.workflows.dev_team_workflow import (
+from orchestra.workflows.dev_team_workflow import (
     AgentType,
     DevTeamWorkflow,
     SecurityContext,

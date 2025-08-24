@@ -44,7 +44,7 @@ coverage:
     - 'docs/' # Don't include documentation
     - '**/__init__.py' # Don't require coverage for __init__ files
     - '**/conftest.py' # Don't require coverage for pytest config
-    - 'src/cli/output.py' # CLI output formatting (hard to test)
+    - 'orchestra/cli/output.py' # CLI output formatting (hard to test)
 
 # Comment configuration for pull requests
 comment:

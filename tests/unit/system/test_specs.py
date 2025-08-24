@@ -2,7 +2,7 @@
 
 import pytest
 
-from src.system.specs import (
+from orchestra.system.specs import (
     BehavioralContract,
     CommandDefinition,
     CommandInterface,

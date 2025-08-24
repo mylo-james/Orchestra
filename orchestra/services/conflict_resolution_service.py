@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime, timedelta
 from typing import List, Optional
 
-from src.models.knowledge import (
+from orchestra.models.knowledge import (
     ConflictType,
     KnowledgeChunk,
     KnowledgeConflict,
@@ -15,8 +15,8 @@ from src.models.knowledge import (
     MergeStrategy,
     SeverityLevel,
 )
-from src.services.embedding_service import EmbeddingService
-from src.utils.logging import get_logger
+from orchestra.services.embedding_service import EmbeddingService
+from orchestra.utils.logging import get_logger
 
 logger = get_logger(__name__)
 

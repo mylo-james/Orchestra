@@ -3,7 +3,7 @@
 import logging
 from unittest.mock import MagicMock, patch
 
-from src.utils.logging import (
+from orchestra.utils.logging import (
     SecurityAuditLogger,
     configure_logging,
     get_logger,
@@ -140,7 +140,7 @@ class TestLoggingIntegration:
         logger.warning("Warning message")
         logger.error("Error message")
 
-    @patch("src.utils.logging.structlog")
+    @patch("orchestra.utils.logging.structlog")
     def test_structlog_integration(self, mock_structlog):
         """Test structlog integration."""
         mock_structlog.configure = MagicMock()

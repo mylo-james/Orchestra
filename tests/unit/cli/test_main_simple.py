@@ -6,7 +6,7 @@ import pytest
 import typer
 from typer.testing import CliRunner
 
-from src.cli.main import app, main, run_async_command
+from orchestra.cli.main import app, main, run_async_command
 
 
 class TestMainAppBasic:
@@ -25,7 +25,7 @@ class TestMainAppBasic:
 
     def test_version_command(self, runner):
         """Test version command."""
-        with patch("src.cli.main.get_settings") as mock_settings:
+        with patch("orchestra.cli.main.get_settings") as mock_settings:
             mock_settings.return_value.version = "1.0.0"
             mock_settings.return_value.environment = "test"
 
@@ -34,8 +34,8 @@ class TestMainAppBasic:
             assert "Orchestra" in result.stdout
             assert "1.0.0" in result.stdout
 
-    @patch("src.cli.main.display_success")
-    @patch("src.cli.main.logger")
+    @patch("orchestra.cli.main.display_success")
+    @patch("orchestra.cli.main.logger")
     @patch("time.sleep")  # Mock the infinite loop
     def test_serve_command_basic(
         self, mock_sleep, mock_logger, mock_display_success, runner
@@ -52,9 +52,9 @@ class TestMainAppBasic:
         # Verify the sleep was called (meaning we entered the server loop)
         mock_sleep.assert_called_once()
 
-    @patch("src.utils.circuit_breaker.circuit_breaker_health_check")
-    @patch("src.cli.main.security_health_check")
-    @patch("src.cli.main.get_settings")
+    @patch("orchestra.utils.circuit_breaker.circuit_breaker_health_check")
+    @patch("orchestra.cli.main.security_health_check")
+    @patch("orchestra.cli.main.get_settings")
     def test_health_command_success(
         self, mock_get_settings, mock_security_health, mock_cb_health, runner
     ):
@@ -76,7 +76,7 @@ class TestMainAppBasic:
         assert result.exit_code == 0
         assert "Health Check" in result.stdout
 
-    @patch("src.cli.main.get_settings")
+    @patch("orchestra.cli.main.get_settings")
     def test_health_command_missing_api_key(self, mock_get_settings, runner):
         """Test health command with missing API key."""
         mock_settings = Mock()
@@ -91,7 +91,7 @@ class TestMainAppBasic:
 class TestAsyncHelper:
     """Test async command helper."""
 
-    @patch("src.cli.main.asyncio.run")
+    @patch("orchestra.cli.main.asyncio.run")
     def test_run_async_command_success(self, mock_asyncio_run):
         """Test successful async command execution."""
 
@@ -104,8 +104,8 @@ class TestAsyncHelper:
         assert result == "success"
         mock_asyncio_run.assert_called_once()
 
-    @patch("src.cli.main.asyncio.run")
-    @patch("src.cli.main.console")
+    @patch("orchestra.cli.main.asyncio.run")
+    @patch("orchestra.cli.main.console")
     def test_run_async_command_keyboard_interrupt(self, mock_console, mock_asyncio_run):
         """Test async command with keyboard interrupt."""
 
@@ -122,8 +122,8 @@ class TestAsyncHelper:
         assert hasattr(exc_info.value, "exit_code") and exc_info.value.exit_code == 130
         mock_console.print.assert_called_once()
 
-    @patch("src.cli.main.asyncio.run")
-    @patch("src.cli.main.logger")
+    @patch("orchestra.cli.main.asyncio.run")
+    @patch("orchestra.cli.main.logger")
     def test_run_async_command_exception(self, mock_logger, mock_asyncio_run):
         """Test async command with exception."""
 
@@ -141,11 +141,11 @@ class TestAsyncHelper:
 class TestMainCallback:
     """Test main callback function."""
 
-    @patch("src.cli.main.set_correlation_id")
-    @patch("src.cli.main.get_settings")
-    @patch("src.cli.main.configure_logging")
-    @patch("src.cli.main.display_banner")
-    @patch("src.cli.main.logger")
+    @patch("orchestra.cli.main.set_correlation_id")
+    @patch("orchestra.cli.main.get_settings")
+    @patch("orchestra.cli.main.configure_logging")
+    @patch("orchestra.cli.main.display_banner")
+    @patch("orchestra.cli.main.logger")
     def test_main_callback_success(
         self,
         mock_logger,
@@ -183,11 +183,11 @@ class TestMainCallback:
         mock_display_banner.assert_called_once()
         mock_logger.info.assert_called_once()
 
-    @patch("src.cli.main.set_correlation_id")
-    @patch("src.cli.main.get_settings")
-    @patch("src.cli.main.configure_logging")
-    @patch("src.cli.main.display_banner")
-    @patch("src.cli.main.logger")
+    @patch("orchestra.cli.main.set_correlation_id")
+    @patch("orchestra.cli.main.get_settings")
+    @patch("orchestra.cli.main.configure_logging")
+    @patch("orchestra.cli.main.display_banner")
+    @patch("orchestra.cli.main.logger")
     def test_main_callback_verbose(
         self,
         mock_logger,
@@ -220,11 +220,11 @@ class TestMainCallback:
             log_level="DEBUG", json_logs=False, enable_audit=True
         )
 
-    @patch("src.cli.main.set_correlation_id")
-    @patch("src.cli.main.get_settings")
-    @patch("src.cli.main.configure_logging")
-    @patch("src.cli.main.display_banner")
-    @patch("src.cli.main.logger")
+    @patch("orchestra.cli.main.set_correlation_id")
+    @patch("orchestra.cli.main.get_settings")
+    @patch("orchestra.cli.main.configure_logging")
+    @patch("orchestra.cli.main.display_banner")
+    @patch("orchestra.cli.main.logger")
     def test_main_callback_quiet(
         self,
         mock_logger,
@@ -258,11 +258,11 @@ class TestMainCallback:
         )
         mock_display_banner.assert_not_called()
 
-    @patch("src.cli.main.set_correlation_id")
-    @patch("src.cli.main.get_settings")
-    @patch("src.cli.main.configure_logging")
-    @patch("src.cli.main.display_banner")
-    @patch("src.cli.main.logger")
+    @patch("orchestra.cli.main.set_correlation_id")
+    @patch("orchestra.cli.main.get_settings")
+    @patch("orchestra.cli.main.configure_logging")
+    @patch("orchestra.cli.main.display_banner")
+    @patch("orchestra.cli.main.logger")
     def test_main_callback_json_logs(
         self,
         mock_logger,
@@ -295,11 +295,11 @@ class TestMainCallback:
             log_level="INFO", json_logs=True, enable_audit=True
         )
 
-    @patch("src.cli.main.set_correlation_id")
-    @patch("src.cli.main.get_settings")
-    @patch("src.cli.main.configure_logging")
-    @patch("src.cli.main.display_banner")
-    @patch("src.cli.main.logger")
+    @patch("orchestra.cli.main.set_correlation_id")
+    @patch("orchestra.cli.main.get_settings")
+    @patch("orchestra.cli.main.configure_logging")
+    @patch("orchestra.cli.main.display_banner")
+    @patch("orchestra.cli.main.logger")
     def test_main_callback_custom_correlation_id(
         self,
         mock_logger,
@@ -324,9 +324,9 @@ class TestMainCallback:
         # Verify correlation ID was set
         mock_set_correlation_id.assert_called_once_with("test-123")
 
-    @patch("src.cli.main.get_settings")
-    @patch("src.cli.main.display_error")
-    @patch("src.cli.main.logger")
+    @patch("orchestra.cli.main.get_settings")
+    @patch("orchestra.cli.main.display_error")
+    @patch("orchestra.cli.main.logger")
     def test_main_callback_exception(
         self, mock_logger, mock_display_error, mock_get_settings
     ):
@@ -361,9 +361,9 @@ class TestServeCommand:
     def runner(self):
         return CliRunner()
 
-    @patch("src.cli.main.display_success")
-    @patch("src.cli.main.display_error")
-    @patch("src.cli.main.logger")
+    @patch("orchestra.cli.main.display_success")
+    @patch("orchestra.cli.main.display_error")
+    @patch("orchestra.cli.main.logger")
     def test_serve_command_exception(
         self, mock_logger, mock_display_error, mock_display_success, runner
     ):
@@ -376,8 +376,8 @@ class TestServeCommand:
         mock_display_error.assert_called_once()
         mock_logger.error.assert_called_once()
 
-    @patch("src.cli.main.display_success")
-    @patch("src.cli.main.logger")
+    @patch("orchestra.cli.main.display_success")
+    @patch("orchestra.cli.main.logger")
     @patch("time.sleep")  # Mock the infinite loop
     def test_serve_command_with_params(
         self, mock_sleep, mock_logger, mock_display_success, runner
@@ -408,9 +408,9 @@ class TestHealthCommand:
     def runner(self):
         return CliRunner()
 
-    @patch("src.utils.circuit_breaker.circuit_breaker_health_check")
-    @patch("src.cli.main.security_health_check")
-    @patch("src.cli.main.get_settings")
+    @patch("orchestra.utils.circuit_breaker.circuit_breaker_health_check")
+    @patch("orchestra.cli.main.security_health_check")
+    @patch("orchestra.cli.main.get_settings")
     def test_health_command_with_warnings(
         self, mock_get_settings, mock_security_health, mock_cb_health, runner
     ):
@@ -433,9 +433,9 @@ class TestHealthCommand:
         assert "may have issues" in result.stdout
         assert "issues detected" in result.stdout
 
-    @patch("src.cli.main.get_settings")
-    @patch("src.cli.main.display_error")
-    @patch("src.cli.main.logger")
+    @patch("orchestra.cli.main.get_settings")
+    @patch("orchestra.cli.main.display_error")
+    @patch("orchestra.cli.main.logger")
     def test_health_command_exception(
         self, mock_logger, mock_display_error, mock_get_settings, runner
     ):

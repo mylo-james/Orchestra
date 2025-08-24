@@ -84,7 +84,7 @@ logs/security/
 backups/orchestra/backup.log
 
 # Project structure files
-src/__init__.py
+orchestra/__init__.py
 tests/conftest.py
 
 # IDE/Editor settings (if they exist)

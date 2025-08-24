@@ -158,28 +158,30 @@ def run_code_quality_checks() -> Dict[str, bool]:
 
     # Black formatting check
     checks["black"] = run_command(
-        ["poetry", "run", "black", "--check", "src/", "tests/"],
+        ["poetry", "run", "black", "--check", "orchestra/", "tests/"],
         "Black formatting check",
         allow_failure=True,
     )[0]
 
     # isort import sorting check
     checks["isort"] = run_command(
-        ["poetry", "run", "isort", "--check-only", "src/", "tests/"],
+        ["poetry", "run", "isort", "--check-only", "orchestra/", "tests/"],
         "isort import sorting check",
         allow_failure=True,
     )[0]
 
     # Ruff linting
     checks["ruff"] = run_command(
-        ["poetry", "run", "ruff", "check", "src/", "tests/"],
+        ["poetry", "run", "ruff", "check", "orchestra/", "tests/"],
         "Ruff linting",
         allow_failure=True,
     )[0]
 
     # MyPy type checking
     checks["mypy"] = run_command(
-        ["poetry", "run", "mypy", "src/"], "MyPy type checking", allow_failure=True
+        ["poetry", "run", "mypy", "orchestra/"],
+        "MyPy type checking",
+        allow_failure=True,
     )[0]
 
     # Pre-commit hooks
@@ -200,7 +202,7 @@ def run_security_checks() -> Dict[str, bool]:
 
     # Bandit security scan
     checks["bandit"] = run_command(
-        ["poetry", "run", "bandit", "-r", "src/", "-c", "bandit.yaml"],
+        ["poetry", "run", "bandit", "-r", "orchestra/", "-c", "bandit.yaml"],
         "Bandit security scan",
         allow_failure=True,
     )[0]
@@ -249,7 +251,7 @@ def run_tests() -> Dict[str, bool]:
             "-m",
             "pytest",
             "tests/",
-            "--cov=src",
+            "--cov=orchestra",
             "--cov-report=term-missing",
             "--cov-report=html",
             "--cov-report=json",
@@ -293,7 +295,7 @@ def run_docker_checks() -> Dict[str, bool]:
                 "orchestra:local-ci",
                 "python",
                 "-c",
-                "import src; print('Docker image works!')",
+                "import orchestra; print('Docker image works!')",
             ],
             "Test Docker image",
             allow_failure=True,

@@ -10,7 +10,10 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from src.services.external_service_client import ExternalServiceClient, SecureAIAgent
+from orchestra.services.external_service_client import (
+    ExternalServiceClient,
+    SecureAIAgent,
+)
 
 
 class TestExternalServiceClientInitialization:
@@ -33,7 +36,7 @@ class TestExternalServiceClientInitialization:
         mock_settings = Mock()
         mock_settings.openai.api_key = "test-api-key"
 
-        with patch("src.services.external_service_client.logger") as mock_logger:
+        with patch("orchestra.services.external_service_client.logger") as mock_logger:
             ExternalServiceClient(mock_settings)
 
             mock_logger.info.assert_called_with(
@@ -266,7 +269,7 @@ class TestCircuitBreakerIntegration:
     def test_circuit_breaker_functionality(self):
         """Test circuit breaker functionality integration."""
         # Test that circuit breaker functions are properly integrated
-        from src.services.external_service_client import (
+        from orchestra.services.external_service_client import (
             get_circuit_breaker_stats,
             get_failing_services,
         )

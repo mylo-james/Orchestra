@@ -2,7 +2,7 @@
 
 import pytest
 
-from src.system.monitoring import AgentMetric, AgentMonitor
+from orchestra.system.monitoring import AgentMetric, AgentMonitor
 
 
 class TestAgentMonitor:

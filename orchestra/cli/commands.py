@@ -7,13 +7,13 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from src.cli.output import error_panel, info_panel, success_panel
-from src.security.ai_agent_monitor import AIAgentSecurityMonitor as AIAgentMonitor
-from src.security.ai_agent_validator import AIAgentValidator
-from src.system.factory import get_registry
-from src.system.loader import PersonaLoader
-from src.utils.circuit_breaker import CircuitBreaker
-from src.utils.logging import get_logger
+from orchestra.cli.output import error_panel, info_panel, success_panel
+from orchestra.security.ai_agent_monitor import AIAgentSecurityMonitor as AIAgentMonitor
+from orchestra.security.ai_agent_validator import AIAgentValidator
+from orchestra.system.factory import get_registry
+from orchestra.system.loader import PersonaLoader
+from orchestra.utils.circuit_breaker import CircuitBreaker
+from orchestra.utils.logging import get_logger
 
 # Create Typer apps for command groups
 agent_cmd = typer.Typer(name="agent", help="Agent management commands")
@@ -275,7 +275,7 @@ def test_circuit_breaker() -> None:
     """Test circuit breaker functionality."""
     console.print(info_panel("Testing circuit breaker..."))
 
-    from src.utils.circuit_breaker import CircuitBreakerConfig
+    from orchestra.utils.circuit_breaker import CircuitBreakerConfig
 
     config = CircuitBreakerConfig(
         failure_threshold=3, recovery_timeout=5.0, request_timeout=30.0

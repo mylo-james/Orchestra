@@ -4,7 +4,7 @@ import re
 
 import pytest
 
-from src.utils.logging import SecurityAuditLogger
+from orchestra.utils.logging import SecurityAuditLogger
 
 
 @pytest.mark.security
@@ -46,7 +46,7 @@ class TestInputValidation:
         """Test prevention of XSS attacks."""
         xss_inputs = [
             "<script>alert('xss')</script>",
-            "<img src=x onerror=alert('xss')>",
+            "<img orchestra=x onerror=alert('xss')>",
             "javascript:alert('xss')",
             "<svg onload=alert('xss')>",
             "' onmouseover='alert(1)'",
@@ -264,7 +264,7 @@ class TestConfigurationSecurity:
         # Test that invalid API keys would be rejected
         with pytest.raises(ValueError):
             # Test invalid API key
-            from src.config.settings import OpenAISettings
+            from orchestra.config.settings import OpenAISettings
 
             OpenAISettings(api_key="invalid-key-format")
 

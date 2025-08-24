@@ -5,7 +5,7 @@ from typing import Dict, List, Optional
 
 import yaml
 
-from src.system.specs import (
+from orchestra.system.specs import (
     BehavioralContract,
     CommandDefinition,
     CommandInterface,
@@ -14,7 +14,7 @@ from src.system.specs import (
     PersonaSpec,
     ResourceDependencies,
 )
-from src.utils.logging import get_logger
+from orchestra.utils.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -24,7 +24,7 @@ class PersonaLoader:
     Loads and manages persona specifications from YAML files.
 
     This loader implements the override precedence system where personas
-    in src/personas/ take precedence over those in .bmad-core/.
+    in orchestra/personas/ take precedence over those in .bmad-core/.
     """
 
     def __init__(self, cache_enabled: bool = True):
@@ -40,7 +40,7 @@ class PersonaLoader:
 
         # Define search paths in precedence order
         self.search_paths = [
-            Path("src/personas"),
+            Path("orchestra/personas"),
             Path(".bmad-core/personas"),
         ]
 

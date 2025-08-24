@@ -11,7 +11,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from src.security.ai_agent_monitor import AIAgentSecurityMonitor
+from orchestra.security.ai_agent_monitor import AIAgentSecurityMonitor
 
 # Initialize console for rich output
 console = Console()

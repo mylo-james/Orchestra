@@ -4,8 +4,11 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from src.services.external_service_client import ExternalServiceClient, SecureAIAgent
-from src.utils.circuit_breaker import CircuitBreakerError, CircuitState
+from orchestra.services.external_service_client import (
+    ExternalServiceClient,
+    SecureAIAgent,
+)
+from orchestra.utils.circuit_breaker import CircuitBreakerError, CircuitState
 
 
 class TestExternalServiceClient:
@@ -20,8 +23,8 @@ class TestExternalServiceClient:
         settings.github.repo = "test-org/test-repo"
         return settings
 
-    @patch("src.services.external_service_client.openai.Client")
-    @patch("src.services.external_service_client.httpx.AsyncClient")
+    @patch("orchestra.services.external_service_client.openai.Client")
+    @patch("orchestra.services.external_service_client.httpx.AsyncClient")
     def test_initialization(self, mock_httpx, mock_openai, mock_settings):
         """Test service client initialization."""
         client = ExternalServiceClient(mock_settings)
@@ -30,9 +33,9 @@ class TestExternalServiceClient:
         mock_openai.assert_called_once_with(api_key="test-openai-key")
         mock_httpx.assert_called_once_with(timeout=30.0)
 
-    @patch("src.services.external_service_client.openai.Client")
-    @patch("src.services.external_service_client.httpx.AsyncClient")
-    @patch("src.services.external_service_client.protect_external_service")
+    @patch("orchestra.services.external_service_client.openai.Client")
+    @patch("orchestra.services.external_service_client.httpx.AsyncClient")
+    @patch("orchestra.services.external_service_client.protect_external_service")
     def test_generate_code_with_openai(
         self, mock_protect, mock_httpx, mock_openai, mock_settings
     ):
@@ -54,9 +57,9 @@ class TestExternalServiceClient:
         client.openai_client.chat.completions.create.assert_called_once()
 
     @pytest.mark.asyncio
-    @patch("src.services.external_service_client.openai.Client")
-    @patch("src.services.external_service_client.httpx.AsyncClient")
-    @patch("src.services.external_service_client.protect_external_service_async")
+    @patch("orchestra.services.external_service_client.openai.Client")
+    @patch("orchestra.services.external_service_client.httpx.AsyncClient")
+    @patch("orchestra.services.external_service_client.protect_external_service_async")
     async def test_create_github_pr(
         self, mock_protect, mock_httpx, mock_openai, mock_settings
     ):
@@ -80,9 +83,9 @@ class TestExternalServiceClient:
         assert result["url"] == "https://github.com/test/pull/123"
 
     @pytest.mark.asyncio
-    @patch("src.services.external_service_client.openai.Client")
-    @patch("src.services.external_service_client.httpx.AsyncClient")
-    @patch("src.services.external_service_client.protect_external_service_async")
+    @patch("orchestra.services.external_service_client.openai.Client")
+    @patch("orchestra.services.external_service_client.httpx.AsyncClient")
+    @patch("orchestra.services.external_service_client.protect_external_service_async")
     async def test_query_qdrant_knowledge(
         self, mock_protect, mock_httpx, mock_openai, mock_settings
     ):
@@ -97,9 +100,9 @@ class TestExternalServiceClient:
         assert "test query" in result[0]["text"]
 
     @pytest.mark.asyncio
-    @patch("src.services.external_service_client.openai.Client")
-    @patch("src.services.external_service_client.httpx.AsyncClient")
-    @patch("src.services.external_service_client.protect_external_service_async")
+    @patch("orchestra.services.external_service_client.openai.Client")
+    @patch("orchestra.services.external_service_client.httpx.AsyncClient")
+    @patch("orchestra.services.external_service_client.protect_external_service_async")
     async def test_start_temporal_workflow(
         self, mock_protect, mock_httpx, mock_openai, mock_settings
     ):
@@ -116,8 +119,8 @@ class TestExternalServiceClient:
         assert "workflow_" in result["workflow_id"]
 
     @pytest.mark.asyncio
-    @patch("src.services.external_service_client.openai.Client")
-    @patch("src.services.external_service_client.httpx.AsyncClient")
+    @patch("orchestra.services.external_service_client.openai.Client")
+    @patch("orchestra.services.external_service_client.httpx.AsyncClient")
     async def test_close(self, mock_httpx, mock_openai, mock_settings):
         """Test HTTP client cleanup."""
         client = ExternalServiceClient(mock_settings)
@@ -140,7 +143,7 @@ class TestSecureAIAgent:
         settings.github.repo = "test-org/test-repo"
         return settings
 
-    @patch("src.services.external_service_client.ExternalServiceClient")
+    @patch("orchestra.services.external_service_client.ExternalServiceClient")
     def test_initialization(self, mock_client_class, mock_settings):
         """Test SecureAIAgent initialization."""
         agent = SecureAIAgent("test-agent", mock_settings)
@@ -149,7 +152,7 @@ class TestSecureAIAgent:
         mock_client_class.assert_called_once_with(mock_settings)
 
     @pytest.mark.asyncio
-    @patch("src.services.external_service_client.ExternalServiceClient")
+    @patch("orchestra.services.external_service_client.ExternalServiceClient")
     async def test_generate_and_commit_code_success(
         self, mock_client_class, mock_settings
     ):
@@ -175,7 +178,7 @@ class TestSecureAIAgent:
         assert result["fallbacks_used"] == []
 
     @pytest.mark.asyncio
-    @patch("src.services.external_service_client.ExternalServiceClient")
+    @patch("orchestra.services.external_service_client.ExternalServiceClient")
     async def test_generate_and_commit_code_with_fallbacks(
         self, mock_client_class, mock_settings
     ):
@@ -215,7 +218,7 @@ class TestSecureAIAgent:
         assert result["workflow_started"]["status"] == "degraded_mode"
 
     @pytest.mark.asyncio
-    @patch("src.services.external_service_client.ExternalServiceClient")
+    @patch("orchestra.services.external_service_client.ExternalServiceClient")
     async def test_generate_and_commit_code_with_exception(
         self, mock_client_class, mock_settings
     ):
@@ -238,12 +241,12 @@ class TestCircuitBreakerIntegration:
     """Test circuit breaker integration."""
 
     @pytest.mark.asyncio
-    @patch("src.services.external_service_client.get_openai_circuit_breaker")
-    @patch("src.services.external_service_client.get_temporal_circuit_breaker")
-    @patch("src.services.external_service_client.get_qdrant_circuit_breaker")
-    @patch("src.services.external_service_client.get_github_circuit_breaker")
-    @patch("src.services.external_service_client.get_circuit_breaker_stats")
-    @patch("src.services.external_service_client.get_failing_services")
+    @patch("orchestra.services.external_service_client.get_openai_circuit_breaker")
+    @patch("orchestra.services.external_service_client.get_temporal_circuit_breaker")
+    @patch("orchestra.services.external_service_client.get_qdrant_circuit_breaker")
+    @patch("orchestra.services.external_service_client.get_github_circuit_breaker")
+    @patch("orchestra.services.external_service_client.get_circuit_breaker_stats")
+    @patch("orchestra.services.external_service_client.get_failing_services")
     async def test_circuit_breaker_test_function(
         self,
         mock_failing,
@@ -254,7 +257,7 @@ class TestCircuitBreakerIntegration:
         mock_openai,
     ):
         """Test the circuit breaker test function."""
-        from src.services.external_service_client import test_circuit_breakers
+        from orchestra.services.external_service_client import test_circuit_breakers
 
         # Mock circuit breaker states
         mock_openai.return_value.state.value = "CLOSED"

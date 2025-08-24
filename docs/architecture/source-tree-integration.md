@@ -1,7 +1,7 @@
 # Source Tree Integration
 
 ```
-src/
+orchestra/
   system/
     loader.py (enhanced overlays)
     resource_loader.py (new)
@@ -13,5 +13,5 @@ projects/{project_id}/
   personas/{po|architect|dev|qa}.overlay.yaml
   policies/*.yaml
   kb-seed/*.md
-src/personas/base/{po|architect|dev|qa}.yaml
+orchestra/personas/base/{po|architect|dev|qa}.yaml
 ```

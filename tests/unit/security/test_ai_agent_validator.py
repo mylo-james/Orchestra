@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 import pytest
 
-from src.security.ai_agent_validator import (
+from orchestra.security.ai_agent_validator import (
     AIAgentValidationError,
     AIAgentValidator,
     SecureOperationResult,
@@ -110,7 +110,7 @@ class TestAIAgentValidator:
         with tempfile.TemporaryDirectory() as temp_dir:
             # Use temp directory for security monitor to avoid file conflicts
             with patch(
-                "src.security.ai_agent_validator.AIAgentSecurityMonitor"
+                "orchestra.security.ai_agent_validator.AIAgentSecurityMonitor"
             ) as mock_monitor_class:
                 mock_monitor = mock_monitor_class.return_value
                 mock_monitor.log_directory = temp_dir
@@ -265,7 +265,7 @@ class TestSecureOperationExecution:
         """Create validator for secure operation tests."""
         with tempfile.TemporaryDirectory() as temp_dir:
             with patch(
-                "src.security.ai_agent_validator.AIAgentSecurityMonitor"
+                "orchestra.security.ai_agent_validator.AIAgentSecurityMonitor"
             ) as mock_monitor_class:
                 mock_monitor = mock_monitor_class.return_value
                 mock_monitor.log_directory = temp_dir
@@ -361,7 +361,7 @@ class TestPRDComplianceValidation:
         """Create validator for PRD compliance testing."""
         with tempfile.TemporaryDirectory() as temp_dir:
             with patch(
-                "src.security.ai_agent_validator.AIAgentSecurityMonitor"
+                "orchestra.security.ai_agent_validator.AIAgentSecurityMonitor"
             ) as mock_monitor_class:
                 mock_monitor = mock_monitor_class.return_value
                 mock_monitor.log_directory = temp_dir
@@ -441,7 +441,7 @@ class TestEdgeCasesAndErrorHandling:
         """Create validator for edge case testing."""
         with tempfile.TemporaryDirectory() as temp_dir:
             with patch(
-                "src.security.ai_agent_validator.AIAgentSecurityMonitor"
+                "orchestra.security.ai_agent_validator.AIAgentSecurityMonitor"
             ) as mock_monitor_class:
                 mock_monitor = mock_monitor_class.return_value
                 mock_monitor.log_directory = temp_dir
@@ -487,7 +487,7 @@ class TestSecureAIAgentExample:
         """Create SecureAIAgentExample for testing."""
         with tempfile.TemporaryDirectory() as temp_dir:
             with patch(
-                "src.security.ai_agent_validator.AIAgentSecurityMonitor"
+                "orchestra.security.ai_agent_validator.AIAgentSecurityMonitor"
             ) as mock_monitor_class:
                 mock_monitor = mock_monitor_class.return_value
                 mock_monitor.log_directory = temp_dir
@@ -507,7 +507,7 @@ class TestSecureAIAgentExample:
                 }
                 mock_monitor.log_agent_operation.return_value = "op-123"
 
-                from src.security.ai_agent_validator import SecureAIAgentExample
+                from orchestra.security.ai_agent_validator import SecureAIAgentExample
 
                 agent = SecureAIAgentExample("example-agent")
                 yield agent
@@ -647,12 +647,12 @@ class TestConvenienceFunctions:
         """Test create_secure_agent convenience function (lines 369-388)."""
         with tempfile.TemporaryDirectory() as temp_dir:
             with patch(
-                "src.security.ai_agent_validator.AIAgentSecurityMonitor"
+                "orchestra.security.ai_agent_validator.AIAgentSecurityMonitor"
             ) as mock_monitor_class:
                 mock_monitor = mock_monitor_class.return_value
                 mock_monitor.log_directory = temp_dir
 
-                from src.security.ai_agent_validator import create_secure_agent
+                from orchestra.security.ai_agent_validator import create_secure_agent
 
                 validator = create_secure_agent("convenience-test-agent")
 
@@ -663,7 +663,7 @@ class TestConvenienceFunctions:
         """Test test_ai_agent_validation function (lines 507-546)."""
         with tempfile.TemporaryDirectory() as temp_dir:
             with patch(
-                "src.security.ai_agent_validator.AIAgentSecurityMonitor"
+                "orchestra.security.ai_agent_validator.AIAgentSecurityMonitor"
             ) as mock_monitor_class:
                 mock_monitor = mock_monitor_class.return_value
                 mock_monitor.log_directory = temp_dir
@@ -684,7 +684,9 @@ class TestConvenienceFunctions:
                 mock_monitor.log_agent_operation.return_value = "test-op-123"
 
                 # Import and run the test function
-                from src.security.ai_agent_validator import test_ai_agent_validation
+                from orchestra.security.ai_agent_validator import (
+                    test_ai_agent_validation,
+                )
 
                 # Should execute without errors - captures output with patch
                 with patch("builtins.print"):
@@ -694,7 +696,7 @@ class TestConvenienceFunctions:
         """Test __main__ execution path (line 546)."""
         with tempfile.TemporaryDirectory() as temp_dir:
             with patch(
-                "src.security.ai_agent_validator.AIAgentSecurityMonitor"
+                "orchestra.security.ai_agent_validator.AIAgentSecurityMonitor"
             ) as mock_monitor_class:
                 mock_monitor = mock_monitor_class.return_value
                 mock_monitor.log_directory = temp_dir
@@ -715,15 +717,17 @@ class TestConvenienceFunctions:
                 mock_monitor.log_agent_operation.return_value = "main-test-op-123"
 
                 # Test the __main__ execution path
-                with patch("src.security.ai_agent_validator.__name__", "__main__"):
+                with patch(
+                    "orchestra.security.ai_agent_validator.__name__", "__main__"
+                ):
                     with patch(
-                        "src.security.ai_agent_validator.test_ai_agent_validation"
+                        "orchestra.security.ai_agent_validator.test_ai_agent_validation"
                     ):
                         import importlib
 
-                        import src.security.ai_agent_validator
+                        import orchestra.security.ai_agent_validator
 
-                        importlib.reload(src.security.ai_agent_validator)
+                        importlib.reload(orchestra.security.ai_agent_validator)
                         # The __main__ execution should call test function
 
 
@@ -735,7 +739,7 @@ class TestAdditionalErrorPaths:
         """Create validator for error path testing."""
         with tempfile.TemporaryDirectory() as temp_dir:
             with patch(
-                "src.security.ai_agent_validator.AIAgentSecurityMonitor"
+                "orchestra.security.ai_agent_validator.AIAgentSecurityMonitor"
             ) as mock_monitor_class:
                 mock_monitor = mock_monitor_class.return_value
                 mock_monitor.log_directory = temp_dir

@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from src.security.ai_agent_monitor import (
+from orchestra.security.ai_agent_monitor import (
     AIAgentSecurityMonitor,
     SecurityEventType,
     SecuritySeverity,

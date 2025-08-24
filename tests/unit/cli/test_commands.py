@@ -6,7 +6,7 @@ import pytest
 from typer.testing import CliRunner
 
 # Import the module to ensure it's loaded for coverage
-from src.cli.commands import (
+from orchestra.cli.commands import (
     agent_cmd,
     config_cmd,
     create_basic_command_group,
@@ -73,7 +73,7 @@ class TestAgentCommands:
         agent.describe.return_value = "Test agent description"
         return agent
 
-    @patch("src.cli.commands.get_registry")
+    @patch("orchestra.cli.commands.get_registry")
     def test_start_agent_success(self, mock_get_registry, mock_registry, mock_agent):
         """Test successful agent start."""
         mock_get_registry.return_value = mock_registry
@@ -86,7 +86,7 @@ class TestAgentCommands:
         mock_registry.create.assert_called_once_with("test-persona")
         mock_agent.describe.assert_called_once()
 
-    @patch("src.cli.commands.get_registry")
+    @patch("orchestra.cli.commands.get_registry")
     def test_start_agent_not_found(self, mock_get_registry, mock_registry):
         """Test agent start with non-existent persona."""
         mock_get_registry.return_value = mock_registry
@@ -99,8 +99,8 @@ class TestAgentCommands:
         # Verify registry was called correctly
         mock_registry.create.assert_called_once_with("test-persona")
 
-    @patch("src.cli.commands.get_registry")
-    @patch("src.cli.commands.console")
+    @patch("orchestra.cli.commands.get_registry")
+    @patch("orchestra.cli.commands.console")
     def test_start_agent_exception(
         self, mock_console, mock_get_registry, mock_registry
     ):
@@ -115,7 +115,7 @@ class TestAgentCommands:
         # Verify registry was called correctly
         mock_registry.create.assert_called_once_with("test-persona")
 
-    @patch("src.cli.commands.get_registry")
+    @patch("orchestra.cli.commands.get_registry")
     def test_list_agents_success(self, mock_get_registry, mock_registry):
         """Test successful agent listing."""
         mock_get_registry.return_value = mock_registry
@@ -141,8 +141,8 @@ class TestAgentCommands:
         mock_registry.list_personas.assert_called_once()
         assert mock_registry.get_persona_spec.call_count == 2
 
-    @patch("src.cli.commands.get_registry")
-    @patch("src.cli.commands.console")
+    @patch("orchestra.cli.commands.get_registry")
+    @patch("orchestra.cli.commands.console")
     def test_list_agents_exception(
         self, mock_console, mock_get_registry, mock_registry
     ):
@@ -161,7 +161,7 @@ class TestAgentCommands:
 class TestPersonaCommands:
     """Test persona-related CLI commands."""
 
-    @patch("src.cli.commands.PersonaLoader")
+    @patch("orchestra.cli.commands.PersonaLoader")
     def test_list_personas_success(self, mock_loader_class):
         """Test successful persona listing."""
         mock_loader = Mock()
@@ -188,7 +188,7 @@ class TestPersonaCommands:
         mock_loader.list_personas.assert_called_once()
         assert mock_loader.load_persona.call_count == 2
 
-    @patch("src.cli.commands.PersonaLoader")
+    @patch("orchestra.cli.commands.PersonaLoader")
     def test_list_personas_empty(self, mock_loader_class):
         """Test persona listing with no personas."""
         mock_loader = Mock()
@@ -201,8 +201,8 @@ class TestPersonaCommands:
         # Verify loader was called correctly
         mock_loader.list_personas.assert_called_once()
 
-    @patch("src.cli.commands.sys.exit")
-    @patch("src.cli.commands.PersonaLoader")
+    @patch("orchestra.cli.commands.sys.exit")
+    @patch("orchestra.cli.commands.PersonaLoader")
     def test_list_personas_exception(self, mock_loader_class, mock_exit):
         """Test persona listing with exception."""
         mock_loader = Mock()
@@ -216,7 +216,7 @@ class TestPersonaCommands:
         mock_loader.list_personas.assert_called_once()
         mock_exit.assert_called_once_with(1)
 
-    @patch("src.cli.commands.PersonaLoader")
+    @patch("orchestra.cli.commands.PersonaLoader")
     def test_validate_persona_success(self, mock_loader_class):
         """Test successful persona validation."""
         mock_loader = Mock()
@@ -245,8 +245,8 @@ class TestPersonaCommands:
         mock_loader.load_persona.assert_called_once_with("test-persona")
         mock_spec.validate.assert_called_once()
 
-    @patch("src.cli.commands.sys.exit")
-    @patch("src.cli.commands.PersonaLoader")
+    @patch("orchestra.cli.commands.sys.exit")
+    @patch("orchestra.cli.commands.PersonaLoader")
     def test_validate_persona_not_found(self, mock_loader_class, mock_exit):
         """Test persona validation with non-existent persona."""
         mock_loader = Mock()
@@ -261,8 +261,8 @@ class TestPersonaCommands:
         # Function calls sys.exit twice - once for not found, once for AttributeError
         assert mock_exit.call_count == 2
 
-    @patch("src.cli.commands.sys.exit")
-    @patch("src.cli.commands.PersonaLoader")
+    @patch("orchestra.cli.commands.sys.exit")
+    @patch("orchestra.cli.commands.PersonaLoader")
     def test_validate_persona_validation_errors(self, mock_loader_class, mock_exit):
         """Test persona validation with validation errors."""
         mock_loader = Mock()
@@ -282,8 +282,8 @@ class TestPersonaCommands:
         mock_spec.validate.assert_called_once()
         mock_exit.assert_called_once_with(1)
 
-    @patch("src.cli.commands.sys.exit")
-    @patch("src.cli.commands.PersonaLoader")
+    @patch("orchestra.cli.commands.sys.exit")
+    @patch("orchestra.cli.commands.PersonaLoader")
     def test_validate_persona_exception(self, mock_loader_class, mock_exit):
         """Test persona validation with exception."""
         mock_loader = Mock()
@@ -346,8 +346,8 @@ class TestCommandGroups:
 class TestMissingCoverageCommands:
     """Test commands that were missing coverage - comprehensive testing."""
 
-    @patch("src.cli.commands.sys.exit")
-    @patch("src.cli.commands.get_registry")
+    @patch("orchestra.cli.commands.sys.exit")
+    @patch("orchestra.cli.commands.get_registry")
     def test_reload_personas_success(self, mock_get_registry, mock_exit):
         """Test successful persona reloading - covers reload_personas function."""
         mock_registry = Mock()
@@ -362,8 +362,8 @@ class TestMissingCoverageCommands:
         mock_registry.reload_personas.assert_called_once()
         mock_registry.list_personas.assert_called_once()
 
-    @patch("src.cli.commands.sys.exit")
-    @patch("src.cli.commands.get_registry")
+    @patch("orchestra.cli.commands.sys.exit")
+    @patch("orchestra.cli.commands.get_registry")
     def test_reload_personas_exception(self, mock_get_registry, mock_exit):
         """Test persona reloading with exception."""
         mock_registry = Mock()
@@ -377,8 +377,8 @@ class TestMissingCoverageCommands:
         mock_registry.reload_personas.assert_called_once()
         mock_exit.assert_called_once_with(1)
 
-    @patch("src.cli.commands.sys.exit")
-    @patch("src.cli.commands.AIAgentMonitor")
+    @patch("orchestra.cli.commands.sys.exit")
+    @patch("orchestra.cli.commands.AIAgentMonitor")
     def test_test_security_success(self, mock_monitor_class, mock_exit):
         """Test successful security testing - covers lines 235-264."""
         mock_monitor = Mock()
@@ -396,8 +396,8 @@ class TestMissingCoverageCommands:
         mock_monitor.check_input_security.assert_called_once()
         mock_monitor.check_output_security.assert_called_once()
 
-    @patch("src.cli.commands.console")
-    @patch("src.cli.commands.AIAgentValidator")
+    @patch("orchestra.cli.commands.console")
+    @patch("orchestra.cli.commands.AIAgentValidator")
     def test_test_security_exception(self, mock_validator_class, mock_console):
         """Test security testing with exception."""
         # Make validator creation fail
@@ -407,8 +407,8 @@ class TestMissingCoverageCommands:
         with pytest.raises(Exception, match="Validator failed"):
             test_security()
 
-    @patch("src.cli.commands.sys.exit")
-    @patch("src.cli.commands.CircuitBreaker")
+    @patch("orchestra.cli.commands.sys.exit")
+    @patch("orchestra.cli.commands.CircuitBreaker")
     def test_test_circuit_breaker_success(self, mock_breaker_class, mock_exit):
         """Test successful circuit breaker testing - covers lines 270-312."""
         mock_breaker = Mock()
@@ -421,8 +421,8 @@ class TestMissingCoverageCommands:
         # Verify circuit breaker was instantiated and called
         mock_breaker_class.assert_called_once()
 
-    @patch("src.cli.commands.console")
-    @patch("src.cli.commands.CircuitBreaker")
+    @patch("orchestra.cli.commands.console")
+    @patch("orchestra.cli.commands.CircuitBreaker")
     def test_test_circuit_breaker_exception(self, mock_breaker_class, mock_console):
         """Test circuit breaker testing with exception."""
         mock_breaker_class.side_effect = Exception("Circuit breaker failed")
@@ -431,7 +431,7 @@ class TestMissingCoverageCommands:
         with pytest.raises(Exception, match="Circuit breaker failed"):
             test_circuit_breaker()
 
-    @patch("src.cli.commands.console")
+    @patch("orchestra.cli.commands.console")
     def test_start_workflow_success(self, mock_console):
         """Test successful workflow start - covers lines 325-330."""
         # Test the function directly
@@ -440,7 +440,7 @@ class TestMissingCoverageCommands:
         # Verify console was used for output
         assert mock_console.print.call_count >= 2
 
-    @patch("src.cli.commands.console")
+    @patch("orchestra.cli.commands.console")
     def test_start_workflow_custom_name(self, mock_console):
         """Test workflow start with custom name."""
         # Test the function directly
@@ -471,8 +471,8 @@ class TestMissingCoverageCommands:
         # Just verify it runs without exception (basic output test)
         assert True
 
-    @patch("src.cli.commands.sys.exit")
-    @patch("src.cli.commands.console")
+    @patch("orchestra.cli.commands.sys.exit")
+    @patch("orchestra.cli.commands.console")
     def test_show_config_success(self, mock_console, mock_exit):
         """Test showing configuration - covers lines 344-346."""
         # Test the function directly
@@ -481,8 +481,8 @@ class TestMissingCoverageCommands:
         # Verify console was used for output
         mock_console.print.assert_called()
 
-    @patch("src.cli.commands.sys.exit")
-    @patch("src.cli.commands.console")
+    @patch("orchestra.cli.commands.sys.exit")
+    @patch("orchestra.cli.commands.console")
     def test_validate_config_success(self, mock_console, mock_exit):
         """Test config validation - covers lines 352-353."""
         # Test the function directly
@@ -491,8 +491,8 @@ class TestMissingCoverageCommands:
         # Verify console was used for output
         mock_console.print.assert_called()
 
-    @patch("src.cli.commands.sys.exit")
-    @patch("src.cli.commands.console")
+    @patch("orchestra.cli.commands.sys.exit")
+    @patch("orchestra.cli.commands.console")
     def test_health_check_success(self, mock_console, mock_exit):
         """Test health check functionality - covers lines 359-402."""
         # Test the function directly
@@ -509,7 +509,7 @@ class TestCLIIntegrationWithRunner:
         """Test agent start command through CliRunner."""
         runner = CliRunner()
 
-        with patch("src.cli.commands.get_registry") as mock_registry:
+        with patch("orchestra.cli.commands.get_registry") as mock_registry:
             mock_reg = Mock()
             mock_registry.return_value = mock_reg
             mock_agent = Mock()
@@ -524,7 +524,7 @@ class TestCLIIntegrationWithRunner:
         """Test agent list command through CliRunner."""
         runner = CliRunner()
 
-        with patch("src.cli.commands.get_registry") as mock_registry:
+        with patch("orchestra.cli.commands.get_registry") as mock_registry:
             mock_reg = Mock()
             mock_registry.return_value = mock_reg
             mock_reg.list_personas.return_value = ["persona1", "persona2"]

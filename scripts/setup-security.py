@@ -160,7 +160,7 @@ echo "🔒 Running security checks before push..."
 
 # Run bandit security scan
 echo "Running Bandit security scan..."
-if ! poetry run bandit -r src/ -c bandit.yaml --quiet; then
+if ! poetry run bandit -r orchestra/ -c bandit.yaml --quiet; then
     echo "❌ Bandit security scan failed"
     exit 1
 fi

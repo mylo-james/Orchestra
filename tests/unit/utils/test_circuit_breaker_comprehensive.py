@@ -11,7 +11,7 @@ import time
 
 import pytest
 
-from src.utils.circuit_breaker import (
+from orchestra.utils.circuit_breaker import (
     CircuitBreaker,
     CircuitBreakerConfig,
     CircuitBreakerError,
@@ -415,7 +415,7 @@ class TestCircuitBreakerHealthCheck:
     def test_health_check_all_healthy(self):
         """Test health check when all services are healthy."""
         # Create some healthy circuit breakers via global registry
-        from src.utils.circuit_breaker import get_circuit_breaker
+        from orchestra.utils.circuit_breaker import get_circuit_breaker
 
         get_circuit_breaker("health-service1")
         get_circuit_breaker("health-service2")
@@ -429,7 +429,7 @@ class TestCircuitBreakerHealthCheck:
 
     def test_health_check_with_failures(self):
         """Test health check with some failing services."""
-        from src.utils.circuit_breaker import get_circuit_breaker
+        from orchestra.utils.circuit_breaker import get_circuit_breaker
 
         get_circuit_breaker("health-service3")
         cb2 = get_circuit_breaker("health-service4")
@@ -559,7 +559,7 @@ class TestIntegrationScenarios:
 
     def test_openai_service_protection(self):
         """Test protecting OpenAI service calls."""
-        from src.utils.circuit_breaker import get_openai_circuit_breaker
+        from orchestra.utils.circuit_breaker import get_openai_circuit_breaker
 
         cb = get_openai_circuit_breaker()
         assert cb.name == "openai_api"
@@ -572,7 +572,7 @@ class TestIntegrationScenarios:
 
     def test_github_service_protection(self):
         """Test protecting GitHub API calls."""
-        from src.utils.circuit_breaker import get_github_circuit_breaker
+        from orchestra.utils.circuit_breaker import get_github_circuit_breaker
 
         cb = get_github_circuit_breaker()
         assert cb.name == "github_api"
@@ -585,14 +585,14 @@ class TestIntegrationScenarios:
 
     def test_temporal_service_protection(self):
         """Test protecting Temporal workflow calls."""
-        from src.utils.circuit_breaker import get_temporal_circuit_breaker
+        from orchestra.utils.circuit_breaker import get_temporal_circuit_breaker
 
         cb = get_temporal_circuit_breaker()
         assert cb.name == "temporal_cloud"
 
     def test_qdrant_service_protection(self):
         """Test protecting Qdrant vector database calls."""
-        from src.utils.circuit_breaker import get_qdrant_circuit_breaker
+        from orchestra.utils.circuit_breaker import get_qdrant_circuit_breaker
 
         cb = get_qdrant_circuit_breaker()
         assert cb.name == "qdrant_vector_db"
@@ -600,7 +600,7 @@ class TestIntegrationScenarios:
     def test_global_stats_and_management(self):
         """Test global circuit breaker management functions."""
         # Create some circuit breakers
-        from src.utils.circuit_breaker import (
+        from orchestra.utils.circuit_breaker import (
             get_circuit_breaker,
             get_circuit_breaker_stats,
             get_failing_services,

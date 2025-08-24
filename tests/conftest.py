@@ -11,8 +11,8 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 import structlog
 
-from src.config.settings import Settings
-from src.utils.logging import clear_context, configure_logging
+from orchestra.config.settings import Settings
+from orchestra.utils.logging import clear_context, configure_logging
 
 # Configure test logging
 configure_logging(log_level="DEBUG", json_logs=False, enable_audit=True)
@@ -38,7 +38,7 @@ def setup_test_logging():
     clear_context()
 
     # Setup test-specific correlation ID
-    from src.utils.logging import set_correlation_id
+    from orchestra.utils.logging import set_correlation_id
 
     set_correlation_id("test-correlation-id")
 
@@ -207,7 +207,7 @@ class TestClass:
 '''.strip(),
         "test_file": '''
 import pytest
-from src.example import calculate_sum
+from orchestra.example import calculate_sum
 
 
 def test_calculate_sum():

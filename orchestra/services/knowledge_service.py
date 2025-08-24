@@ -16,16 +16,16 @@ from qdrant_client.models import (
     VectorParams,
 )
 
-from src.models.knowledge import (
+from orchestra.models.knowledge import (
     KnowledgeChunk,
     KnowledgeLock,
     KnowledgeMetadata,
     KnowledgeQuery,
     KnowledgeVersion,
 )
-from src.services.embedding_service import EmbeddingService
-from src.utils.circuit_breaker import CircuitBreaker
-from src.utils.logging import get_logger
+from orchestra.services.embedding_service import EmbeddingService
+from orchestra.utils.circuit_breaker import CircuitBreaker
+from orchestra.utils.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -59,7 +59,7 @@ class KnowledgeService:
         self.embedding_service = embedding_service or EmbeddingService()
 
         # Circuit breaker for Qdrant operations
-        from src.utils.circuit_breaker import CircuitBreakerConfig
+        from orchestra.utils.circuit_breaker import CircuitBreakerConfig
 
         config = CircuitBreakerConfig(
             failure_threshold=5,
@@ -402,7 +402,7 @@ class KnowledgeService:
 
     def _point_to_chunk(self, point: Any) -> KnowledgeChunk:
         """Convert a Qdrant point to a KnowledgeChunk."""
-        from src.models.knowledge import KnowledgeDomain, SecurityClassification
+        from orchestra.models.knowledge import KnowledgeDomain, SecurityClassification
 
         payload = point.payload if hasattr(point, "payload") else point
         metadata_dict = payload.get("metadata", {})

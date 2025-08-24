@@ -8,8 +8,8 @@ import pytest
 from rich.console import Console
 from typer.testing import CliRunner
 
-from src.cli.main import app, run_async_command
-from src.cli.output import display_agent_status, display_banner, display_success
+from orchestra.cli.main import app, run_async_command
+from orchestra.cli.output import display_agent_status, display_banner, display_success
 
 
 class TestCLICommandFunctionality:
@@ -30,7 +30,7 @@ class TestCLICommandFunctionality:
         assert "Orchestra" in result.stdout
         assert "0.1.0" in result.stdout or "version" in result.stdout.lower()
 
-    @patch("src.cli.main.get_settings")
+    @patch("orchestra.cli.main.get_settings")
     def test_health_command_checks_actual_system_health(self, mock_settings):
         """Test that health command actually checks system health."""
         # Configure realistic settings
@@ -73,8 +73,8 @@ class TestCLICommandFunctionality:
 
         assert "Async command failed" in str(exc_info.value)
 
-    @patch("src.cli.main.get_settings")
-    @patch("src.cli.main.configure_logging")
+    @patch("orchestra.cli.main.get_settings")
+    @patch("orchestra.cli.main.configure_logging")
     def test_cli_global_options_affect_behavior(self, mock_configure, mock_settings):
         """Test that global CLI options actually affect behavior."""
         mock_settings.return_value = MagicMock()
@@ -90,7 +90,7 @@ class TestCLICommandFunctionality:
         """Test that correlation ID is properly set and used."""
         test_correlation_id = "test-correlation-12345"
 
-        with patch("src.cli.main.set_correlation_id") as mock_set_correlation:
+        with patch("orchestra.cli.main.set_correlation_id") as mock_set_correlation:
             result = self.runner.invoke(
                 app, ["--correlation-id", test_correlation_id, "version"]
             )
@@ -189,7 +189,7 @@ class TestCLICommandGroupFunctionality:
 
     def test_create_basic_command_group_creates_working_commands(self):
         """Test that command group creation produces working commands."""
-        from src.cli.commands import create_basic_command_group
+        from orchestra.cli.commands import create_basic_command_group
 
         runner = CliRunner()
 
@@ -218,7 +218,7 @@ class TestCLICommandGroupFunctionality:
 
     def test_command_groups_are_properly_isolated(self):
         """Test that command groups don't interfere with each other."""
-        from src.cli.commands import create_basic_command_group
+        from orchestra.cli.commands import create_basic_command_group
 
         runner = CliRunner()
 
@@ -241,7 +241,7 @@ class TestCLICommandGroupFunctionality:
 
     def test_predefined_command_groups_work_correctly(self):
         """Test that predefined command groups work correctly."""
-        from src.cli.commands import agent_cmd, config_cmd, dev_cmd, workflow_cmd
+        from orchestra.cli.commands import agent_cmd, config_cmd, dev_cmd, workflow_cmd
 
         runner = CliRunner()
 
@@ -285,7 +285,7 @@ class TestCLIIntegrationFunctionality:
         """Set up test fixtures."""
         self.runner = CliRunner()
 
-    @patch("src.cli.main.get_settings")
+    @patch("orchestra.cli.main.get_settings")
     def test_cli_properly_loads_and_uses_settings(self, mock_settings, test_settings):
         """Test that CLI properly loads and uses settings."""
         mock_settings.return_value = test_settings

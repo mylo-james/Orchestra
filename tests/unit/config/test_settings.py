@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
-from src.config.settings import Settings, get_settings
+from orchestra.config.settings import Settings, get_settings
 
 
 class TestSettings:

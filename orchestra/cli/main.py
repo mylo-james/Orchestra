@@ -8,12 +8,12 @@ import typer
 from rich.console import Console
 from rich.traceback import install
 
-from src.cli.circuit_breaker_commands import cb_app
-from src.cli.commands import agent_cmd, config_cmd, dev_cmd, workflow_cmd
-from src.cli.output import display_banner, display_error, display_success
-from src.cli.security_commands import security_app, security_health_check
-from src.config.settings import get_settings
-from src.utils.logging import configure_logging, get_logger, set_correlation_id
+from orchestra.cli.circuit_breaker_commands import cb_app
+from orchestra.cli.commands import agent_cmd, config_cmd, dev_cmd, workflow_cmd
+from orchestra.cli.output import display_banner, display_error, display_success
+from orchestra.cli.security_commands import security_app, security_health_check
+from orchestra.config.settings import get_settings
+from orchestra.utils.logging import configure_logging, get_logger, set_correlation_id
 
 # Install rich traceback handler for better error display
 install(show_locals=True)
@@ -193,7 +193,7 @@ def health() -> None:
             console.print("⚠️ AI Agent security monitoring may have issues")
 
         # Check circuit breaker system
-        from src.utils.circuit_breaker import circuit_breaker_health_check
+        from orchestra.utils.circuit_breaker import circuit_breaker_health_check
 
         cb_health = circuit_breaker_health_check()
         if cb_health["healthy"]:

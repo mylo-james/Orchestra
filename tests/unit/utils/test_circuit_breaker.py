@@ -1,8 +1,8 @@
-"""Tests for src/utils/circuit_breaker.py."""
+"""Tests for orchestra/utils/circuit_breaker.py."""
 
 # Import to ensure module is loaded for coverage
-import src.utils.circuit_breaker
-from src.utils.circuit_breaker import (
+import orchestra.utils.circuit_breaker
+from orchestra.utils.circuit_breaker import (
     CircuitBreakerConfig,
     get_circuit_breaker_stats,
     get_failing_services,
@@ -17,7 +17,7 @@ class TestCircuitBreaker:
 
     def test_circuit_breaker_module_loads(self):
         """Test that circuit breaker module loads."""
-        assert src.utils.circuit_breaker is not None
+        assert orchestra.utils.circuit_breaker is not None
 
     def test_circuit_breaker_config(self):
         """Test CircuitBreakerConfig."""

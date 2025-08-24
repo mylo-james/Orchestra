@@ -1,5 +1,5 @@
 """
-Tests for src/cli/circuit_breaker_commands.py
+Tests for orchestra/cli/circuit_breaker_commands.py
 
 Tests circuit breaker CLI commands for monitoring and managing external service circuit breakers.
 """
@@ -10,7 +10,7 @@ import click
 import pytest
 from typer.testing import CliRunner
 
-from src.cli.circuit_breaker_commands import (
+from orchestra.cli.circuit_breaker_commands import (
     cb_app,
     circuit_breaker_health,
     circuit_breaker_status,
@@ -33,9 +33,9 @@ class TestCircuitBreakerApp:
 class TestCircuitBreakerStatus:
     """Test circuit_breaker_status command."""
 
-    @patch("src.cli.circuit_breaker_commands.get_circuit_breaker_stats")
-    @patch("src.cli.circuit_breaker_commands.circuit_breaker_health_check")
-    @patch("src.cli.circuit_breaker_commands.console")
+    @patch("orchestra.cli.circuit_breaker_commands.get_circuit_breaker_stats")
+    @patch("orchestra.cli.circuit_breaker_commands.circuit_breaker_health_check")
+    @patch("orchestra.cli.circuit_breaker_commands.console")
     def test_status_all_healthy(self, mock_console, mock_health_check, mock_get_stats):
         """Test status command with all services healthy."""
         # Mock healthy status
@@ -70,9 +70,9 @@ class TestCircuitBreakerStatus:
         assert any("All Services Healthy" in str(call) for call in printed_calls)
         assert any("🟢" in str(call) for call in printed_calls)
 
-    @patch("src.cli.circuit_breaker_commands.get_circuit_breaker_stats")
-    @patch("src.cli.circuit_breaker_commands.circuit_breaker_health_check")
-    @patch("src.cli.circuit_breaker_commands.console")
+    @patch("orchestra.cli.circuit_breaker_commands.get_circuit_breaker_stats")
+    @patch("orchestra.cli.circuit_breaker_commands.circuit_breaker_health_check")
+    @patch("orchestra.cli.circuit_breaker_commands.console")
     def test_status_with_failures(
         self, mock_console, mock_health_check, mock_get_stats
     ):
@@ -106,9 +106,9 @@ class TestCircuitBreakerStatus:
         assert any("🔴" in str(call) for call in printed_calls)
         assert any("github_api" in str(call) for call in printed_calls)
 
-    @patch("src.cli.circuit_breaker_commands.get_circuit_breaker_stats")
-    @patch("src.cli.circuit_breaker_commands.circuit_breaker_health_check")
-    @patch("src.cli.circuit_breaker_commands.console")
+    @patch("orchestra.cli.circuit_breaker_commands.get_circuit_breaker_stats")
+    @patch("orchestra.cli.circuit_breaker_commands.circuit_breaker_health_check")
+    @patch("orchestra.cli.circuit_breaker_commands.console")
     def test_status_no_circuit_breakers(
         self, mock_console, mock_health_check, mock_get_stats
     ):
@@ -131,9 +131,9 @@ class TestCircuitBreakerStatus:
             "No circuit breakers active yet" in str(call) for call in printed_calls
         )
 
-    @patch("src.cli.circuit_breaker_commands.get_circuit_breaker_stats")
-    @patch("src.cli.circuit_breaker_commands.circuit_breaker_health_check")
-    @patch("src.cli.circuit_breaker_commands.console")
+    @patch("orchestra.cli.circuit_breaker_commands.get_circuit_breaker_stats")
+    @patch("orchestra.cli.circuit_breaker_commands.circuit_breaker_health_check")
+    @patch("orchestra.cli.circuit_breaker_commands.console")
     def test_status_half_open_state(
         self, mock_console, mock_health_check, mock_get_stats
     ):
@@ -166,9 +166,9 @@ class TestCircuitBreakerStatus:
         mock_health_check.assert_called_once()
         mock_get_stats.assert_called_once()
 
-    @patch("src.cli.circuit_breaker_commands.get_circuit_breaker_stats")
-    @patch("src.cli.circuit_breaker_commands.circuit_breaker_health_check")
-    @patch("src.cli.circuit_breaker_commands.console")
+    @patch("orchestra.cli.circuit_breaker_commands.get_circuit_breaker_stats")
+    @patch("orchestra.cli.circuit_breaker_commands.circuit_breaker_health_check")
+    @patch("orchestra.cli.circuit_breaker_commands.console")
     def test_status_exception_handling(
         self, mock_console, mock_health_check, mock_get_stats
     ):
@@ -187,9 +187,9 @@ class TestCircuitBreakerStatus:
             for call in printed_calls
         )
 
-    @patch("src.cli.circuit_breaker_commands.get_circuit_breaker_stats")
-    @patch("src.cli.circuit_breaker_commands.circuit_breaker_health_check")
-    @patch("src.cli.circuit_breaker_commands.console")
+    @patch("orchestra.cli.circuit_breaker_commands.get_circuit_breaker_stats")
+    @patch("orchestra.cli.circuit_breaker_commands.circuit_breaker_health_check")
+    @patch("orchestra.cli.circuit_breaker_commands.console")
     def test_status_different_success_rates(
         self, mock_console, mock_health_check, mock_get_stats
     ):
@@ -241,8 +241,8 @@ class TestCircuitBreakerStatus:
 class TestResetCircuitBreakers:
     """Test reset_circuit_breakers command."""
 
-    @patch("src.cli.circuit_breaker_commands.reset_all_circuit_breakers")
-    @patch("src.cli.circuit_breaker_commands.console")
+    @patch("orchestra.cli.circuit_breaker_commands.reset_all_circuit_breakers")
+    @patch("orchestra.cli.circuit_breaker_commands.console")
     def test_reset_all_with_yes_flag(self, mock_console, mock_reset_all):
         """Test reset all circuit breakers with --yes flag."""
         # Run command with confirmation skip
@@ -258,8 +258,8 @@ class TestResetCircuitBreakers:
             for call in printed_calls
         )
 
-    @patch("src.cli.circuit_breaker_commands.reset_all_circuit_breakers")
-    @patch("src.cli.circuit_breaker_commands.console")
+    @patch("orchestra.cli.circuit_breaker_commands.reset_all_circuit_breakers")
+    @patch("orchestra.cli.circuit_breaker_commands.console")
     @patch("typer.confirm")
     def test_reset_all_with_confirmation_yes(
         self, mock_confirm, mock_console, mock_reset_all
@@ -275,8 +275,8 @@ class TestResetCircuitBreakers:
         mock_confirm.assert_called_once_with("Reset ALL circuit breakers?")
         mock_reset_all.assert_called_once()
 
-    @patch("src.cli.circuit_breaker_commands.reset_all_circuit_breakers")
-    @patch("src.cli.circuit_breaker_commands.console")
+    @patch("orchestra.cli.circuit_breaker_commands.reset_all_circuit_breakers")
+    @patch("orchestra.cli.circuit_breaker_commands.console")
     @patch("typer.confirm")
     def test_reset_all_with_confirmation_no(
         self, mock_confirm, mock_console, mock_reset_all
@@ -296,7 +296,7 @@ class TestResetCircuitBreakers:
         printed_calls = mock_console.print.call_args_list
         assert any("Reset cancelled" in str(call) for call in printed_calls)
 
-    @patch("src.cli.circuit_breaker_commands.console")
+    @patch("orchestra.cli.circuit_breaker_commands.console")
     @patch("typer.confirm")
     def test_reset_specific_service_not_implemented(self, mock_confirm, mock_console):
         """Test reset specific service shows not implemented message."""
@@ -316,8 +316,8 @@ class TestResetCircuitBreakers:
             for call in printed_calls
         )
 
-    @patch("src.cli.circuit_breaker_commands.reset_all_circuit_breakers")
-    @patch("src.cli.circuit_breaker_commands.console")
+    @patch("orchestra.cli.circuit_breaker_commands.reset_all_circuit_breakers")
+    @patch("orchestra.cli.circuit_breaker_commands.console")
     def test_reset_exception_handling(self, mock_console, mock_reset_all):
         """Test reset command exception handling."""
         # Mock exception
@@ -337,8 +337,8 @@ class TestResetCircuitBreakers:
 class TestCircuitBreakerHealth:
     """Test circuit_breaker_health command."""
 
-    @patch("src.cli.circuit_breaker_commands.circuit_breaker_health_check")
-    @patch("src.cli.circuit_breaker_commands.console")
+    @patch("orchestra.cli.circuit_breaker_commands.circuit_breaker_health_check")
+    @patch("orchestra.cli.circuit_breaker_commands.console")
     def test_health_all_healthy(self, mock_console, mock_health_check):
         """Test health command with all services healthy."""
         mock_health_check.return_value = {
@@ -362,8 +362,8 @@ class TestCircuitBreakerHealth:
         )
         assert any("✅" in str(call) for call in printed_calls)
 
-    @patch("src.cli.circuit_breaker_commands.circuit_breaker_health_check")
-    @patch("src.cli.circuit_breaker_commands.console")
+    @patch("orchestra.cli.circuit_breaker_commands.circuit_breaker_health_check")
+    @patch("orchestra.cli.circuit_breaker_commands.console")
     def test_health_some_failing(self, mock_console, mock_health_check):
         """Test health command with some services failing."""
         mock_health_check.return_value = {
@@ -388,8 +388,8 @@ class TestCircuitBreakerHealth:
             for call in printed_calls
         )
 
-    @patch("src.cli.circuit_breaker_commands.circuit_breaker_health_check")
-    @patch("src.cli.circuit_breaker_commands.console")
+    @patch("orchestra.cli.circuit_breaker_commands.circuit_breaker_health_check")
+    @patch("orchestra.cli.circuit_breaker_commands.console")
     def test_health_no_circuit_breakers(self, mock_console, mock_health_check):
         """Test health command with no circuit breakers."""
         mock_health_check.return_value = {
@@ -407,8 +407,8 @@ class TestCircuitBreakerHealth:
         printed_calls = mock_console.print.call_args_list
         assert any("Total circuit breakers: 0" in str(call) for call in printed_calls)
 
-    @patch("src.cli.circuit_breaker_commands.circuit_breaker_health_check")
-    @patch("src.cli.circuit_breaker_commands.console")
+    @patch("orchestra.cli.circuit_breaker_commands.circuit_breaker_health_check")
+    @patch("orchestra.cli.circuit_breaker_commands.console")
     def test_health_with_progress_visualization(self, mock_console, mock_health_check):
         """Test health command includes progress visualization."""
         mock_health_check.return_value = {
@@ -426,8 +426,8 @@ class TestCircuitBreakerHealth:
         printed_calls = mock_console.print.call_args_list
         assert any("Service Availability" in str(call) for call in printed_calls)
 
-    @patch("src.cli.circuit_breaker_commands.circuit_breaker_health_check")
-    @patch("src.cli.circuit_breaker_commands.console")
+    @patch("orchestra.cli.circuit_breaker_commands.circuit_breaker_health_check")
+    @patch("orchestra.cli.circuit_breaker_commands.console")
     def test_health_exception_handling(self, mock_console, mock_health_check):
         """Test health command exception handling."""
         # Mock exception
@@ -448,7 +448,7 @@ class TestCircuitBreakerHealth:
 class TestSimulateServiceFailure:
     """Test simulate_service_failure command."""
 
-    @patch("src.cli.circuit_breaker_commands.console")
+    @patch("orchestra.cli.circuit_breaker_commands.console")
     def test_simulate_failure_basic(self, mock_console):
         """Test simulate failure command basic functionality."""
         # Run command
@@ -465,7 +465,7 @@ class TestSimulateServiceFailure:
             for call in printed_calls
         )
 
-    @patch("src.cli.circuit_breaker_commands.console")
+    @patch("orchestra.cli.circuit_breaker_commands.console")
     def test_simulate_failure_default_count(self, mock_console):
         """Test simulate failure command with default failure count."""
         # Run command with default failure count (5)
@@ -478,7 +478,7 @@ class TestSimulateServiceFailure:
             for call in printed_calls
         )
 
-    @patch("src.cli.circuit_breaker_commands.console")
+    @patch("orchestra.cli.circuit_breaker_commands.console")
     def test_simulate_failure_exception_handling(self, mock_console):
         """Test simulate failure command exception handling."""
         # Mock console.print to work normally but cause an exception in the try block
@@ -501,10 +501,10 @@ class TestCliIntegration:
 
         with (
             patch(
-                "src.cli.circuit_breaker_commands.circuit_breaker_health_check"
+                "orchestra.cli.circuit_breaker_commands.circuit_breaker_health_check"
             ) as mock_health,
             patch(
-                "src.cli.circuit_breaker_commands.get_circuit_breaker_stats"
+                "orchestra.cli.circuit_breaker_commands.get_circuit_breaker_stats"
             ) as mock_stats,
         ):
 
@@ -525,7 +525,7 @@ class TestCliIntegration:
         runner = CliRunner()
 
         with patch(
-            "src.cli.circuit_breaker_commands.circuit_breaker_health_check"
+            "orchestra.cli.circuit_breaker_commands.circuit_breaker_health_check"
         ) as mock_health:
             mock_health.return_value = {
                 "healthy": True,
@@ -545,7 +545,7 @@ class TestCliIntegration:
         runner = CliRunner()
 
         with patch(
-            "src.cli.circuit_breaker_commands.reset_all_circuit_breakers"
+            "orchestra.cli.circuit_breaker_commands.reset_all_circuit_breakers"
         ) as mock_reset:
             result = runner.invoke(cb_app, ["reset", "--yes"])
 
@@ -568,9 +568,9 @@ class TestCliIntegration:
 class TestCommandEdgeCases:
     """Test edge cases and boundary conditions."""
 
-    @patch("src.cli.circuit_breaker_commands.get_circuit_breaker_stats")
-    @patch("src.cli.circuit_breaker_commands.circuit_breaker_health_check")
-    @patch("src.cli.circuit_breaker_commands.console")
+    @patch("orchestra.cli.circuit_breaker_commands.get_circuit_breaker_stats")
+    @patch("orchestra.cli.circuit_breaker_commands.circuit_breaker_health_check")
+    @patch("orchestra.cli.circuit_breaker_commands.console")
     def test_status_with_no_last_success_time(
         self, mock_console, mock_health_check, mock_get_stats
     ):
@@ -601,9 +601,9 @@ class TestCommandEdgeCases:
         mock_health_check.assert_called_once()
         mock_get_stats.assert_called_once()
 
-    @patch("src.cli.circuit_breaker_commands.get_circuit_breaker_stats")
-    @patch("src.cli.circuit_breaker_commands.circuit_breaker_health_check")
-    @patch("src.cli.circuit_breaker_commands.console")
+    @patch("orchestra.cli.circuit_breaker_commands.get_circuit_breaker_stats")
+    @patch("orchestra.cli.circuit_breaker_commands.circuit_breaker_health_check")
+    @patch("orchestra.cli.circuit_breaker_commands.console")
     def test_status_with_unknown_state(
         self, mock_console, mock_health_check, mock_get_stats
     ):
@@ -634,7 +634,7 @@ class TestCommandEdgeCases:
         mock_health_check.assert_called_once()
         mock_get_stats.assert_called_once()
 
-    @patch("src.cli.circuit_breaker_commands.console")
+    @patch("orchestra.cli.circuit_breaker_commands.console")
     @patch("typer.confirm")
     def test_reset_specific_service_user_cancels(self, mock_confirm, mock_console):
         """Test reset specific service when user cancels."""
@@ -651,9 +651,9 @@ class TestCommandEdgeCases:
         printed_calls = mock_console.print.call_args_list
         assert any("Reset cancelled" in str(call) for call in printed_calls)
 
-    @patch("src.cli.circuit_breaker_commands.get_circuit_breaker_stats")
-    @patch("src.cli.circuit_breaker_commands.circuit_breaker_health_check")
-    @patch("src.cli.circuit_breaker_commands.console")
+    @patch("orchestra.cli.circuit_breaker_commands.get_circuit_breaker_stats")
+    @patch("orchestra.cli.circuit_breaker_commands.circuit_breaker_health_check")
+    @patch("orchestra.cli.circuit_breaker_commands.console")
     def test_status_failing_services_without_stats(
         self, mock_console, mock_health_check, mock_get_stats
     ):
@@ -684,7 +684,7 @@ class TestAppMainExecution:
         assert hasattr(cb_app, "__call__")
 
         # Test that the main execution code exists in the module
-        with open("src/cli/circuit_breaker_commands.py", "r") as f:
+        with open("orchestra/cli/circuit_breaker_commands.py", "r") as f:
             content = f.read()
             assert 'if __name__ == "__main__":' in content
             assert "cb_app()" in content

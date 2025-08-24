@@ -13,7 +13,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress
 
-from src.cli.output import (
+from orchestra.cli.output import (
     display_agent_status,
     display_banner,
     display_code_diff,
@@ -407,7 +407,7 @@ class TestProgressBar:
     def test_create_progress_bar(self, console):
         """Test creating a progress bar."""
         # Import locally since it's not in the main import list
-        from src.cli.output import create_progress_bar
+        from orchestra.cli.output import create_progress_bar
 
         progress = create_progress_bar(console, "Test task")
         assert isinstance(progress, Progress)

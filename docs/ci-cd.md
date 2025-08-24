@@ -7,6 +7,7 @@ This document describes the Continuous Integration and Continuous Deployment (CI
 Orchestra uses GitHub Actions for CI/CD with a comprehensive pipeline that includes:
 
 - **Code Quality**: Formatting, linting, type checking
+  - Note: Type checking is advisory in CI (non-blocking) due to ongoing typing work
 - **Security**: Vulnerability scanning, secret detection
 - **Testing**: Unit, integration, and security tests
 - **Coverage**: Code coverage reporting with Codecov
@@ -18,6 +19,7 @@ Orchestra uses GitHub Actions for CI/CD with a comprehensive pipeline that inclu
 ### 1. Main CI Pipeline (`.github/workflows/ci.yml`)
 
 Triggered on:
+
 - Push to `main` or `develop` branches
 - Pull requests to `main` or `develop`
 - Daily schedule (2 AM UTC) for security checks
@@ -25,36 +27,26 @@ Triggered on:
 #### Jobs:
 
 **Quality Job**
-- Code formatting check (Black, isort)
-- Linting (Ruff)
-- Type checking (MyPy)
-- Security scanning (Bandit, Safety)
-- Pre-commit hooks validation
 
-**Test Job**
-- Unit tests with coverage
-- Integration tests
-- Security tests
-- Coverage reporting to Codecov
-- Test result publishing
+- Code formatting checks: Black (check), isort (check-only)
+- Linting: Ruff
+- Type checking: MyPy
+- Pre-commit hooks: run with `SKIP=coverage-check` to avoid re-running tests
 
-**Docker Job**
-- Docker image building
-- Container testing
-- Docker Compose validation
+**Security Job**
 
-**Performance Job** (main branch only)
-- Performance benchmarks
-- Load testing
+- Static analysis: Bandit (configured via `bandit.yaml`)
+- Dependency audit: pip-audit
 
-**Documentation Job**
-- Documentation structure validation
-- Example configuration checks
-- CLI help verification
+**Tests + Coverage Job**
 
-**Dependency Check Job** (scheduled)
-- Daily dependency security audits
-- Outdated package reporting
+- Run pytest with a hard 90% coverage gate
+- Generate `coverage.xml` and upload to Codecov
+- Upload `htmlcov/` as a build artifact
+
+**Docker Build Job** (optional, non-PR)
+
+- Build Docker image and run a basic smoke test
 
 ### 2. Pre-commit Pipeline (`.github/workflows/pre-commit.yml`)
 
@@ -63,10 +55,12 @@ Triggered on pull requests to ensure code quality standards.
 ### 3. Release Pipeline (`.github/workflows/release.yml`)
 
 Triggered on:
+
 - Git tags matching `v*` pattern
 - Manual workflow dispatch
 
 #### Release Process:
+
 1. Validate release version format
 2. Run full test suite
 3. Build and publish Docker image
@@ -124,31 +118,36 @@ python scripts/fix_code_quality.py
 ## Code Quality Standards
 
 ### Formatting
+
 - **Black**: Code formatting with 88-character line length
 - **isort**: Import sorting with Black profile
 
 ### Linting
+
 - **Ruff**: Fast Python linting with security rules
 - **MyPy**: Type checking with strict mode
 
 ### Security
+
 - **Bandit**: Security vulnerability scanning
-- **Safety**: Dependency vulnerability checking
+- **pip-audit**: Dependency vulnerability checking
 - **Pre-commit**: Git hooks for quality enforcement
 
 ### Testing
+
 - **pytest**: Testing framework with async support
 - **Coverage**: Minimum 90% code coverage
 - **Markers**: `unit`, `integration`, `security`, `slow`
 
 ## Coverage Requirements
 
-| Type | Target | Threshold |
-|------|---------|-----------|
-| Overall Project | 90% | 2% drop allowed |
-| New Code (Patches) | 95% | 5% drop allowed |
+| Type               | Target | Threshold       |
+| ------------------ | ------ | --------------- |
+| Overall Project    | 90%    | 2% drop allowed |
+| New Code (Patches) | 95%    | 5% drop allowed |
 
 ### Coverage Exclusions
+
 - Test files (`tests/`)
 - Setup scripts (`scripts/`)
 - Documentation (`docs/`)
@@ -158,17 +157,20 @@ python scripts/fix_code_quality.py
 ## Security Scanning
 
 ### Bandit Configuration
-- Scans all Python code in `src/`
+
+- Scans all Python code in `orchestra/`
 - Custom rules for AI agent systems
 - JSON and text output formats
 - Baseline file for ignoring false positives
 
-### Safety Configuration
+### Dependency Audit Configuration
+
 - Checks all dependencies for known vulnerabilities
 - Daily automated scans
 - JSON reporting for tracking
 
 ### Secret Detection
+
 - Pre-commit hooks scan for secrets
 - Pattern-based detection for API keys
 - Baseline file for legitimate patterns
@@ -176,12 +178,14 @@ python scripts/fix_code_quality.py
 ## Docker Pipeline
 
 ### Build Process
+
 1. Multi-stage Dockerfile with Poetry
 2. Security-focused base image
 3. Non-root user execution
 4. Health checks included
 
 ### Testing
+
 - Container functionality verification
 - Docker Compose service integration
 - Environment variable validation
@@ -189,6 +193,7 @@ python scripts/fix_code_quality.py
 ## Dependency Management
 
 ### Dependabot Configuration
+
 - **Python**: Weekly updates on Monday
 - **Docker**: Weekly updates on Tuesday
 - **GitHub Actions**: Weekly updates on Wednesday
@@ -196,6 +201,7 @@ python scripts/fix_code_quality.py
 - Automatic labeling and assignment
 
 ### Update Strategy
+
 - Direct and indirect dependencies
 - Ignore patch updates for stable packages
 - Maximum 5 open PRs per ecosystem
@@ -203,16 +209,19 @@ python scripts/fix_code_quality.py
 ## Release Process
 
 ### Version Management
+
 - Semantic versioning (vX.Y.Z)
 - Git tags trigger releases
 - Automated changelog generation
 
 ### Artifacts
+
 - **Docker**: `orchestra/orchestra:vX.Y.Z`
 - **PyPI**: `orchestra==X.Y.Z`
 - **GitHub**: Release with artifacts
 
 ### Deployment
+
 1. Tag creation triggers release workflow
 2. Full test suite must pass
 3. Docker image built and pushed
@@ -223,6 +232,7 @@ python scripts/fix_code_quality.py
 ## Environment Variables
 
 ### Required for CI
+
 ```bash
 # Secrets (set in GitHub repository settings)
 DOCKER_USERNAME=<docker-hub-username>
@@ -235,6 +245,7 @@ SLACK_WEBHOOK_URL=<slack-webhook-for-notifications>
 ```
 
 ### Test Environment
+
 ```bash
 # Automatically set by CI
 ENVIRONMENT=test
@@ -252,30 +263,35 @@ POSTGRES_PASSWORD=test_password
 ## Monitoring and Notifications
 
 ### Failure Notifications
+
 - Slack notifications on main branch failures
 - Email notifications for security issues
 - GitHub issue creation for dependency vulnerabilities
 
 ### Reporting
+
 - **Codecov**: Coverage reports and trends
 - **GitHub**: Test results and artifacts
-- **Security**: Bandit and Safety reports
+- **Security**: Bandit and pip-audit reports
 
 ## Best Practices
 
 ### Before Pushing
+
 1. Run `make ci` locally
 2. Fix any code quality issues with `make fix`
 3. Ensure all tests pass
 4. Review security scan results
 
 ### Pull Request Guidelines
+
 1. Target the `develop` branch
 2. Include tests for new features
 3. Update documentation if needed
 4. Ensure CI passes before requesting review
 
 ### Release Guidelines
+
 1. Update version in `pyproject.toml`
 2. Create comprehensive changelog
 3. Tag with `git tag vX.Y.Z`
@@ -286,6 +302,7 @@ POSTGRES_PASSWORD=test_password
 ### Common CI Failures
 
 **Code Quality Issues**
+
 ```bash
 # Auto-fix most issues
 make fix
@@ -295,6 +312,7 @@ make quality
 ```
 
 **Test Failures**
+
 ```bash
 # Run specific test types
 make test-unit
@@ -306,6 +324,7 @@ poetry run pytest tests/ -v -s
 ```
 
 **Docker Build Issues**
+
 ```bash
 # Test Docker build locally
 make docker-build
@@ -315,15 +334,17 @@ docker-compose config
 ```
 
 **Security Scan Issues**
+
 ```bash
 # Run security scans locally
 make security
 
 # Review and update security baseline
-poetry run bandit -r src/ -f json -o .bandit_baseline
+poetry run bandit -r orchestra/ -f json -o .bandit_baseline
 ```
 
 ### Performance Issues
+
 - Use caching for dependencies
 - Parallel job execution where possible
 - Optimize Docker layer caching

@@ -14,9 +14,9 @@ from agents import Agent, FunctionTool, Runner, SQLiteSession
 from agents.models.openai_chatcompletions import OpenAIChatCompletionsModel
 from openai import AsyncOpenAI
 
-from src.config.settings import get_settings
-from src.system.monitoring import AgentMonitor
-from src.utils.logging import get_logger, set_agent_context
+from orchestra.config.settings import get_settings
+from orchestra.system.monitoring import AgentMonitor
+from orchestra.utils.logging import get_logger, set_agent_context
 
 logger = get_logger(__name__)
 

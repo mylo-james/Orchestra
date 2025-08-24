@@ -2,7 +2,7 @@
 
 import pytest
 
-from src.utils.logging import get_logger, set_correlation_id
+from orchestra.utils.logging import get_logger, set_correlation_id
 
 
 @pytest.mark.integration
@@ -118,7 +118,7 @@ class TestSecurityIntegration:
 
     def test_audit_logging_integration(self, test_settings):
         """Test that audit logging is properly integrated."""
-        from src.utils.logging import SecurityAuditLogger
+        from orchestra.utils.logging import SecurityAuditLogger
 
         audit_logger = SecurityAuditLogger()
 

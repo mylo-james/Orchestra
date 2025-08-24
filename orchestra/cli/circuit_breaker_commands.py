@@ -10,7 +10,7 @@ from rich.console import Console
 from rich.progress import BarColumn, Progress, TextColumn
 from rich.table import Table
 
-from src.utils.circuit_breaker import (
+from orchestra.utils.circuit_breaker import (
     circuit_breaker_health_check,
     get_circuit_breaker_stats,
     reset_all_circuit_breakers,

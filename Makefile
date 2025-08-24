@@ -16,6 +16,9 @@ help:
 	@echo "  coverage    - Run tests with coverage report"
 	@echo "  lint        - Run code linting"
 	@echo "  format      - Format code"
+	@echo "  type-check  - Run static type checks"
+	@echo "  quality     - Run formatting, linting, and type checks"
+	@echo "  fix         - Auto-fix formatting and lint issues"
 	@echo "  security    - Run security checks"
 	@echo "  clean       - Clean build artifacts"
 	@echo "  ci          - Run complete CI pipeline"
@@ -69,22 +72,35 @@ test-sec:
 
 coverage:
 	@echo "📊 Running tests with coverage..."
-	poetry run pytest tests/ --cov=src --cov-fail-under=90 --cov-report=html --cov-report=term-missing --cov-report=json
+	poetry run pytest tests/ --cov=orchestra --cov-fail-under=90 --cov-report=html --cov-report=term-missing --cov-report=json
 
 # Code quality
 lint:
 	@echo "🔍 Running code linting..."
-	poetry run ruff check src/ tests/
+	poetry run ruff check orchestra/ tests/
 
 format:
 	@echo "🎨 Formatting code..."
-	poetry run black src/ tests/
-	poetry run isort src/ tests/
+	poetry run black orchestra/ tests/
+	poetry run isort orchestra/ tests/
+
+type-check:
+	@echo "🧠 Running static type checks..."
+	poetry run mypy orchestra/
+
+quality: format lint type-check
+	@echo "✅ Quality checks complete!"
+
+fix:
+	@echo "🛠️  Auto-fixing style issues..."
+	poetry run black orchestra/ tests/
+	poetry run isort orchestra/ tests/
+	poetry run ruff check --fix orchestra/ tests/
 
 # Security
 security:
 	@echo "🔒 Running security checks..."
-	poetry run bandit -r src/
+	poetry run bandit -r orchestra/
 	poetry run pip-audit
 
 # Development workflow shortcuts
@@ -101,7 +117,7 @@ pre-push: format lint test security
 	@echo "🚀 Pre-push checks complete!"
 
 # CI pipeline
-ci: install lint security coverage
+ci: install quality security coverage
 	@echo "🎯 CI pipeline complete!"
 
 # Cleanup

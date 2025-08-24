@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 # Import the module to ensure it's loaded for coverage
-from src.models.knowledge import (
+from orchestra.models.knowledge import (
     ConflictType,
     KnowledgeChunk,
     KnowledgeConflict,
@@ -18,7 +18,7 @@ from src.models.knowledge import (
     SecurityClassification,
     SeverityLevel,
 )
-from src.services.conflict_resolution_service import ConflictResolutionService
+from orchestra.services.conflict_resolution_service import ConflictResolutionService
 
 
 class TestConflictResolutionServiceInitialization:

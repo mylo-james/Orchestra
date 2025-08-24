@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from src.system.base import AgentContext, ModelConfig, SecureAgent
+from orchestra.system.base import AgentContext, ModelConfig, SecureAgent
 
 
 class TestAgentContext:
@@ -91,7 +91,7 @@ class TestSecureAgent:
     async def test_start_stop(self, secure_agent):
         """Test agent start and stop methods."""
         # Mock SQLiteSession to avoid database file creation in tests
-        with patch("src.system.base.SQLiteSession") as mock_session_class:
+        with patch("orchestra.system.base.SQLiteSession") as mock_session_class:
             mock_session = Mock()
             mock_session_class.return_value = mock_session
 
@@ -116,7 +116,7 @@ class TestSecureAgent:
 
         # Mock session creation and runner execution
         with (
-            patch("src.system.base.SQLiteSession") as mock_session_class,
+            patch("orchestra.system.base.SQLiteSession") as mock_session_class,
             patch.object(secure_agent.runner, "run_sync") as mock_run_sync,
         ):
 
@@ -150,7 +150,7 @@ class TestSecureAgent:
         user_message = "Test message"
 
         with (
-            patch("src.system.base.SQLiteSession") as mock_session_class,
+            patch("orchestra.system.base.SQLiteSession") as mock_session_class,
             patch.object(secure_agent.runner, "run_sync") as mock_run_sync,
         ):
 
@@ -178,7 +178,7 @@ class TestSecureAgent:
         user_message = "Test message"
 
         with (
-            patch("src.system.base.SQLiteSession") as mock_session_class,
+            patch("orchestra.system.base.SQLiteSession") as mock_session_class,
             patch.object(secure_agent.runner, "run_sync") as mock_run_sync,
         ):
 
@@ -206,7 +206,7 @@ class TestSecureAgent:
         user_message = "Test message"
 
         with (
-            patch("src.system.base.SQLiteSession") as mock_session_class,
+            patch("orchestra.system.base.SQLiteSession") as mock_session_class,
             patch.object(secure_agent.runner, "run_sync") as mock_run_sync,
         ):
 
@@ -265,7 +265,7 @@ class TestSecureAgent:
         )
 
         with (
-            patch("src.system.base.SQLiteSession") as mock_session_class,
+            patch("orchestra.system.base.SQLiteSession") as mock_session_class,
             patch.object(secure_agent.runner, "run_sync") as mock_run_sync,
         ):
 
@@ -293,7 +293,7 @@ class TestSecureAgent:
         user_message = "Test error handling"
 
         with (
-            patch("src.system.base.SQLiteSession") as mock_session_class,
+            patch("orchestra.system.base.SQLiteSession") as mock_session_class,
             patch.object(secure_agent.runner, "run_sync") as mock_run_sync,
         ):
 
@@ -317,7 +317,7 @@ class TestSecureAgent:
         user_message = "Test default context"
 
         with (
-            patch("src.system.base.SQLiteSession") as mock_session_class,
+            patch("orchestra.system.base.SQLiteSession") as mock_session_class,
             patch.object(secure_agent.runner, "run_sync") as mock_run_sync,
             patch("asyncio.current_task") as mock_current_task,
         ):
@@ -353,7 +353,7 @@ class TestSecureAgent:
         user_message = "Test comprehensive coverage"
 
         with (
-            patch("src.system.base.SQLiteSession") as mock_session_class,
+            patch("orchestra.system.base.SQLiteSession") as mock_session_class,
             patch.object(secure_agent.runner, "run_sync") as mock_run_sync,
         ):
 

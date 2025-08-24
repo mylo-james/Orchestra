@@ -9,12 +9,12 @@ from typing import Any, Dict, List, Optional
 from temporalio import workflow
 from temporalio.common import RetryPolicy
 
-from src.workflows.activities import (
+from orchestra.workflows.activities import (
     create_github_pr_activity,
     execute_agent_activity,
     validate_context_activity,
 )
-from src.workflows.security_activities import (
+from orchestra.workflows.security_activities import (
     audit_log_activity,
     validate_security_activity,
 )

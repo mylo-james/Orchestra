@@ -2,3 +2,4 @@
 !.bmad-infrastructure-devops/
 !.cursor/
 !.env.example
+!.gitignore

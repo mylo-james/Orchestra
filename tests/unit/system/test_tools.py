@@ -11,7 +11,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from src.system.tools import (
+from orchestra.system.tools import (
     CreatePRInput,
     FunctionTool,
     create_github_pr_tool,
@@ -115,7 +115,7 @@ class TestGitHubPRTool:
         )
 
         # Mock external service client to avoid actual API calls
-        with patch("src.system.tools.ExternalServiceClient") as mock_client_class:
+        with patch("orchestra.system.tools.ExternalServiceClient") as mock_client_class:
             mock_client = AsyncMock()
             mock_client.create_github_pr.return_value = {
                 "html_url": "https://github.com/test/repo/pull/123"
@@ -123,7 +123,7 @@ class TestGitHubPRTool:
             mock_client_class.return_value = mock_client
 
             # Mock settings to provide GitHub token
-            with patch("src.system.tools.get_settings") as mock_settings:
+            with patch("orchestra.system.tools.get_settings") as mock_settings:
                 mock_settings.return_value.github.token = "test-token"
 
                 # Execute actual tool function (not mocked)
@@ -184,12 +184,12 @@ class TestGitHubPRTool:
         )
 
         # Mock external service client to simulate GitHub API failure
-        with patch("src.system.tools.ExternalServiceClient") as mock_client_class:
+        with patch("orchestra.system.tools.ExternalServiceClient") as mock_client_class:
             mock_client = AsyncMock()
             mock_client.create_github_pr.side_effect = Exception("GitHub API Error")
             mock_client_class.return_value = mock_client
 
-            with patch("src.system.tools.get_settings") as mock_settings:
+            with patch("orchestra.system.tools.get_settings") as mock_settings:
                 mock_settings.return_value.github.token = "test-token"
 
                 # Verify proper error handling
@@ -238,7 +238,7 @@ class TestGitHubRepositoriesTool:
         )
 
         # Mock external service for execution test
-        with patch("src.system.tools.ExternalServiceClient") as mock_client_class:
+        with patch("orchestra.system.tools.ExternalServiceClient") as mock_client_class:
             mock_client = AsyncMock()
             mock_client.list_github_repositories.return_value = [
                 {"name": "repo1", "full_name": "user/repo1"},
@@ -246,7 +246,7 @@ class TestGitHubRepositoriesTool:
             ]
             mock_client_class.return_value = mock_client
 
-            with patch("src.system.tools.get_settings") as mock_settings:
+            with patch("orchestra.system.tools.get_settings") as mock_settings:
                 mock_settings.return_value.github.token = "test-token"
 
                 # Execute actual tool function

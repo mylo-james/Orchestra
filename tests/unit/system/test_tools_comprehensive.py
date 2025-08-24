@@ -1,5 +1,5 @@
 """
-Comprehensive tests for src/system/tools.py to achieve 90%+ coverage.
+Comprehensive tests for orchestra/system/tools.py to achieve 90%+ coverage.
 
 Tests GitHub tools implementation with OpenAI Agents SDK integration.
 """
@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from src.system.tools import (
+from orchestra.system.tools import (
     CreatePRInput,
     FunctionTool,
     ToolContext,
@@ -85,9 +85,9 @@ class TestToolDefinitionAndContext:
 class TestCreateGitHubPRTool:
     """Test create_github_pr_tool function."""
 
-    @patch("src.system.tools.ExternalServiceClient")
-    @patch("src.system.tools.get_settings")
-    @patch("src.system.tools.logger")
+    @patch("orchestra.system.tools.ExternalServiceClient")
+    @patch("orchestra.system.tools.get_settings")
+    @patch("orchestra.system.tools.logger")
     def test_create_github_pr_tool_creation(
         self, mock_logger, mock_get_settings, mock_client_class
     ):
@@ -101,8 +101,8 @@ class TestCreateGitHubPRTool:
         assert tool.func is not None
 
     @pytest.mark.asyncio
-    @patch("src.system.tools.ExternalServiceClient")
-    @patch("src.system.tools.get_settings")
+    @patch("orchestra.system.tools.ExternalServiceClient")
+    @patch("orchestra.system.tools.get_settings")
     async def test_create_pr_success(self, mock_get_settings, mock_client_class):
         """Test successful PR creation."""
         # Setup mocks
@@ -148,8 +148,8 @@ class TestCreateGitHubPRTool:
         mock_client.create_github_pr.assert_called_once()
 
     @pytest.mark.asyncio
-    @patch("src.system.tools.ExternalServiceClient")
-    @patch("src.system.tools.get_settings")
+    @patch("orchestra.system.tools.ExternalServiceClient")
+    @patch("orchestra.system.tools.get_settings")
     async def test_create_pr_invalid_json(self, mock_get_settings, mock_client_class):
         """Test PR creation with invalid JSON."""
         tool = create_github_pr_tool()
@@ -162,8 +162,8 @@ class TestCreateGitHubPRTool:
             await tool.func(mock_context, "invalid json {")
 
     @pytest.mark.asyncio
-    @patch("src.system.tools.ExternalServiceClient")
-    @patch("src.system.tools.get_settings")
+    @patch("orchestra.system.tools.ExternalServiceClient")
+    @patch("orchestra.system.tools.get_settings")
     async def test_create_pr_api_failure(self, mock_get_settings, mock_client_class):
         """Test PR creation when API fails."""
         # Setup mocks
@@ -193,8 +193,8 @@ class TestCreateGitHubPRTool:
 class TestListRepositoriesTool:
     """Test list_repositories_tool function."""
 
-    @patch("src.system.tools.ExternalServiceClient")
-    @patch("src.system.tools.get_settings")
+    @patch("orchestra.system.tools.ExternalServiceClient")
+    @patch("orchestra.system.tools.get_settings")
     def test_list_repositories_tool_creation(
         self, mock_get_settings, mock_client_class
     ):
@@ -207,8 +207,8 @@ class TestListRepositoriesTool:
         assert tool.func is not None
 
     @pytest.mark.asyncio
-    @patch("src.system.tools.ExternalServiceClient")
-    @patch("src.system.tools.get_settings")
+    @patch("orchestra.system.tools.ExternalServiceClient")
+    @patch("orchestra.system.tools.get_settings")
     async def test_list_repositories_execution(
         self, mock_get_settings, mock_client_class
     ):
@@ -251,7 +251,7 @@ class TestCreatePRToolDefinition:
 class TestGetGitHubTools:
     """Test get_github_tools function."""
 
-    @patch("src.system.tools.get_settings")
+    @patch("orchestra.system.tools.get_settings")
     def test_get_github_tools(self, mock_get_settings):
         """Test creating all GitHub tools."""
         mock_settings = MagicMock()
@@ -268,7 +268,7 @@ class TestGetGitHubTools:
         assert "create_github_pr" in tool_names
         assert "list_github_repositories" in tool_names
 
-    @patch("src.system.tools.get_settings")
+    @patch("orchestra.system.tools.get_settings")
     def test_get_github_tools_no_token(self, mock_get_settings):
         """Test creating GitHub tools without token."""
         mock_settings = MagicMock()
@@ -286,8 +286,8 @@ class TestIntegration:
     """Integration tests for tools module."""
 
     @pytest.mark.asyncio
-    @patch("src.system.tools.ExternalServiceClient")
-    @patch("src.system.tools.get_settings")
+    @patch("orchestra.system.tools.ExternalServiceClient")
+    @patch("orchestra.system.tools.get_settings")
     async def test_full_pr_workflow(self, mock_get_settings, mock_client_class):
         """Test complete PR creation workflow."""
         # Setup

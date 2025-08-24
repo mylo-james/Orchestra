@@ -5,11 +5,11 @@ import asyncio
 import sys
 from pathlib import Path
 
-# Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+# Add orchestra to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent / "orchestra"))
 
-from src.config.settings import get_settings
-from src.utils.logging import configure_logging, get_logger
+from orchestra.config.settings import get_settings
+from orchestra.utils.logging import configure_logging, get_logger
 
 logger = get_logger(__name__)
 

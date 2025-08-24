@@ -12,7 +12,7 @@ import pytest
 import typer
 from typer.testing import CliRunner as TyperCliRunner
 
-from src.cli.main import app, main, run_async_command
+from orchestra.cli.main import app, main, run_async_command
 
 
 class TestMainApp:
@@ -42,7 +42,7 @@ class TestMainApp:
         """Test version command works correctly."""
         runner = TyperCliRunner()
 
-        with patch("src.cli.main.get_settings") as mock_settings:
+        with patch("orchestra.cli.main.get_settings") as mock_settings:
             mock_settings.return_value.version = "1.0.0"
             mock_settings.return_value.environment = "test"
 
@@ -73,10 +73,10 @@ class TestMainCallback:
         ctx.invoked_subcommand = "test_command"
         return ctx
 
-    @patch("src.cli.main.get_settings")
-    @patch("src.cli.main.configure_logging")
-    @patch("src.cli.main.set_correlation_id")
-    @patch("src.cli.main.display_banner")
+    @patch("orchestra.cli.main.get_settings")
+    @patch("orchestra.cli.main.configure_logging")
+    @patch("orchestra.cli.main.set_correlation_id")
+    @patch("orchestra.cli.main.display_banner")
     def test_main_success_with_correct_parameters(
         self,
         mock_banner,
@@ -108,9 +108,9 @@ class TestMainCallback:
         mock_correlation.assert_called_once_with("test-correlation-id")
         mock_get_settings.assert_called_once()
 
-    @patch("src.cli.main.get_settings")
-    @patch("src.cli.main.configure_logging")
-    @patch("src.cli.main.set_correlation_id")
+    @patch("orchestra.cli.main.get_settings")
+    @patch("orchestra.cli.main.configure_logging")
+    @patch("orchestra.cli.main.set_correlation_id")
     def test_main_verbose_logging_correct_level(
         self,
         mock_correlation,
@@ -129,9 +129,9 @@ class TestMainCallback:
             log_level="DEBUG", json_logs=False, enable_audit=True  # Verbose mode
         )
 
-    @patch("src.cli.main.get_settings")
-    @patch("src.cli.main.configure_logging")
-    @patch("src.cli.main.set_correlation_id")
+    @patch("orchestra.cli.main.get_settings")
+    @patch("orchestra.cli.main.configure_logging")
+    @patch("orchestra.cli.main.set_correlation_id")
     def test_main_quiet_mode_correct_level(
         self,
         mock_correlation,
@@ -150,9 +150,9 @@ class TestMainCallback:
             log_level="ERROR", json_logs=False, enable_audit=True  # Quiet mode
         )
 
-    @patch("src.cli.main.get_settings")
-    @patch("src.cli.main.configure_logging")
-    @patch("src.cli.main.set_correlation_id")
+    @patch("orchestra.cli.main.get_settings")
+    @patch("orchestra.cli.main.configure_logging")
+    @patch("orchestra.cli.main.set_correlation_id")
     def test_main_json_logs_enabled(
         self,
         mock_correlation,
@@ -171,8 +171,8 @@ class TestMainCallback:
             log_level="INFO", json_logs=True, enable_audit=True  # JSON logs enabled
         )
 
-    @patch("src.cli.main.get_settings")
-    @patch("src.cli.main.set_correlation_id")
+    @patch("orchestra.cli.main.get_settings")
+    @patch("orchestra.cli.main.set_correlation_id")
     def test_main_correlation_id_generation(
         self, mock_correlation, mock_get_settings, mock_context, mock_settings
     ):
@@ -196,8 +196,8 @@ class TestMainCallbackErrorHandling:
         ctx.obj = {}  # Initialize obj as dict
         return ctx
 
-    @patch("src.cli.main.get_settings")
-    @patch("src.cli.main.display_error")
+    @patch("orchestra.cli.main.get_settings")
+    @patch("orchestra.cli.main.display_error")
     def test_main_callback_exception_handling_with_exit_1(
         self, mock_display_error, mock_get_settings, mock_context
     ):
@@ -211,8 +211,8 @@ class TestMainCallbackErrorHandling:
         assert exc_info.value.exit_code == 1  # Actual exit code for exceptions
         mock_display_error.assert_called_once()
 
-    @patch("src.cli.main.get_settings")
-    @patch("src.cli.main.configure_logging")
+    @patch("orchestra.cli.main.get_settings")
+    @patch("orchestra.cli.main.configure_logging")
     def test_main_callback_settings_validation(
         self, mock_configure, mock_get_settings, mock_context
     ):
@@ -239,7 +239,7 @@ class TestAsyncCommandHelper:
             return "test_result"
 
         # Test the function directly without pytest-asyncio conflict
-        with patch("src.cli.main.asyncio.run") as mock_run:
+        with patch("orchestra.cli.main.asyncio.run") as mock_run:
             mock_run.return_value = "test_result"
             result = run_async_command(test_coro())
             assert result == "test_result"
@@ -276,9 +276,11 @@ class TestHealthCommand:
         runner = TyperCliRunner()
 
         with (
-            patch("src.cli.main.get_settings") as mock_settings,
-            patch("src.cli.main.security_health_check") as mock_security,
-            patch("src.utils.circuit_breaker.circuit_breaker_health_check") as mock_cb,
+            patch("orchestra.cli.main.get_settings") as mock_settings,
+            patch("orchestra.cli.main.security_health_check") as mock_security,
+            patch(
+                "orchestra.utils.circuit_breaker.circuit_breaker_health_check"
+            ) as mock_cb,
         ):
 
             mock_settings.return_value.openai.api_key = "test-key"
@@ -295,7 +297,7 @@ class TestHealthCommand:
         """Test health check with missing API key."""
         runner = TyperCliRunner()
 
-        with patch("src.cli.main.get_settings") as mock_settings:
+        with patch("orchestra.cli.main.get_settings") as mock_settings:
             mock_settings.return_value.openai.api_key = None
 
             result = runner.invoke(app, ["health"])
@@ -343,8 +345,8 @@ class TestCLIPRDCompliance:
         mock_context.invoked_subcommand = None
 
         with (
-            patch("src.cli.main.get_settings") as mock_settings,
-            patch("src.cli.main.configure_logging") as mock_logging,
+            patch("orchestra.cli.main.get_settings") as mock_settings,
+            patch("orchestra.cli.main.configure_logging") as mock_logging,
         ):
 
             mock_settings.return_value.version = "1.0.0"
@@ -367,16 +369,16 @@ class TestCLIPRDCompliance:
         """Test progress transparency through proper logging."""
         runner = TyperCliRunner()
 
-        with patch("src.cli.main.get_settings") as mock_settings:
+        with patch("orchestra.cli.main.get_settings") as mock_settings:
             mock_settings.return_value.version = "1.0.0"
             mock_settings.return_value.environment = "test"
             mock_settings.return_value.openai.api_key = "test-key"
 
             # Health command should provide transparent progress
             with (
-                patch("src.cli.main.security_health_check") as mock_security,
+                patch("orchestra.cli.main.security_health_check") as mock_security,
                 patch(
-                    "src.utils.circuit_breaker.circuit_breaker_health_check"
+                    "orchestra.utils.circuit_breaker.circuit_breaker_health_check"
                 ) as mock_cb,
             ):
 

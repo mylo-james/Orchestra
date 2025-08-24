@@ -243,7 +243,6 @@ docs/build/
 *.model
 *.pkl
 *.pickle
-models/
 data/
 datasets/
 

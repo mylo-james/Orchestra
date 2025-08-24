@@ -17,7 +17,7 @@ def main():
                 "poetry",
                 "run",
                 "pytest",
-                "--cov=src",
+                "--cov=orchestra",
                 "--cov-fail-under=90",
                 "--cov-report=term-missing",
                 "--quiet",

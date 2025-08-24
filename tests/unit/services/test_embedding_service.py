@@ -6,14 +6,14 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 # Import the module to ensure it's loaded for coverage
-from src.services.embedding_service import EmbeddingService
+from orchestra.services.embedding_service import EmbeddingService
 
 
 class TestEmbeddingServiceInitialization:
     """Test embedding service initialization."""
 
-    @patch("src.services.embedding_service.AsyncOpenAI")
-    @patch("src.services.embedding_service.get_settings")
+    @patch("orchestra.services.embedding_service.AsyncOpenAI")
+    @patch("orchestra.services.embedding_service.get_settings")
     def test_initialization_with_defaults(self, mock_get_settings, mock_openai):
         """Test service initialization with default parameters."""
         # Mock settings
@@ -31,8 +31,8 @@ class TestEmbeddingServiceInitialization:
         assert service._cache_misses == 0
         mock_openai.assert_called_once_with(api_key="test-api-key")
 
-    @patch("src.services.embedding_service.AsyncOpenAI")
-    @patch("src.services.embedding_service.get_settings")
+    @patch("orchestra.services.embedding_service.AsyncOpenAI")
+    @patch("orchestra.services.embedding_service.get_settings")
     def test_initialization_with_custom_model(self, mock_get_settings, mock_openai):
         """Test service initialization with custom model."""
         mock_settings = Mock()
@@ -51,8 +51,8 @@ class TestEmbeddingServiceSingleEmbedding:
     def mock_service(self):
         """Create a mock embedding service."""
         with (
-            patch("src.services.embedding_service.AsyncOpenAI"),
-            patch("src.services.embedding_service.get_settings"),
+            patch("orchestra.services.embedding_service.AsyncOpenAI"),
+            patch("orchestra.services.embedding_service.get_settings"),
         ):
             service = EmbeddingService()
             service.client = AsyncMock()
@@ -137,7 +137,7 @@ class TestEmbeddingServiceSingleEmbedding:
         mock_response.data[0].embedding = [0.1, 0.2, 0.3, 0.4]
         mock_service.client.embeddings.create = AsyncMock(return_value=mock_response)
 
-        with patch("src.services.embedding_service.logger") as mock_logger:
+        with patch("orchestra.services.embedding_service.logger") as mock_logger:
             await mock_service.generate_embedding("test text")
 
             # Should log performance
@@ -153,8 +153,8 @@ class TestEmbeddingServiceBatchEmbedding:
     def mock_service(self):
         """Create a mock embedding service."""
         with (
-            patch("src.services.embedding_service.AsyncOpenAI"),
-            patch("src.services.embedding_service.get_settings"),
+            patch("orchestra.services.embedding_service.AsyncOpenAI"),
+            patch("orchestra.services.embedding_service.get_settings"),
         ):
             service = EmbeddingService()
             service.client = AsyncMock()
@@ -298,8 +298,8 @@ class TestEmbeddingServiceUtilities:
     def mock_service(self):
         """Create a mock embedding service."""
         with (
-            patch("src.services.embedding_service.AsyncOpenAI"),
-            patch("src.services.embedding_service.get_settings"),
+            patch("orchestra.services.embedding_service.AsyncOpenAI"),
+            patch("orchestra.services.embedding_service.get_settings"),
         ):
             service = EmbeddingService()
             return service
@@ -370,8 +370,8 @@ class TestEmbeddingServiceCacheWarmup:
     def mock_service(self):
         """Create a mock embedding service."""
         with (
-            patch("src.services.embedding_service.AsyncOpenAI"),
-            patch("src.services.embedding_service.get_settings"),
+            patch("orchestra.services.embedding_service.AsyncOpenAI"),
+            patch("orchestra.services.embedding_service.get_settings"),
         ):
             service = EmbeddingService()
             service.client = AsyncMock()
@@ -421,8 +421,8 @@ class TestEmbeddingServicePerformance:
     def mock_service(self):
         """Create a mock embedding service."""
         with (
-            patch("src.services.embedding_service.AsyncOpenAI"),
-            patch("src.services.embedding_service.get_settings"),
+            patch("orchestra.services.embedding_service.AsyncOpenAI"),
+            patch("orchestra.services.embedding_service.get_settings"),
         ):
             service = EmbeddingService()
             service.client = AsyncMock()
@@ -483,8 +483,8 @@ class TestEmbeddingServiceIntegration:
     def mock_service(self):
         """Create a mock embedding service."""
         with (
-            patch("src.services.embedding_service.AsyncOpenAI"),
-            patch("src.services.embedding_service.get_settings"),
+            patch("orchestra.services.embedding_service.AsyncOpenAI"),
+            patch("orchestra.services.embedding_service.get_settings"),
         ):
             service = EmbeddingService()
             service.client = AsyncMock()
@@ -578,8 +578,8 @@ class TestEmbeddingServiceRealExecution:
         """Test _hash_text method with real execution - no mocking."""
         # Create service with minimal mocking for just the external dependencies
         with (
-            patch("src.services.embedding_service.AsyncOpenAI"),
-            patch("src.services.embedding_service.get_settings") as mock_settings,
+            patch("orchestra.services.embedding_service.AsyncOpenAI"),
+            patch("orchestra.services.embedding_service.get_settings") as mock_settings,
         ):
 
             mock_settings_obj = Mock()
@@ -606,8 +606,8 @@ class TestEmbeddingServiceRealExecution:
     def test_cache_management_real_execution(self):
         """Test cache operations with real code execution."""
         with (
-            patch("src.services.embedding_service.AsyncOpenAI"),
-            patch("src.services.embedding_service.get_settings") as mock_settings,
+            patch("orchestra.services.embedding_service.AsyncOpenAI"),
+            patch("orchestra.services.embedding_service.get_settings") as mock_settings,
         ):
 
             mock_settings_obj = Mock()

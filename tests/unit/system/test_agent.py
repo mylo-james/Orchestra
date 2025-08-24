@@ -6,8 +6,8 @@ from unittest.mock import Mock, patch
 import pytest
 
 # Import the module to ensure it's loaded for coverage
-from src.system.agent import UniversalAgent
-from src.system.specs import (
+from orchestra.system.agent import UniversalAgent
+from orchestra.system.specs import (
     BehavioralContract,
     CommandInterface,
     PersonaIdentity,
@@ -59,13 +59,13 @@ class TestUniversalAgent:
     @pytest.fixture
     def universal_agent(self, mock_persona_spec):
         """Create a UniversalAgent instance for testing."""
-        with patch("src.system.agent.PersonaLoader"):
+        with patch("orchestra.system.agent.PersonaLoader"):
             agent = UniversalAgent(persona_spec=mock_persona_spec)
             return agent
 
     def test_initialization_with_persona_spec(self, mock_persona_spec):
         """Test UniversalAgent initialization with provided persona spec."""
-        with patch("src.system.agent.PersonaLoader"):
+        with patch("orchestra.system.agent.PersonaLoader"):
             agent = UniversalAgent(persona_spec=mock_persona_spec)
 
             assert agent.persona_spec == mock_persona_spec
@@ -80,7 +80,7 @@ class TestUniversalAgent:
         mock_loader = Mock()
         mock_loader.load_persona.return_value = mock_persona_spec
 
-        with patch("src.system.agent.PersonaLoader", return_value=mock_loader):
+        with patch("orchestra.system.agent.PersonaLoader", return_value=mock_loader):
             agent = UniversalAgent(persona_id="test-persona")
 
             mock_loader.load_persona.assert_called_once_with("test-persona")
@@ -91,7 +91,7 @@ class TestUniversalAgent:
         mock_loader = Mock()
         mock_loader.load_persona.return_value = None
 
-        with patch("src.system.agent.PersonaLoader", return_value=mock_loader):
+        with patch("orchestra.system.agent.PersonaLoader", return_value=mock_loader):
             with pytest.raises(
                 ValueError, match="Failed to load persona: invalid-persona"
             ):

@@ -5,10 +5,15 @@ from unittest.mock import Mock, patch
 import pytest
 
 # Import the module to ensure it's loaded for coverage
-from src.system.agent import UniversalAgent
-from src.system.factory import AgentRegistry, create_agent, get_registry, list_personas
-from src.system.loader import PersonaLoader
-from src.system.specs import PersonaIdentity, PersonaSpec
+from orchestra.system.agent import UniversalAgent
+from orchestra.system.factory import (
+    AgentRegistry,
+    create_agent,
+    get_registry,
+    list_personas,
+)
+from orchestra.system.loader import PersonaLoader
+from orchestra.system.specs import PersonaIdentity, PersonaSpec
 
 
 class TestAgentRegistry:
@@ -35,14 +40,14 @@ class TestAgentRegistry:
     def registry(self, mock_persona_loader):
         """Create an AgentRegistry with mocked dependencies."""
         with patch(
-            "src.system.factory.PersonaLoader", return_value=mock_persona_loader
+            "orchestra.system.factory.PersonaLoader", return_value=mock_persona_loader
         ):
             return AgentRegistry()
 
     def test_agent_registry_initialization(self, mock_persona_loader):
         """Test AgentRegistry initialization."""
         with patch(
-            "src.system.factory.PersonaLoader", return_value=mock_persona_loader
+            "orchestra.system.factory.PersonaLoader", return_value=mock_persona_loader
         ):
             registry = AgentRegistry()
 
@@ -55,7 +60,7 @@ class TestAgentRegistry:
         # Setup mock
         mock_persona_loader.load_persona.return_value = sample_persona_spec
 
-        with patch("src.system.factory.UniversalAgent") as mock_universal_agent:
+        with patch("orchestra.system.factory.UniversalAgent") as mock_universal_agent:
             mock_agent = Mock(spec=UniversalAgent)
             mock_universal_agent.return_value = mock_agent
 
@@ -147,14 +152,14 @@ class TestAgentRegistry:
 
         mock_persona_loader.reload_all.assert_called_once()
 
-    @patch("src.system.factory.logger")
+    @patch("orchestra.system.factory.logger")
     def test_create_agent_logging(
         self, mock_logger, registry, mock_persona_loader, sample_persona_spec
     ):
         """Test that agent creation is properly logged."""
         mock_persona_loader.load_persona.return_value = sample_persona_spec
 
-        with patch("src.system.factory.UniversalAgent") as mock_universal_agent:
+        with patch("orchestra.system.factory.UniversalAgent") as mock_universal_agent:
             mock_agent = Mock(spec=UniversalAgent)
             mock_universal_agent.return_value = mock_agent
 
@@ -164,7 +169,7 @@ class TestAgentRegistry:
                 f"Creating agent with persona: {sample_persona_spec.display_name}"
             )
 
-    @patch("src.system.factory.logger")
+    @patch("orchestra.system.factory.logger")
     def test_reload_personas_logging(self, mock_logger, registry, mock_persona_loader):
         """Test that persona reload is properly logged."""
         registry.reload_personas()
@@ -185,9 +190,9 @@ class TestGlobalRegistry:
         global _global_registry
         _global_registry = None
 
-    @patch("src.system.factory._global_registry", None)
-    @patch("src.system.factory.AgentRegistry")
-    @patch("src.system.factory.logger")
+    @patch("orchestra.system.factory._global_registry", None)
+    @patch("orchestra.system.factory.AgentRegistry")
+    @patch("orchestra.system.factory.logger")
     def test_get_registry_first_call(self, mock_logger, mock_agent_registry):
         """Test get_registry creates registry on first call."""
         mock_registry_instance = Mock(spec=AgentRegistry)
@@ -231,7 +236,7 @@ class TestConvenienceFunctions:
         global _global_registry
         _global_registry = None
 
-    @patch("src.system.factory.get_registry")
+    @patch("orchestra.system.factory.get_registry")
     def test_create_agent_convenience(self, mock_get_registry):
         """Test create_agent convenience function."""
         mock_registry = Mock(spec=AgentRegistry)
@@ -245,7 +250,7 @@ class TestConvenienceFunctions:
         mock_get_registry.assert_called_once()
         mock_registry.create.assert_called_once_with("test-persona")
 
-    @patch("src.system.factory.get_registry")
+    @patch("orchestra.system.factory.get_registry")
     def test_list_personas_convenience(self, mock_get_registry):
         """Test list_personas convenience function."""
         mock_registry = Mock(spec=AgentRegistry)
@@ -259,7 +264,7 @@ class TestConvenienceFunctions:
         mock_get_registry.assert_called_once()
         mock_registry.list_personas.assert_called_once()
 
-    @patch("src.system.factory.get_registry")
+    @patch("orchestra.system.factory.get_registry")
     def test_create_agent_integration_with_registry(self, mock_get_registry):
         """Test create_agent integrates properly with registry."""
         mock_registry = Mock(spec=AgentRegistry)
@@ -273,7 +278,7 @@ class TestConvenienceFunctions:
         mock_get_registry.assert_called_once()
         mock_registry.create.assert_called_once_with("integration-test")
 
-    @patch("src.system.factory.get_registry")
+    @patch("orchestra.system.factory.get_registry")
     def test_list_personas_integration_with_registry(self, mock_get_registry):
         """Test list_personas integrates properly with registry."""
         mock_registry = Mock(spec=AgentRegistry)
@@ -300,7 +305,7 @@ class TestAgentRegistryErrorHandling:
     def registry(self, mock_persona_loader):
         """Create an AgentRegistry with mocked dependencies."""
         with patch(
-            "src.system.factory.PersonaLoader", return_value=mock_persona_loader
+            "orchestra.system.factory.PersonaLoader", return_value=mock_persona_loader
         ):
             return AgentRegistry()
 
@@ -322,7 +327,7 @@ class TestAgentRegistryErrorHandling:
         mock_persona_loader.load_persona.return_value = persona_spec
 
         with patch(
-            "src.system.factory.UniversalAgent",
+            "orchestra.system.factory.UniversalAgent",
             side_effect=Exception("Agent creation error"),
         ):
             with pytest.raises(Exception) as exc_info:
@@ -372,7 +377,7 @@ class TestAgentRegistryEdgeCases:
     def registry(self, mock_persona_loader):
         """Create an AgentRegistry with mocked dependencies."""
         with patch(
-            "src.system.factory.PersonaLoader", return_value=mock_persona_loader
+            "orchestra.system.factory.PersonaLoader", return_value=mock_persona_loader
         ):
             return AgentRegistry()
 
@@ -411,7 +416,7 @@ class TestAgentRegistryEdgeCases:
         persona_spec = PersonaSpec(identity=identity)
         mock_persona_loader.load_persona.return_value = persona_spec
 
-        with patch("src.system.factory.UniversalAgent") as mock_universal_agent:
+        with patch("orchestra.system.factory.UniversalAgent") as mock_universal_agent:
             mock_agent = Mock(spec=UniversalAgent)
             mock_universal_agent.return_value = mock_agent
 
@@ -434,7 +439,7 @@ class TestAgentRegistryEdgeCases:
 
     def test_multiple_registries_independence(self):
         """Test that multiple registry instances are independent."""
-        with patch("src.system.factory.PersonaLoader") as mock_loader_class:
+        with patch("orchestra.system.factory.PersonaLoader") as mock_loader_class:
             mock_loader1 = Mock(spec=PersonaLoader)
             mock_loader2 = Mock(spec=PersonaLoader)
 
@@ -463,7 +468,7 @@ class TestFactoryIntegration:
         global _global_registry
         _global_registry = None
 
-    @patch("src.system.factory.get_registry")
+    @patch("orchestra.system.factory.get_registry")
     def test_full_agent_creation_workflow(self, mock_get_registry):
         """Test complete agent creation workflow."""
         mock_registry = Mock(spec=AgentRegistry)
@@ -497,7 +502,7 @@ class TestFactoryIntegration:
         assert registry1 is registry2
         assert isinstance(registry1, AgentRegistry)
 
-    @patch("src.system.factory.get_registry")
+    @patch("orchestra.system.factory.get_registry")
     def test_error_propagation_through_convenience_functions(self, mock_get_registry):
         """Test that errors propagate properly through convenience functions."""
         mock_registry = Mock(spec=AgentRegistry)

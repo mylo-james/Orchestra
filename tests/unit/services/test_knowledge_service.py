@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 # Import the module to ensure it's loaded for coverage
-from src.models.knowledge import (
+from orchestra.models.knowledge import (
     KnowledgeChunk,
     KnowledgeDomain,
     KnowledgeLock,
@@ -16,7 +16,7 @@ from src.models.knowledge import (
     KnowledgeQuery,
     SecurityClassification,
 )
-from src.services.knowledge_service import KnowledgeService
+from orchestra.services.knowledge_service import KnowledgeService
 
 
 def create_test_knowledge_chunk(
@@ -62,8 +62,8 @@ def create_test_knowledge_chunk(
 class TestKnowledgeServiceInitialization:
     """Test knowledge service initialization."""
 
-    @patch("src.services.knowledge_service.QdrantClient")
-    @patch("src.services.knowledge_service.EmbeddingService")
+    @patch("orchestra.services.knowledge_service.QdrantClient")
+    @patch("orchestra.services.knowledge_service.EmbeddingService")
     def test_initialization_with_defaults(
         self, mock_embedding_service, mock_qdrant_client
     ):
@@ -81,8 +81,8 @@ class TestKnowledgeServiceInitialization:
         assert service._cache_ttl == 300
         assert service._locks == {}
 
-    @patch("src.services.knowledge_service.QdrantClient")
-    @patch("src.services.knowledge_service.EmbeddingService")
+    @patch("orchestra.services.knowledge_service.QdrantClient")
+    @patch("orchestra.services.knowledge_service.EmbeddingService")
     def test_initialization_with_custom_params(
         self, mock_embedding_service, mock_qdrant_client
     ):
@@ -102,8 +102,8 @@ class TestKnowledgeServiceInitialization:
         assert service.collection_name == "custom_collection"
         assert service.embedding_service == custom_embedding_service
 
-    @patch("src.services.knowledge_service.QdrantClient")
-    @patch("src.services.knowledge_service.EmbeddingService")
+    @patch("orchestra.services.knowledge_service.QdrantClient")
+    @patch("orchestra.services.knowledge_service.EmbeddingService")
     def test_collection_initialization_existing(
         self, mock_embedding_service, mock_qdrant_client
     ):
@@ -121,8 +121,8 @@ class TestKnowledgeServiceInitialization:
         # Should not create new collection
         mock_client.create_collection.assert_not_called()
 
-    @patch("src.services.knowledge_service.QdrantClient")
-    @patch("src.services.knowledge_service.EmbeddingService")
+    @patch("orchestra.services.knowledge_service.QdrantClient")
+    @patch("orchestra.services.knowledge_service.EmbeddingService")
     def test_collection_initialization_new(
         self, mock_embedding_service, mock_qdrant_client
     ):
@@ -144,8 +144,8 @@ class TestKnowledgeServiceGrabOperation:
     def mock_service(self):
         """Create a mock knowledge service."""
         with (
-            patch("src.services.knowledge_service.QdrantClient"),
-            patch("src.services.knowledge_service.EmbeddingService"),
+            patch("orchestra.services.knowledge_service.QdrantClient"),
+            patch("orchestra.services.knowledge_service.EmbeddingService"),
         ):
             service = KnowledgeService()
             service.client.get_collections.return_value.collections = []
@@ -252,8 +252,8 @@ class TestKnowledgeServiceUpsertOperation:
     def mock_service(self):
         """Create a mock knowledge service."""
         with (
-            patch("src.services.knowledge_service.QdrantClient"),
-            patch("src.services.knowledge_service.EmbeddingService"),
+            patch("orchestra.services.knowledge_service.QdrantClient"),
+            patch("orchestra.services.knowledge_service.EmbeddingService"),
         ):
             service = KnowledgeService()
             service.client.get_collections.return_value.collections = []
@@ -362,8 +362,8 @@ class TestKnowledgeServiceQueryOperation:
     def mock_service(self):
         """Create a mock knowledge service."""
         with (
-            patch("src.services.knowledge_service.QdrantClient"),
-            patch("src.services.knowledge_service.EmbeddingService"),
+            patch("orchestra.services.knowledge_service.QdrantClient"),
+            patch("orchestra.services.knowledge_service.EmbeddingService"),
         ):
             service = KnowledgeService()
             service.client.get_collections.return_value.collections = []
@@ -438,8 +438,8 @@ class TestKnowledgeServiceLocking:
     def mock_service(self):
         """Create a mock knowledge service."""
         with (
-            patch("src.services.knowledge_service.QdrantClient"),
-            patch("src.services.knowledge_service.EmbeddingService"),
+            patch("orchestra.services.knowledge_service.QdrantClient"),
+            patch("orchestra.services.knowledge_service.EmbeddingService"),
         ):
             service = KnowledgeService()
             service.client.get_collections.return_value.collections = []
@@ -559,8 +559,8 @@ class TestKnowledgeServiceVersioning:
     def mock_service(self):
         """Create a mock knowledge service."""
         with (
-            patch("src.services.knowledge_service.QdrantClient"),
-            patch("src.services.knowledge_service.EmbeddingService"),
+            patch("orchestra.services.knowledge_service.QdrantClient"),
+            patch("orchestra.services.knowledge_service.EmbeddingService"),
         ):
             service = KnowledgeService()
             service.client.get_collections.return_value.collections = []
@@ -612,8 +612,8 @@ class TestKnowledgeServicePerformance:
     def mock_service(self):
         """Create a mock knowledge service."""
         with (
-            patch("src.services.knowledge_service.QdrantClient"),
-            patch("src.services.knowledge_service.EmbeddingService"),
+            patch("orchestra.services.knowledge_service.QdrantClient"),
+            patch("orchestra.services.knowledge_service.EmbeddingService"),
         ):
             service = KnowledgeService()
             service.client.get_collections.return_value.collections = []
@@ -663,8 +663,8 @@ class TestKnowledgeServiceIntegration:
     def mock_service(self):
         """Create a mock knowledge service."""
         with (
-            patch("src.services.knowledge_service.QdrantClient"),
-            patch("src.services.knowledge_service.EmbeddingService"),
+            patch("orchestra.services.knowledge_service.QdrantClient"),
+            patch("orchestra.services.knowledge_service.EmbeddingService"),
         ):
             service = KnowledgeService()
             service.client.get_collections.return_value.collections = []
@@ -778,8 +778,8 @@ class TestKnowledgeServiceIntegration:
 class TestKnowledgeServiceErrorHandling:
     """Test error handling and exception scenarios for missing coverage."""
 
-    @patch("src.services.knowledge_service.QdrantClient")
-    @patch("src.services.knowledge_service.EmbeddingService")
+    @patch("orchestra.services.knowledge_service.QdrantClient")
+    @patch("orchestra.services.knowledge_service.EmbeddingService")
     def test_collection_initialization_exception(
         self, mock_embedding_service, mock_qdrant_client
     ):
@@ -797,8 +797,8 @@ class TestKnowledgeServiceErrorHandling:
     def error_test_service(self):
         """Create service for error testing."""
         with (
-            patch("src.services.knowledge_service.QdrantClient"),
-            patch("src.services.knowledge_service.EmbeddingService"),
+            patch("orchestra.services.knowledge_service.QdrantClient"),
+            patch("orchestra.services.knowledge_service.EmbeddingService"),
         ):
             service = KnowledgeService()
             service.client.get_collections.return_value.collections = []
@@ -862,8 +862,8 @@ class TestKnowledgeServicePerformanceWarnings:
     def perf_test_service(self):
         """Create service for performance testing."""
         with (
-            patch("src.services.knowledge_service.QdrantClient"),
-            patch("src.services.knowledge_service.EmbeddingService"),
+            patch("orchestra.services.knowledge_service.QdrantClient"),
+            patch("orchestra.services.knowledge_service.EmbeddingService"),
         ):
             service = KnowledgeService()
             service.client.get_collections.return_value.collections = []
@@ -894,7 +894,7 @@ class TestKnowledgeServicePerformanceWarnings:
                 )  # End time (2 seconds later, > 1s threshold)
 
         with patch("time.time", side_effect=mock_time):
-            with patch("src.services.knowledge_service.logger") as mock_logger:
+            with patch("orchestra.services.knowledge_service.logger") as mock_logger:
                 result = await perf_test_service.upsert(chunk)
 
                 assert result is True
@@ -948,7 +948,7 @@ class TestKnowledgeServicePerformanceWarnings:
                 )  # End time (0.8 seconds later, > 0.5s threshold)
 
         with patch("time.time", side_effect=mock_time):
-            with patch("src.services.knowledge_service.logger") as mock_logger:
+            with patch("orchestra.services.knowledge_service.logger") as mock_logger:
                 result = await perf_test_service.query(query)
 
                 assert len(result) == 1

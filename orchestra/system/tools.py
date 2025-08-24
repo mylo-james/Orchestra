@@ -11,9 +11,9 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from src.config.settings import get_settings
-from src.services.external_service_client import ExternalServiceClient
-from src.utils.logging import get_logger
+from orchestra.config.settings import get_settings
+from orchestra.services.external_service_client import ExternalServiceClient
+from orchestra.utils.logging import get_logger
 
 
 # Define tool classes for universal persona model (no more agents package)

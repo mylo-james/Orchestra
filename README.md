@@ -17,7 +17,7 @@ Orchestra is a sophisticated AI agent system designed to orchestrate complex dev
 Orchestra follows a modular architecture with a unique persona-based agent system:
 
 ```
-src/
+orchestra/
 ├── cli/                    # Command-line interface
 ├── personas/               # YAML persona definitions
 │   ├── orchestrator.yaml  # Orchestrator persona (Brendan)
@@ -45,8 +45,8 @@ src/
 
 ### Prerequisites
 
-- Python 3.12.0+
-- Poetry 1.7.1+
+- Python 3.13.0+
+- Poetry 1.8.3+
 - Docker and Docker Compose
 - Git
 
@@ -68,6 +68,7 @@ nano .env
 ```
 
 **Required Environment Variables:**
+
 - `OPENAI_API_KEY`: Your OpenAI API key (get from [OpenAI Platform](https://platform.openai.com/api-keys))
 - `QDRANT_HOST`: Qdrant server host (default: localhost)
 - `QDRANT_PORT`: Qdrant HTTP port (default: 6333)
@@ -123,7 +124,7 @@ poetry run pytest tests/integration/    # Integration tests
 poetry run pytest tests/security/       # Security tests
 
 # Run with coverage
-poetry run pytest --cov=src --cov-report=html
+poetry run pytest --cov=orchestra --cov-report=html
 
 # Run only fast tests (exclude slow tests)
 poetry run pytest -m "not slow"
@@ -133,17 +134,17 @@ poetry run pytest -m "not slow"
 
 ```bash
 # Format code
-poetry run black src/ tests/
-poetry run isort src/ tests/
+poetry run black orchestra/ tests/
+poetry run isort orchestra/ tests/
 
 # Lint code
-poetry run ruff check src/ tests/
+poetry run ruff check orchestra/ tests/
 
 # Security scanning
-poetry run bandit -r src/ -f json -o bandit-report.json
+poetry run bandit -r orchestra/ -f json -o bandit-report.json
 
 # Type checking
-poetry run mypy src/
+poetry run mypy orchestra/
 
 # Run all quality checks
 poetry run pre-commit run --all-files
@@ -189,26 +190,41 @@ docker-compose exec dev-tools bash
 poetry run orchestra serve --reload
 ```
 
+## ✅ CI
+
+The GitHub Actions pipeline runs on pushes and pull requests to `main` and `develop`, with a nightly scheduled run:
+
+- Quality: Black/isort checks, Ruff, MyPy, and pre-commit (style-only)
+- Security: Bandit scan and dependency audit with pip-audit
+- Tests + Coverage: pytest with a hard 90% gate, Codecov upload, HTML coverage artifact
+- Docker (non-PR): Build image and run a smoke test
+
+Codecov requires `CODECOV_TOKEN` in repository secrets (tokenless for public repos may work). Run `make ci` locally to mirror the pipeline.
+
 ## 🔒 Security
 
 Orchestra implements comprehensive security measures:
 
 ### Input Validation
+
 - Pydantic models for structured data validation
 - Input sanitization and validation
 - File type and size restrictions
 
 ### Output Scanning
+
 - Generated code security analysis
 - Bandit integration for Python security scanning
 - Pattern-based secret detection
 
 ### Audit Logging
+
 - Comprehensive security audit trails
 - Correlation IDs for request tracing
 - Agent handoff logging
 
 ### Configuration Security
+
 - Environment variable validation
 - Secret masking in logs and outputs
 - Secure defaults for all settings
@@ -220,7 +236,7 @@ Orchestra implements comprehensive security measures:
 poetry run pytest tests/security/
 
 # Run security scan
-poetry run bandit -r src/
+poetry run bandit -r orchestra/
 
 # Check for secrets
 poetry run detect-secrets scan --all-files
@@ -264,7 +280,7 @@ docker-compose down
 Orchestra uses structured logging with correlation IDs:
 
 ```python
-from src.utils.logging import get_logger, set_correlation_id
+from orchestra.utils.logging import get_logger, set_correlation_id
 
 logger = get_logger(__name__)
 correlation_id = set_correlation_id()
@@ -348,16 +364,16 @@ poetry run pytest -m "not slow"     # Exclude slow tests
 
 ### CLI Commands
 
-| Command | Description |
-|---------|-------------|
-| `orchestra --help` | Show help and available commands |
-| `orchestra version` | Display version information |
-| `orchestra health` | Check system health |
-| `orchestra serve` | Start API server |
-| `orchestra agent <subcommand>` | Agent management |
-| `orchestra workflow <subcommand>` | Workflow management |
-| `orchestra config <subcommand>` | Configuration management |
-| `orchestra dev <subcommand>` | Development tools |
+| Command                           | Description                      |
+| --------------------------------- | -------------------------------- |
+| `orchestra --help`                | Show help and available commands |
+| `orchestra version`               | Display version information      |
+| `orchestra health`                | Check system health              |
+| `orchestra serve`                 | Start API server                 |
+| `orchestra agent <subcommand>`    | Agent management                 |
+| `orchestra workflow <subcommand>` | Workflow management              |
+| `orchestra config <subcommand>`   | Configuration management         |
+| `orchestra dev <subcommand>`      | Development tools                |
 
 ### Available Personas
 

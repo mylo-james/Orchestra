@@ -2,10 +2,10 @@
 
 from typing import List, Optional
 
-from src.system.agent import UniversalAgent
-from src.system.loader import PersonaLoader
-from src.system.specs import PersonaSpec
-from src.utils.logging import get_logger
+from orchestra.system.agent import UniversalAgent
+from orchestra.system.loader import PersonaLoader
+from orchestra.system.specs import PersonaSpec
+from orchestra.utils.logging import get_logger
 
 logger = get_logger(__name__)
 
