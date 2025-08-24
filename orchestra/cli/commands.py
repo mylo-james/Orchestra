@@ -1,6 +1,5 @@
 """Orchestra CLI Commands."""
 
-import asyncio
 import json
 import time
 from pathlib import Path
@@ -12,7 +11,6 @@ from rich.panel import Panel
 from rich.table import Table
 
 from orchestra.cli.output import error_panel, info_panel, success_panel, warning_panel
-from orchestra.system.agent import UniversalAgent
 from orchestra.system.checklist_engine import ChecklistEngine
 from orchestra.system.factory import get_registry
 from orchestra.system.loader import PersonaLoader
@@ -238,7 +236,7 @@ def describe_persona(persona_id: str):
             console.print(f"\n[bold]Focus:[/bold]\n{persona_spec.identity.focus}")
 
         if persona_spec.behavioral_contract.core_principles:
-            console.print(f"\n[bold]Core Principles:[/bold]")
+            console.print("\n[bold]Core Principles:[/bold]")
             for principle in persona_spec.behavioral_contract.core_principles:
                 console.print(f"  • {principle}")
 
@@ -247,7 +245,7 @@ def describe_persona(persona_id: str):
         )
 
         if persona_spec.command_interface.commands:
-            console.print(f"\n[bold]Available Commands:[/bold]")
+            console.print("\n[bold]Available Commands:[/bold]")
             for cmd_name, cmd_def in persona_spec.command_interface.commands.items():
                 description = (
                     cmd_def.description
@@ -259,7 +257,7 @@ def describe_persona(persona_id: str):
         # Show resource dependencies
         deps = persona_spec.resource_dependencies
         if deps.tasks or deps.templates or deps.tools:
-            console.print(f"\n[bold]Resource Dependencies:[/bold]")
+            console.print("\n[bold]Resource Dependencies:[/bold]")
             if deps.tasks:
                 console.print(f"  Tasks: {', '.join(deps.tasks)}")
             if deps.templates:
@@ -528,8 +526,8 @@ def list_persona_commands():
             table.add_row(cmd_name, description, param_str)
 
         console.print(table)
-        console.print(f"Use 'orchestra agent exec <command>' to execute a command")
-        console.print(f"Use 'orchestra agent help <command>' for detailed help")
+        console.print("Use 'orchestra agent exec <command>' to execute a command")
+        console.print("Use 'orchestra agent help <command>' for detailed help")
 
     except Exception as e:
         logger.error(f"Failed to list persona commands: {e}")
@@ -616,7 +614,7 @@ def show_command_help(command: str):
 
         params = cmd_def.parameters if hasattr(cmd_def, "parameters") else {}
         if params:
-            console.print(f"\n[bold]Parameters:[/bold]")
+            console.print("\n[bold]Parameters:[/bold]")
             for param_name, param_def in params.items():
                 if isinstance(param_def, dict):
                     param_type = param_def.get("type", "string")
@@ -634,7 +632,7 @@ def show_command_help(command: str):
                 else:
                     console.print(f"  • [cyan]{param_name}[/cyan]: {param_def}")
         else:
-            console.print(f"\n[dim]No parameters required[/dim]")
+            console.print("\n[dim]No parameters required[/dim]")
 
         console.print(
             f"\n[bold]Usage:[/bold] orchestra agent exec {command} [parameters]"
@@ -722,7 +720,7 @@ def run_persona_task(
                 for warning in execution_result.warnings:
                     console.print(f"  ⚠️ {warning}")
         else:
-            console.print(error_panel(f"Task execution failed"))
+            console.print(error_panel("Task execution failed"))
             for error in execution_result.errors:
                 console.print(f"  ❌ {error}")
             raise typer.Exit(1)
@@ -1783,13 +1781,13 @@ def preview_merged_persona(
 
         # Show core principles
         if persona_spec.behavioral_contract.core_principles:
-            console.print(f"\n[bold]Core Principles:[/bold]")
+            console.print("\n[bold]Core Principles:[/bold]")
             for principle in persona_spec.behavioral_contract.core_principles:
                 console.print(f"  • {principle}")
 
         # Show commands
         if persona_spec.command_interface.commands:
-            console.print(f"\n[bold]Available Commands:[/bold]")
+            console.print("\n[bold]Available Commands:[/bold]")
             for cmd_name, cmd_def in persona_spec.command_interface.commands.items():
                 description = (
                     cmd_def.description
@@ -1800,7 +1798,7 @@ def preview_merged_persona(
 
         # Show tools
         if persona_spec.resource_dependencies.tools:
-            console.print(f"\n[bold]Tools:[/bold]")
+            console.print("\n[bold]Tools:[/bold]")
             tools_str = ", ".join(persona_spec.resource_dependencies.tools)
             console.print(f"  {tools_str}")
 

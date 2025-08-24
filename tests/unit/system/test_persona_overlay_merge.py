@@ -1,16 +1,11 @@
 """Tests for persona overlay merge engine."""
 
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Any, Dict, List, Optional
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import pytest
 
 from orchestra.system.persona_overlay_merge import (
     ConflictResolution,
-    MergeConflict,
-    MergeResult,
     OverlayMergeEngine,
     OverlayType,
     OverlayValidationError,

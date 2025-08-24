@@ -9,8 +9,6 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-import yaml
-from pydantic import BaseModel
 
 from orchestra.utils.logging import get_logger
 

@@ -8,7 +8,6 @@ import yaml
 from orchestra.system.persona_overlay_merge import (
     OverlayMergeEngine,
     OverlayType,
-    OverlayValidationError,
     PersonaOverlay,
 )
 from orchestra.system.specs import (

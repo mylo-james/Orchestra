@@ -1,12 +1,9 @@
 """Tests for Orchestra CLI persona selection and management (Story 1.4)."""
 
-import json
 from pathlib import Path
-from typing import Dict, List, Optional
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
-import yaml
 from typer.testing import CliRunner
 
 from orchestra.cli.main import app

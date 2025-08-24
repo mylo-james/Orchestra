@@ -1,12 +1,9 @@
 """Tests for Orchestra resource system (Story 1.3)."""
 
-import json
 from pathlib import Path
-from typing import Dict, List, Optional
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
-import yaml
 
 from orchestra.system.bmad_inventory import BmadContentInventory
 from orchestra.system.checklist_engine import ChecklistEngine, ChecklistExecutionResult
@@ -15,7 +12,6 @@ from orchestra.system.resource_loader import (
     ResourceLoadResult,
     ResourceMetadata,
     ResourceType,
-    ResourceValidationError,
 )
 from orchestra.system.task_engine import TaskEngine, TaskExecutionResult
 from orchestra.system.template_processor import TemplateProcessor, TemplateRenderResult
