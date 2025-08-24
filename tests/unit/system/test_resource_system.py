@@ -1,13 +1,16 @@
 """Tests for Orchestra resource system (Story 1.3)."""
 
+import sys
 from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 
-import sys
-sys.path.append(str(Path(__file__).parent.parent.parent.parent / "tools" / "bmad-conversion"))
+sys.path.append(
+    str(Path(__file__).parent.parent.parent.parent / "tools" / "bmad-conversion")
+)
 from bmad_inventory import BmadContentInventory
+
 from orchestra.system.checklist_engine import ChecklistEngine, ChecklistExecutionResult
 from orchestra.system.resource_loader import (
     ResourceLoader,

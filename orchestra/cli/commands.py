@@ -1,6 +1,9 @@
 """Orchestra CLI Commands."""
 
 import json
+
+# BMad imports from tools directory
+import sys
 import time
 from pathlib import Path
 from typing import Optional
@@ -15,11 +18,10 @@ from orchestra.system.checklist_engine import ChecklistEngine
 from orchestra.system.factory import get_registry
 from orchestra.system.loader import PersonaLoader
 
-# BMad imports from tools directory
-import sys
 sys.path.append(str(Path(__file__).parent.parent.parent / "tools" / "bmad-conversion"))
 from bmad_inventory import BmadContentInventory
 from bmad_persona_converter import BmadPersonaConverter
+
 from orchestra.system.resource_loader import ResourceLoader, ResourceType
 from orchestra.system.task_engine import TaskEngine
 from orchestra.system.template_processor import TemplateProcessor

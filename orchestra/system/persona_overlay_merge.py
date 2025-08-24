@@ -308,7 +308,7 @@ class OverlayMergeEngine:
                         resolution=ConflictResolution.PROJECT_WINS,
                         resolved_value=new_value,
                     )
-                    conflicts.append(conflict                    )
+                    conflicts.append(conflict)
                 setattr(base_contract, field_name, new_value)
 
         # Handle list fields (merge)
