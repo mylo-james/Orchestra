@@ -163,7 +163,7 @@ class TestBmadPersonaConverter:
         """Test that conversion maintains backward compatibility (AC: 4)."""
         # Load existing Orchestra personas
         loader = PersonaLoader()
-        existing_personas = ["orchestrator", "dev", "release"]
+        existing_personas = ["orchestrator", "dev", "master"]
         
         for persona_id in existing_personas:
             try:
