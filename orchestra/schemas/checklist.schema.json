@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Checklist Resource",
+  "type": "object",
+  "properties": {
+    "id": {"type": "string"},
+    "items": {"type": "array", "items": {"type": "string"}}
+  },
+  "required": ["id", "items"]
+}
+

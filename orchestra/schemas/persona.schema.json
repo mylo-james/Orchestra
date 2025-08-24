@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orchestra/schema/persona.schema.json",
+  "title": "Persona",
+  "type": "object",
+  "properties": {
+    "identity": { "type": "object", "required": ["name", "id", "role"], "properties": {"name": {"type": "string"}, "id": {"type": "string"}, "role": {"type": "string"} } },
+    "behavioral_contract": { "type": "object" },
+    "command_interface": { "type": "object" },
+    "resource_dependencies": { "type": "object" }
+  },
+  "required": ["identity", "resource_dependencies"]
+}
+

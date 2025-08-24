@@ -1,0 +1,7 @@
+identity:
+  name: 'Stub Persona 00'
+  id: 'persona-00'
+  title: 'Stub'
+  role: 'Stub role'
+resource_dependencies: {}
+

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Template Resource",
+  "type": "object",
+  "properties": {
+    "id": {"type": "string"},
+    "content": {"type": "string"}
+  },
+  "required": ["id", "content"]
+}
+
