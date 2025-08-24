@@ -139,7 +139,7 @@ def _determine_next_action(persona_id: str, operation: str) -> str:
 
 
 @activity.defn
-async def validate_context_activity(context: Dict[str, Any]) -> Dict[str, bool]:
+async def validate_context_activity(context: Dict[str, Any]) -> Dict[str, Any]:
     """
     Validate workflow context integrity.
 

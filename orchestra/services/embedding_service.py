@@ -115,12 +115,17 @@ class EmbeddingService:
             text_hash = self._hash_text(text)
             if text_hash in self._cache:
                 self._cache_hits += 1
-                embeddings.append(self._cache[text_hash])
-            else:
-                self._cache_misses += 1
-                embeddings.append(None)
-                uncached_texts.append(text)
-                uncached_indices.append(i)
+                cached_embedding = self._cache[text_hash]
+                if cached_embedding is not None:
+                    embeddings.append(cached_embedding)
+                    continue
+                # If cached embedding is None, fall through to uncached handling
+
+            # Handle uncached or None cached embeddings
+            self._cache_misses += 1
+            embeddings.append([])  # Initialize with empty list
+            uncached_texts.append(text)
+            uncached_indices.append(i)
 
         # Generate embeddings for uncached texts
         if uncached_texts:
@@ -161,10 +166,10 @@ class EmbeddingService:
         """Generate a hash for text to use as cache key."""
         return hashlib.sha256(text.encode()).hexdigest()
 
-    def get_cache_stats(self) -> Dict[str, int]:
+    def get_cache_stats(self) -> Dict[str, float | int]:
         """Get cache statistics."""
         total = self._cache_hits + self._cache_misses
-        hit_rate = self._cache_hits / total if total > 0 else 0
+        hit_rate = self._cache_hits / total if total > 0 else 0.0
 
         return {
             "cache_size": len(self._cache),

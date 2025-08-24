@@ -106,7 +106,7 @@ class UniversalAgent(SecureAgent):
         # Return tools if found in registry
         if tool_name in tool_registry:
             tools = tool_registry[tool_name]
-            return tools[0] if len(tools) == 1 else tools
+            return tools[0] if len(tools) == 1 else tools  # type: ignore[return-value]
 
         # Log unknown tool
         logger.warning(f"Unknown tool requested: {tool_name}")
@@ -336,3 +336,29 @@ class UniversalAgent(SecureAgent):
             f"Tools: {', '.join(self.persona_spec.resource_dependencies.tools)}\n"
             f"Execution Model: {self.persona_spec.command_interface.execution_model}"
         )
+
+    def get_tool(self, tool_name: str) -> FunctionTool | list[FunctionTool] | None:
+        """
+        Get a tool by name.
+
+        Args:
+            tool_name: Name of the tool to retrieve
+
+        Returns:
+            FunctionTool, list of FunctionTools, or None if not found
+        """
+        # Tool registry for different persona types
+        tool_registry = {
+            "github-tools": [create_github_pr_tool(), list_repositories_tool()],
+            "create-pr": [create_github_pr_tool()],
+            "list-repos": [list_repositories_tool()],
+        }
+
+        # Return tools if found in registry
+        if tool_name in tool_registry:
+            tools = tool_registry[tool_name]
+            return tools[0] if len(tools) == 1 else tools
+
+        # Log unknown tool
+        logger.warning(f"Unknown tool requested: {tool_name}")
+        return None

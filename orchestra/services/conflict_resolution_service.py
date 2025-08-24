@@ -148,7 +148,7 @@ class ConflictResolutionService:
         """
         # Auto-select strategy if not specified
         if not strategy:
-            severity = self._classify_severity(conflict.similarity_score)
+            severity = self._classify_severity(conflict.similarity_score or 0.0)
             strategy = self.strategy_rules[severity]
             logger.info(f"Auto-selected strategy: {strategy} for {severity} conflict")
 
@@ -160,9 +160,15 @@ class ConflictResolutionService:
         elif strategy == MergeStrategy.HYBRID:
             return await self._merge_hybrid(conflict)
         elif strategy == MergeStrategy.CONSERVATIVE:
-            return self._version_to_chunk(conflict.version_a)
+            if conflict.version_a is not None:
+                return self._version_to_chunk(conflict.version_a)
+            else:
+                raise ValueError("Version A is None for conservative strategy")
         elif strategy == MergeStrategy.AGGRESSIVE:
-            return self._version_to_chunk(conflict.version_b)
+            if conflict.version_b is not None:
+                return self._version_to_chunk(conflict.version_b)
+            else:
+                raise ValueError("Version B is None for aggressive strategy")
         else:
             raise ValueError(f"Unknown merge strategy: {strategy}")
 
@@ -176,6 +182,9 @@ class ConflictResolutionService:
         Returns:
             Merged knowledge chunk
         """
+        if conflict.version_a is None or conflict.version_b is None:
+            raise ValueError("Both versions must be present for append merge")
+
         # Combine content with clear separation
         merged_content = (
             f"{conflict.version_a.content}\n\n"
@@ -219,6 +228,9 @@ class ConflictResolutionService:
         Returns:
             Merged knowledge chunk
         """
+        if conflict.version_a is None or conflict.version_b is None:
+            raise ValueError("Both versions must be present for vote merge")
+
         # Get confidence scores
         conf_a = conflict.version_a.metadata.get("confidence_score", 0.5)
         conf_b = conflict.version_b.metadata.get("confidence_score", 0.5)
@@ -270,6 +282,9 @@ class ConflictResolutionService:
         Returns:
             Merged knowledge chunk
         """
+        if conflict.version_a is None or conflict.version_b is None:
+            raise ValueError("Both versions must be present for hybrid merge")
+
         # Check if human escalation is needed
         if self._needs_human_escalation(conflict):
             logger.warning(
@@ -339,6 +354,8 @@ class ConflictResolutionService:
 
     async def _merge_conservative(self, conflict: KnowledgeConflict) -> KnowledgeChunk:
         """Conservative merge - keep existing version."""
+        if conflict.version_a is None:
+            raise ValueError("Version A is required for conservative merge")
         return self._version_to_chunk(conflict.version_a)
 
     def _calculate_similarity(
@@ -405,7 +422,9 @@ class ConflictResolutionService:
             document_id=chunk.metadata.get("document_id", "unknown"),
             version=chunk.version,
             content=chunk.content,
-            metadata=chunk.metadata,
+            metadata=(
+                chunk.metadata.__dict__ if hasattr(chunk.metadata, "__dict__") else {}
+            ),
             created_at=chunk.created_at,
             agent_attribution=chunk.metadata.get("agent_attribution", "system"),
         )

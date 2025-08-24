@@ -51,6 +51,23 @@ repos:
         language: system
         pass_filenames: false
         files: ^(orchestra/.*\.py|tests/.*\.py)$
+
+  # Static typing
+  - repo: local
+    hooks:
+      - id: mypy-quick
+        name: MyPy (changed files)
+        entry: poetry run mypy
+        language: system
+        pass_filenames: true
+        files: ^orchestra/.*\.py$
+
+      - id: mypy-full
+        name: MyPy (full project)
+        entry: poetry run mypy orchestra/
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
 # ENTERPRISE FEATURES (add back when ready):
 #
 # Advanced secret detection:

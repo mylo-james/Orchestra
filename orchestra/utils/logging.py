@@ -16,7 +16,15 @@ agent_context: ContextVar[str | None] = ContextVar("agent_context", default=None
 workflow_context: ContextVar[str | None] = ContextVar("workflow_context", default=None)
 
 
-class SilentTraceProvider:
+class TraceProvider:
+    """Base class for trace providers to satisfy mypy."""
+
+    def shutdown(self) -> None:
+        """Shutdown the trace provider."""
+        pass
+
+
+class SilentTraceProvider(TraceProvider):
     """Silent trace provider that prevents shutdown logging issues.
 
     The OpenAI Agents SDK's default trace provider tries to log during Python
@@ -25,11 +33,11 @@ class SilentTraceProvider:
     "I/O operation on closed file" errors during test shutdown.
     """
 
-    def shutdown(self):
+    def shutdown(self) -> None:
         """Silent shutdown - no logging."""
         pass
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> Any:
         """Return no-op functions for any other trace provider methods."""
         return lambda *args, **kwargs: None
 
@@ -49,7 +57,7 @@ def _configure_agents_tracing():
 
         # Set a silent trace provider that won't log during shutdown
         silent_provider = SilentTraceProvider()
-        agents.tracing.set_trace_provider(silent_provider)
+        agents.tracing.set_trace_provider(silent_provider)  # type: ignore[arg-type]
 
     except ImportError:
         # Agents SDK not available, skip configuration

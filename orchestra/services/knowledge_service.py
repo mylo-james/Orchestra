@@ -214,7 +214,9 @@ class KnowledgeService:
             )
 
             # Update cache
-            self._cache[metadata_dict["document_id"]] = (chunk, time.time())
+            cache_key = metadata_dict.get("document_id", "")
+            if cache_key and isinstance(cache_key, str):
+                self._cache[cache_key] = (chunk, time.time())
 
             # Release lock if held
             if lock:
@@ -257,7 +259,7 @@ class KnowledgeService:
             )
 
             # Build filter conditions
-            filter_conditions = []
+            filter_conditions: List[FieldCondition] = []
 
             if query.knowledge_domains:
                 domain_values = [d.value for d in query.knowledge_domains]
@@ -287,9 +289,12 @@ class KnowledgeService:
                 )
 
             # Create filter
-            search_filter = (
-                Filter(must=filter_conditions) if filter_conditions else None
-            )
+            if filter_conditions:
+                # Convert list to tuple to satisfy type variance requirements
+                filter_conditions_tuple = tuple(filter_conditions)
+                search_filter = Filter(must=filter_conditions_tuple)  # type: ignore[arg-type]
+            else:
+                search_filter = None
 
             # Search in Qdrant
             results = self.client.search(
@@ -337,7 +342,11 @@ class KnowledgeService:
                 document_id=document_id,
                 version=chunk.version,
                 content=chunk.content,
-                metadata=chunk.metadata,
+                metadata=(
+                    chunk.metadata.__dict__
+                    if hasattr(chunk.metadata, "__dict__")
+                    else {}
+                ),
                 created_at=chunk.created_at,
                 agent_attribution=chunk.metadata.get("agent_attribution", "system"),
             )
@@ -424,7 +433,11 @@ class KnowledgeService:
             id=metadata_dict.get("document_id", str(uuid.uuid4())),
             content=payload.get("content", ""),
             metadata=metadata,
-            embedding=point.vector if hasattr(point, "vector") else None,
+            embedding=(
+                point.vector
+                if hasattr(point, "vector") and point.vector is not None
+                else []
+            ),
             version=payload.get("version", 1),
             created_at=datetime.fromisoformat(
                 str(metadata_dict.get("created_at", datetime.utcnow().isoformat()))

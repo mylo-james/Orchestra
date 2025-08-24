@@ -47,6 +47,7 @@ mypy = "^1.13.0"
 bandit = "^1.8.0"
 pip-audit = "^2.7.0"
 pre-commit = "^4.3.0"
+types-PyYAML = "^6.0.12"
 # Enterprise security tools (add when ready)
 # safety = "^3.2.0"  # Has dependency conflicts, use pip-audit instead
 # detect-secrets = "^1.5.0"

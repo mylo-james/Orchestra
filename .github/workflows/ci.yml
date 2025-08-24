@@ -67,7 +67,7 @@ jobs:
 
       - name: Pre-commit (style only)
         env:
-          SKIP: coverage-check
+          SKIP: coverage-check,mypy-quick,mypy-full
         run: poetry run pre-commit run --all-files
 
   security:

@@ -190,6 +190,9 @@ class DevTeamWorkflow:
 
     async def _validate_security(self) -> None:
         """Validate security context before proceeding."""
+        if self.context is None:
+            raise ValueError("Workflow context is None")
+
         validation_result = await workflow.execute_activity(
             validate_security_activity,
             self.context.security_context,
@@ -198,17 +201,21 @@ class DevTeamWorkflow:
                 maximum_attempts=2,
                 initial_interval=timedelta(seconds=1),
             ),
-        )
+        )  # type: ignore[misc]
 
         if not validation_result["valid"]:
             raise ValueError(
                 f"Security validation failed: {validation_result.get('reason')}"
             )
 
-        self.context.security_context.validated = True
+        if self.context.security_context is not None:
+            self.context.security_context.validated = True
 
     async def _execute_orchestrator_planning(self) -> None:
         """Execute orchestrator agent for planning phase."""
+        if self.context is None:
+            raise ValueError("Workflow context is None")
+
         self.context.current_agent = AgentType.ORCHESTRATOR
         self.context.task_state = TaskState.PLANNING
         self.agents_involved.append(AgentType.ORCHESTRATOR)
@@ -218,7 +225,7 @@ class DevTeamWorkflow:
             validate_context_activity,
             self.context,
             start_to_close_timeout=timedelta(seconds=10),
-        )
+        )  # type: ignore[misc]
 
         # Execute orchestrator agent with 30s timeout for planning
         result = await workflow.execute_activity(
@@ -234,12 +241,17 @@ class DevTeamWorkflow:
                 initial_interval=timedelta(seconds=2),
                 backoff_coefficient=2.0,
             ),
-        )
+        )  # type: ignore[misc]
 
         # Update context with orchestrator results
-        self.context.conversation_history.append(result["conversation"])
-        self.context.confidence_scores["orchestrator"] = result.get("confidence", 0.8)
-        self.context.working_memory.update(result.get("memory_updates", {}))
+        if self.context.conversation_history is not None:
+            self.context.conversation_history.append(result["conversation"])
+        if self.context.confidence_scores is not None:
+            self.context.confidence_scores["orchestrator"] = result.get(
+                "confidence", 0.8
+            )
+        if self.context.working_memory is not None:
+            self.context.working_memory.update(result.get("memory_updates", {}))
 
         # Determine next state based on orchestrator decision
         next_action = result.get("next_action", "implement")
@@ -254,6 +266,9 @@ class DevTeamWorkflow:
 
     async def _execute_developer_implementation(self) -> None:
         """Execute developer agent for implementation phase."""
+        if self.context is None:
+            raise ValueError("Workflow context is None")
+
         self.context.current_agent = AgentType.DEVELOPER
         self.context.task_state = TaskState.IMPLEMENTING
         self.agents_involved.append(AgentType.DEVELOPER)
@@ -275,9 +290,12 @@ class DevTeamWorkflow:
         )
 
         # Update context with developer results
-        self.context.conversation_history.append(result["conversation"])
-        self.context.confidence_scores["developer"] = result.get("confidence", 0.85)
-        self.context.working_memory.update(result.get("memory_updates", {}))
+        if self.context.conversation_history is not None:
+            self.context.conversation_history.append(result["conversation"])
+        if self.context.confidence_scores is not None:
+            self.context.confidence_scores["developer"] = result.get("confidence", 0.85)
+        if self.context.working_memory is not None:
+            self.context.working_memory.update(result.get("memory_updates", {}))
 
         # Check if release is needed
         if result.get("needs_release", False):
@@ -285,16 +303,22 @@ class DevTeamWorkflow:
             self.context.handoff_reason = "Implementation complete, ready for release"
         else:
             self.context.task_state = TaskState.COMPLETED
-            self.context.working_memory["final_result"] = result.get("output")
+            if self.context.working_memory is not None:
+                self.context.working_memory["final_result"] = result.get("output")
 
     async def _execute_release_operations(self) -> None:
         """Execute release agent for deployment operations."""
+        if self.context is None:
+            raise ValueError("Workflow context is None")
+
         self.context.current_agent = AgentType.RELEASE
         self.context.task_state = TaskState.RELEASING
         self.agents_involved.append(AgentType.RELEASE)
 
         # Create GitHub PR if needed
-        if self.context.working_memory.get("create_pr", False):
+        if self.context.working_memory is not None and self.context.working_memory.get(
+            "create_pr", False
+        ):
             pr_result = await workflow.execute_activity(
                 create_github_pr_activity,
                 {
@@ -313,7 +337,8 @@ class DevTeamWorkflow:
                 ),
             )
 
-            self.context.working_memory["pr_url"] = pr_result.get("url")
+            if self.context.working_memory is not None:
+                self.context.working_memory["pr_url"] = pr_result.get("url")
 
         # Execute release agent
         result = await workflow.execute_activity(
@@ -331,9 +356,12 @@ class DevTeamWorkflow:
         )
 
         # Update context with release results
-        self.context.conversation_history.append(result["conversation"])
-        self.context.confidence_scores["release"] = result.get("confidence", 0.9)
-        self.context.working_memory["final_result"] = result.get("output")
+        if self.context.conversation_history is not None:
+            self.context.conversation_history.append(result["conversation"])
+        if self.context.confidence_scores is not None:
+            self.context.confidence_scores["release"] = result.get("confidence", 0.9)
+        if self.context.working_memory is not None:
+            self.context.working_memory["final_result"] = result.get("output")
         self.context.task_state = TaskState.COMPLETED
 
     def _get_current_timestamp(self) -> float:
@@ -348,6 +376,9 @@ class DevTeamWorkflow:
 
     async def _audit_workflow_completion(self) -> None:
         """Audit log the workflow completion."""
+        if self.context is None:
+            raise ValueError("Workflow context is None")
+
         await workflow.execute_activity(
             audit_log_activity,
             {
@@ -416,6 +447,9 @@ class DevTeamWorkflow:
         self, signal_type: str, data: Dict[str, Any]
     ) -> None:
         """Audit log workflow signals."""
+        if self.context is None:
+            raise ValueError("Workflow context is None")
+
         await workflow.execute_activity(
             audit_log_activity,
             {

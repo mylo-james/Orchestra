@@ -119,7 +119,7 @@ def create_github_pr_tool() -> FunctionTool:
     """Create a FunctionTool for GitHub PR creation with security validation."""
 
     async def create_pr(
-        tool_context: ToolContext[Any],
+        tool_context: ToolContext,
         params_json: str,
     ) -> Any:
         """
@@ -244,7 +244,7 @@ def list_repositories_tool() -> FunctionTool:
     """Create a FunctionTool for listing GitHub repositories."""
 
     async def list_repositories(
-        tool_context: ToolContext[Any],
+        tool_context: ToolContext,
         params_json: str,
     ) -> Any:
         """
