@@ -10,10 +10,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from src.services.external_service_client import (
-    ExternalServiceClient,
-    SecureAIAgent,
-)
+from src.services.external_service_client import ExternalServiceClient, SecureAIAgent
 
 
 class TestExternalServiceClientInitialization:

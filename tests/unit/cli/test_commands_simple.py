@@ -1,11 +1,6 @@
 """Simple tests for CLI commands."""
 
-from src.cli.commands import (
-    agent_cmd,
-    config_cmd,
-    dev_cmd,
-    workflow_cmd,
-)
+from src.cli.commands import agent_cmd, config_cmd, dev_cmd, workflow_cmd
 
 
 class TestCommandGroupBasics:

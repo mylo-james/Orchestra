@@ -402,10 +402,7 @@ class KnowledgeService:
 
     def _point_to_chunk(self, point: Any) -> KnowledgeChunk:
         """Convert a Qdrant point to a KnowledgeChunk."""
-        from src.models.knowledge import (
-            KnowledgeDomain,
-            SecurityClassification,
-        )
+        from src.models.knowledge import KnowledgeDomain, SecurityClassification
 
         payload = point.payload if hasattr(point, "payload") else point
         metadata_dict = payload.get("metadata", {})

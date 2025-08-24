@@ -6,12 +6,7 @@ import pytest
 
 # Import the module to ensure it's loaded for coverage
 from src.system.agent import UniversalAgent
-from src.system.factory import (
-    AgentRegistry,
-    create_agent,
-    get_registry,
-    list_personas,
-)
+from src.system.factory import AgentRegistry, create_agent, get_registry, list_personas
 from src.system.loader import PersonaLoader
 from src.system.specs import PersonaIdentity, PersonaSpec
 

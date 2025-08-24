@@ -9,9 +9,7 @@ import yaml
 
 # Import the module to ensure it's loaded for coverage
 from src.system.loader import PersonaLoader
-from src.system.specs import (
-    PersonaSpec,
-)
+from src.system.specs import PersonaSpec
 
 
 class TestPersonaLoader:
