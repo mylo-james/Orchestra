@@ -241,19 +241,23 @@ def describe_persona(persona_id: str):
         if persona_spec.command_interface.commands:
             console.print(f"\n[bold]Available Commands:[/bold]")
             for cmd_name, cmd_def in persona_spec.command_interface.commands.items():
-                description = cmd_def.get("description", "No description")
+                description = cmd_def.description if hasattr(cmd_def, 'description') else "No description"
                 console.print(f"  • [cyan]{cmd_name}[/cyan]: {description}")
         
         # Show resource dependencies
         deps = persona_spec.resource_dependencies
-        if deps.tasks or deps.templates or deps.checklists:
+        if deps.tasks or deps.templates or deps.tools:
             console.print(f"\n[bold]Resource Dependencies:[/bold]")
             if deps.tasks:
                 console.print(f"  Tasks: {', '.join(deps.tasks)}")
             if deps.templates:
                 console.print(f"  Templates: {', '.join(deps.templates)}")
-            if deps.checklists:
-                console.print(f"  Checklists: {', '.join(deps.checklists)}")
+            if deps.tools:
+                console.print(f"  Tools: {', '.join(deps.tools)}")
+            if deps.knowledge_sources:
+                console.print(f"  Knowledge Sources: {', '.join(deps.knowledge_sources)}")
+            if deps.required_services:
+                console.print(f"  Required Services: {', '.join(deps.required_services)}")
         
     except Exception as e:
         logger.error(f"Failed to describe persona: {e}")
@@ -446,10 +450,10 @@ def list_persona_commands():
         table.add_column("Parameters", style="dim")
         
         for cmd_name, cmd_def in commands.items():
-            description = cmd_def.get("description", "No description")
+            description = cmd_def.description if hasattr(cmd_def, 'description') else "No description"
             
             # Format parameters
-            params = cmd_def.get("parameters", {})
+            params = cmd_def.parameters if hasattr(cmd_def, 'parameters') else {}
             if params:
                 param_list = []
                 for param_name, param_def in params.items():
@@ -548,9 +552,9 @@ def show_command_help(command: str):
         cmd_def = commands[command]
         
         console.print(f"\n[bold blue]Command: {command}[/bold blue]")
-        console.print(f"[bold]Description:[/bold] {cmd_def.get('description', 'No description')}")
+        console.print(f"[bold]Description:[/bold] {cmd_def.description if hasattr(cmd_def, 'description') else 'No description'}")
         
-        params = cmd_def.get("parameters", {})
+        params = cmd_def.parameters if hasattr(cmd_def, 'parameters') else {}
         if params:
             console.print(f"\n[bold]Parameters:[/bold]")
             for param_name, param_def in params.items():

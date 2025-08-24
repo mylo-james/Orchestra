@@ -41,6 +41,7 @@ class PersonaLoader:
         # Define search paths in precedence order
         self.search_paths = [
             Path("orchestra/personas"),
+            Path("orchestra/personas/bmad"),  # Converted BMad personas
             Path(".bmad-core/personas"),
         ]
 
