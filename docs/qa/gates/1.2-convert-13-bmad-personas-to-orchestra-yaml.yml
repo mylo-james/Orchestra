@@ -1,0 +1,13 @@
+schema: 1
+story: "1.2"
+story_title: "Convert 13 BMad Personas to Orchestra YAML Personas"
+gate: CONCERNS
+status_reason: "Schema validation and performance benchmarks not yet implemented."
+reviewer: "Quinn (Test Architect)"
+updated: "2025-08-24T00:00:00Z"
+waiver: { active: false }
+top_issues:
+  - id: "TEST-001"
+    severity: medium
+    finding: "Missing persona JSON Schema and CI validation pipeline"
+    suggested_action: "Add schema and CI job to validate persona YAMLs"

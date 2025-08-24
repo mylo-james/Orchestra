@@ -1,0 +1,13 @@
+schema: 1
+story: "1.6"
+story_title: "Directory Scaffolding for teams/ and projects/ Overlays"
+gate: CONCERNS
+status_reason: "Scaffolding and loader resolution not yet implemented."
+reviewer: "Quinn (Test Architect)"
+updated: "2025-08-24T00:00:00Z"
+waiver: { active: false }
+top_issues:
+  - id: "ARCH-003"
+    severity: medium
+    finding: "Missing directory scaffolding and CI checks"
+    suggested_action: "Add overlay directories with schema validation"

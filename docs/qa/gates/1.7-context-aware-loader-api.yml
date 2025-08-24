@@ -1,0 +1,13 @@
+schema: 1
+story: "1.7"
+story_title: "Context-aware Loader API (load_persona(pid, team_id, project_id))"
+gate: CONCERNS
+status_reason: "Loader API and error handling not implemented."
+reviewer: "Quinn (Test Architect)"
+updated: "2025-08-24T00:00:00Z"
+waiver: { active: false }
+top_issues:
+  - id: "ARCH-004"
+    severity: medium
+    finding: "API missing with overlay application and tracing"
+    suggested_action: "Implement API with structured logging and retries"

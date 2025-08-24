@@ -1,0 +1,13 @@
+schema: 1
+story: "1.12"
+story_title: "Policy Versioning, Diff, Rollback for Cascaded Updates"
+gate: CONCERNS
+status_reason: "Versioning model, diff, and rollback not yet implemented."
+reviewer: "Quinn (Test Architect)"
+updated: "2025-08-24T00:00:00Z"
+waiver: { active: false }
+top_issues:
+  - id: "ARCH-006"
+    severity: medium
+    finding: "Missing policy versioning model"
+    suggested_action: "Implement versioning with diff and rollback"

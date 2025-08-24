@@ -1,0 +1,13 @@
+schema: 1
+story: "1.5"
+story_title: "Persona Overlay Merge Engine (base → team → project)"
+gate: CONCERNS
+status_reason: "Overlay merge engine and conflict reporting not implemented yet."
+reviewer: "Quinn (Test Architect)"
+updated: "2025-08-24T00:00:00Z"
+waiver: { active: false }
+top_issues:
+  - id: "ARCH-002"
+    severity: medium
+    finding: "Missing overlay schema and conflict handling"
+    suggested_action: "Implement merge engine with deterministic precedence"

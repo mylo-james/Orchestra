@@ -1,0 +1,13 @@
+schema: 1
+story: "1.3"
+story_title: "Integrate Tasks, Templates, Checklists as Orchestra Resources"
+gate: CONCERNS
+status_reason: "Resource engines and CI schema validation not yet implemented."
+reviewer: "Quinn (Test Architect)"
+updated: "2025-08-24T00:00:00Z"
+waiver: { active: false }
+top_issues:
+  - id: "ARCH-001"
+    severity: medium
+    finding: "Missing ResourceLoader and engines scaffolding"
+    suggested_action: "Add loader and engines with unit tests"

@@ -1,0 +1,13 @@
+schema: 1
+story: "1.10"
+story_title: "Tag-based Targeting (e.g., role=dev, lang=python, domain=fintech)"
+gate: CONCERNS
+status_reason: "Tag model and registry support not yet implemented."
+reviewer: "Quinn (Test Architect)"
+updated: "2025-08-24T00:00:00Z"
+waiver: { active: false }
+top_issues:
+  - id: "ARCH-005"
+    severity: medium
+    finding: "Missing tag schema and matching rules"
+    suggested_action: "Implement tag model and query semantics"

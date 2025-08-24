@@ -1,0 +1,13 @@
+schema: 1
+story: "1.11"
+story_title: "Broadcast & Policy Cascade"
+gate: CONCERNS
+status_reason: "Dry-run, approval gate, and audit trail not implemented."
+reviewer: "Quinn (Test Architect)"
+updated: "2025-08-24T00:00:00Z"
+waiver: { active: false }
+top_issues:
+  - id: "REQ-001"
+    severity: medium
+    finding: "Approval gate workflow missing"
+    suggested_action: "Add dry-run preview and approval flow with logs"

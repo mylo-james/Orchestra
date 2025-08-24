@@ -1,0 +1,13 @@
+schema: 1
+story: "1.9"
+story_title: "CLI Commands for Team/Project Init and Context Switching"
+gate: CONCERNS
+status_reason: "CLI context commands and persistence not yet implemented."
+reviewer: "Quinn (Test Architect)"
+updated: "2025-08-24T00:00:00Z"
+waiver: { active: false }
+top_issues:
+  - id: "TEST-003"
+    severity: medium
+    finding: "Missing CLI unit and integration tests"
+    suggested_action: "Implement commands with tests and status display"

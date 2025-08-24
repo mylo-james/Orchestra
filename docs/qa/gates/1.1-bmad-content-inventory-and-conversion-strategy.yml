@@ -1,0 +1,9 @@
+schema: 1
+story: "1.1"
+story_title: "BMad Content Inventory and Conversion Strategy"
+gate: PASS
+status_reason: "Story draft meets clarity and technical guidance for inventory and mapping."
+reviewer: "Quinn (Test Architect)"
+updated: "2025-08-24T00:00:00Z"
+waiver: { active: false }
+top_issues: []

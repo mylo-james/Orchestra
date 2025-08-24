@@ -1,0 +1,13 @@
+schema: 1
+story: "1.4"
+story_title: "Expand CLI Persona Selection; Validate End-to-End Execution"
+gate: CONCERNS
+status_reason: "Regression test suite for existing personas not yet implemented."
+reviewer: "Quinn (Test Architect)"
+updated: "2025-08-24T00:00:00Z"
+waiver: { active: false }
+top_issues:
+  - id: "TEST-002"
+    severity: medium
+    finding: "Missing regression tests for orchestrator/dev/release personas"
+    suggested_action: "Add CLI tests for listing/selection and existing personas"

@@ -1,0 +1,13 @@
+schema: 1
+story: "1.8"
+story_title: "Namespaced Storage (Qdrant collections, PG schemas, logs)"
+gate: CONCERNS
+status_reason: "Namespace isolation and performance validation not yet implemented."
+reviewer: "Quinn (Test Architect)"
+updated: "2025-08-24T00:00:00Z"
+waiver: { active: false }
+top_issues:
+  - id: "REL-001"
+    severity: medium
+    finding: "Isolation and initialization scripts pending"
+    suggested_action: "Add init scripts and isolation tests"
