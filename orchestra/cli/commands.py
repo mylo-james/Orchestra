@@ -2,11 +2,13 @@
 
 import asyncio
 import json
+import time
 from pathlib import Path
 from typing import Optional
 
 import typer
 from rich.console import Console
+from rich.panel import Panel
 from rich.table import Table
 
 from orchestra.cli.output import (
@@ -17,6 +19,10 @@ from orchestra.cli.output import (
 )
 from orchestra.system.bmad_inventory import BmadContentInventory
 from orchestra.system.bmad_persona_converter import BmadPersonaConverter
+from orchestra.system.resource_loader import ResourceLoader, ResourceType
+from orchestra.system.task_engine import TaskEngine
+from orchestra.system.template_processor import TemplateProcessor
+from orchestra.system.checklist_engine import ChecklistEngine
 from orchestra.system.factory import get_registry
 from orchestra.utils.logging import get_logger
 
@@ -469,4 +475,310 @@ def validate_converted_personas(
     except Exception as e:
         logger.error(f"Persona validation failed: {e}")
         console.print(error_panel(f"Persona validation failed: {e}"))
+        raise typer.Exit(1)
+
+
+@bmad_cmd.command("list-resources")
+def list_resources(
+    resource_type: Optional[str] = typer.Option(
+        None, "--type", "-t", help="Resource type to list (task, template, checklist)"
+    ),
+    base_path: Optional[str] = typer.Option(
+        ".bmad-core", "--base-path", "-b", help="Base path to BMad content directory"
+    )
+):
+    """List available BMad resources (Story 1.3)."""
+    try:
+        console.print(info_panel(f"Listing BMad resources from {base_path}"))
+        
+        # Create resource loader
+        loader = ResourceLoader(base_path=Path(base_path))
+        
+        # Determine which resource types to list
+        if resource_type:
+            try:
+                resource_types = [ResourceType(resource_type.lower())]
+            except ValueError:
+                console.print(error_panel(f"Invalid resource type: {resource_type}. Valid types: task, template, checklist"))
+                raise typer.Exit(1)
+        else:
+            resource_types = [ResourceType.TASK, ResourceType.TEMPLATE, ResourceType.CHECKLIST]
+        
+        # Discover and display resources
+        for res_type in resource_types:
+            resources = loader.discover_resources(res_type)
+            
+            if resources:
+                table = Table(title=f"{res_type.value.title()} Resources")
+                table.add_column("ID", style="cyan")
+                table.add_column("Name", style="white")
+                table.add_column("Description", style="dim")
+                table.add_column("Trust Level", style="green")
+                table.add_column("Tags", style="blue")
+                
+                for resource in resources:
+                    description = resource.description[:50] + "..." if len(resource.description) > 50 else resource.description
+                    tags = ", ".join(resource.tags[:3])  # Show first 3 tags
+                    
+                    table.add_row(
+                        resource.id,
+                        resource.name,
+                        description,
+                        resource.trust_level,
+                        tags
+                    )
+                
+                console.print(table)
+                console.print()
+            else:
+                console.print(warning_panel(f"No {res_type.value} resources found"))
+        
+    except Exception as e:
+        logger.error(f"Resource listing failed: {e}")
+        console.print(error_panel(f"Resource listing failed: {e}"))
+        raise typer.Exit(1)
+
+
+@bmad_cmd.command("execute-task")
+def execute_task(
+    task_id: str = typer.Argument(..., help="ID of the task to execute"),
+    base_path: Optional[str] = typer.Option(
+        ".bmad-core", "--base-path", "-b", help="Base path to BMad content directory"
+    ),
+    context_file: Optional[str] = typer.Option(
+        None, "--context", "-c", help="JSON file containing execution context"
+    ),
+    timeout: Optional[int] = typer.Option(
+        300, "--timeout", help="Execution timeout in seconds"
+    )
+):
+    """Execute a BMad task (Story 1.3)."""
+    try:
+        console.print(info_panel(f"Executing task: {task_id}"))
+        
+        # Create resource loader and task engine
+        loader = ResourceLoader(base_path=Path(base_path))
+        engine = TaskEngine(execution_timeout=timeout)
+        
+        # Load the task
+        result = loader.load_resource(task_id, ResourceType.TASK)
+        if not result.success:
+            console.print(error_panel(f"Failed to load task: {task_id}"))
+            for error in result.validation_errors:
+                console.print(f"  • {error}")
+            raise typer.Exit(1)
+        
+        # Load context
+        context = {}
+        if context_file:
+            try:
+                with open(context_file, 'r') as f:
+                    context = json.load(f)
+            except Exception as e:
+                console.print(error_panel(f"Failed to load context file: {e}"))
+                raise typer.Exit(1)
+        
+        # Add default context
+        context.update({
+            "project_root": str(Path.cwd()),
+            "user": "cli-user",
+            "timestamp": time.time()
+        })
+        
+        # Execute the task
+        console.print(info_panel("Starting task execution..."))
+        execution_result = engine.execute_task(result.metadata, result.content, context)
+        
+        # Display results
+        if execution_result.success:
+            console.print(success_panel(f"Task executed successfully in {execution_result.execution_time:.3f}s"))
+            console.print(f"Steps completed: {execution_result.steps_completed}/{execution_result.total_steps}")
+            
+            if execution_result.warnings:
+                console.print("\n[bold yellow]Warnings:[/bold yellow]")
+                for warning in execution_result.warnings:
+                    console.print(f"  ⚠️ {warning}")
+            
+            if execution_result.outputs:
+                console.print(f"\n[bold]Outputs:[/bold] {len(execution_result.outputs)} items")
+        else:
+            console.print(error_panel(f"Task execution failed after {execution_result.retry_count} retries"))
+            for error in execution_result.errors:
+                console.print(f"  ❌ {error}")
+            raise typer.Exit(1)
+        
+    except Exception as e:
+        logger.error(f"Task execution failed: {e}")
+        console.print(error_panel(f"Task execution failed: {e}"))
+        raise typer.Exit(1)
+
+
+@bmad_cmd.command("render-template")
+def render_template(
+    template_id: str = typer.Argument(..., help="ID of the template to render"),
+    base_path: Optional[str] = typer.Option(
+        ".bmad-core", "--base-path", "-b", help="Base path to BMad content directory"
+    ),
+    context_file: Optional[str] = typer.Option(
+        None, "--context", "-c", help="JSON file containing template variables"
+    ),
+    output_file: Optional[str] = typer.Option(
+        None, "--output", "-o", help="Output file for rendered content"
+    )
+):
+    """Render a BMad template (Story 1.3)."""
+    try:
+        console.print(info_panel(f"Rendering template: {template_id}"))
+        
+        # Create resource loader and template processor
+        loader = ResourceLoader(base_path=Path(base_path))
+        processor = TemplateProcessor()
+        
+        # Load the template
+        result = loader.load_resource(template_id, ResourceType.TEMPLATE)
+        if not result.success:
+            console.print(error_panel(f"Failed to load template: {template_id}"))
+            for error in result.validation_errors:
+                console.print(f"  • {error}")
+            raise typer.Exit(1)
+        
+        # Load context
+        context = {}
+        if context_file:
+            try:
+                with open(context_file, 'r') as f:
+                    context = json.load(f)
+            except Exception as e:
+                console.print(error_panel(f"Failed to load context file: {e}"))
+                raise typer.Exit(1)
+        
+        # Add default context
+        context.update({
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "user": "cli-user"
+        })
+        
+        # Render the template
+        console.print(info_panel("Rendering template..."))
+        render_result = processor.render_template(result.metadata, result.content, context)
+        
+        # Display results
+        if render_result.success:
+            console.print(success_panel(f"Template rendered successfully in {render_result.render_time:.3f}s"))
+            
+            if render_result.warnings:
+                console.print("\n[bold yellow]Warnings:[/bold yellow]")
+                for warning in render_result.warnings:
+                    console.print(f"  ⚠️ {warning}")
+            
+            # Output rendered content
+            if output_file:
+                with open(output_file, 'w') as f:
+                    f.write(render_result.rendered_content)
+                console.print(f"Rendered content saved to: {output_file}")
+            else:
+                console.print("\n[bold]Rendered Content:[/bold]")
+                console.print(Panel(render_result.rendered_content, title="Template Output"))
+        else:
+            console.print(error_panel("Template rendering failed"))
+            for error in render_result.errors:
+                console.print(f"  ❌ {error}")
+            raise typer.Exit(1)
+        
+    except Exception as e:
+        logger.error(f"Template rendering failed: {e}")
+        console.print(error_panel(f"Template rendering failed: {e}"))
+        raise typer.Exit(1)
+
+
+@bmad_cmd.command("execute-checklist")
+def execute_checklist(
+    checklist_id: str = typer.Argument(..., help="ID of the checklist to execute"),
+    base_path: Optional[str] = typer.Option(
+        ".bmad-core", "--base-path", "-b", help="Base path to BMad content directory"
+    ),
+    context_file: Optional[str] = typer.Option(
+        None, "--context", "-c", help="JSON file containing execution context"
+    ),
+    auto_check: bool = typer.Option(
+        False, "--auto-check", help="Enable automatic checking based on context"
+    ),
+    report_format: str = typer.Option(
+        "markdown", "--format", help="Report format (markdown, json)"
+    ),
+    output_file: Optional[str] = typer.Option(
+        None, "--output", "-o", help="Output file for checklist report"
+    )
+):
+    """Execute a BMad checklist (Story 1.3)."""
+    try:
+        console.print(info_panel(f"Executing checklist: {checklist_id}"))
+        
+        # Create resource loader and checklist engine
+        loader = ResourceLoader(base_path=Path(base_path))
+        engine = ChecklistEngine(auto_check_enabled=auto_check)
+        
+        # Load the checklist
+        result = loader.load_resource(checklist_id, ResourceType.CHECKLIST)
+        if not result.success:
+            console.print(error_panel(f"Failed to load checklist: {checklist_id}"))
+            for error in result.validation_errors:
+                console.print(f"  • {error}")
+            raise typer.Exit(1)
+        
+        # Load context
+        context = {}
+        if context_file:
+            try:
+                with open(context_file, 'r') as f:
+                    context = json.load(f)
+            except Exception as e:
+                console.print(error_panel(f"Failed to load context file: {e}"))
+                raise typer.Exit(1)
+        
+        # Add default context
+        context.update({
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "user": "cli-user"
+        })
+        
+        # Execute the checklist
+        console.print(info_panel("Executing checklist..."))
+        execution_result = engine.execute_checklist(result.metadata, result.content, context)
+        
+        # Display results
+        if execution_result.success:
+            console.print(success_panel(f"Checklist executed successfully in {execution_result.execution_time:.3f}s"))
+            console.print(f"Completion: {execution_result.completion_percentage:.1f}% ({execution_result.completed_items}/{execution_result.total_items - execution_result.not_applicable_items} applicable items)")
+            
+            if auto_check and execution_result.auto_checked_items > 0:
+                console.print(f"Auto-checked: {execution_result.auto_checked_items} items")
+            
+            if execution_result.warnings:
+                console.print("\n[bold yellow]Warnings:[/bold yellow]")
+                for warning in execution_result.warnings:
+                    console.print(f"  ⚠️ {warning}")
+            
+            # Generate and output report
+            report = engine.export_checklist_report(execution_result, report_format)
+            
+            if output_file:
+                with open(output_file, 'w') as f:
+                    f.write(report)
+                console.print(f"Checklist report saved to: {output_file}")
+            else:
+                console.print("\n[bold]Checklist Report:[/bold]")
+                if report_format == "markdown":
+                    console.print(Panel(report, title="Checklist Report"))
+                else:
+                    console.print(report)
+        else:
+            console.print(error_panel("Checklist execution failed"))
+            for error in execution_result.errors:
+                console.print(f"  ❌ {error}")
+            raise typer.Exit(1)
+        
+    except Exception as e:
+        logger.error(f"Checklist execution failed: {e}")
+        console.print(error_panel(f"Checklist execution failed: {e}"))
         raise typer.Exit(1)
