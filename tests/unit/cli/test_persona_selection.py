@@ -31,15 +31,14 @@ class TestPersonaDiscovery:
         mock_personas = {
             "dev": Path("orchestra/personas/dev.yaml"),
             "orchestrator": Path("orchestra/personas/orchestrator.yaml"),
-            "release": Path("orchestra/personas/release.yaml"),
+            "master": Path("orchestra/personas/master.yaml"),
             # Converted BMad personas
             "analyst": Path("orchestra/personas/analyst.yaml"),
             "architect": Path("orchestra/personas/architect.yaml"),
             "pm": Path("orchestra/personas/pm.yaml"),
             "po": Path("orchestra/personas/po.yaml"),
             "qa": Path("orchestra/personas/qa.yaml"),
-            "spec": Path("orchestra/personas/spec.yaml"),
-            "tdd-dev": Path("orchestra/personas/tdd-dev.yaml"),
+
             "ux-expert": Path("orchestra/personas/ux-expert.yaml"),
         }
         
@@ -59,10 +58,10 @@ class TestPersonaDiscovery:
             
             assert result.exit_code == 0
             
-            # Should list original Orchestra personas
+            # Should list Orchestra personas
             assert "dev" in result.stdout
             assert "orchestrator" in result.stdout
-            assert "release" in result.stdout
+            assert "master" in result.stdout
             
             # Should list converted BMad personas
             assert "analyst" in result.stdout
@@ -105,7 +104,7 @@ class TestPersonaDiscovery:
             assert result.exit_code == 0
             # Should show development-related personas
             assert "dev" in result.stdout
-            assert "tdd-dev" in result.stdout
+            assert "ux-expert" in result.stdout
 
     def test_search_personas_by_keyword(self, runner, mock_persona_loader):
         """Test searching personas by keyword."""
@@ -302,7 +301,7 @@ class TestEndToEndValidation:
         """Create persona with resource dependencies."""
         return PersonaSpec(
             identity=PersonaIdentity(
-                id="tdd-dev",
+                id="dev",
                 name="Test-Driven Developer",
                 title="Test-Driven Developer",
                 role="TDD Developer"
@@ -478,34 +477,7 @@ class TestRegressionValidation:
             assert result.exit_code == 0
             assert "dev" in result.stdout.lower()
 
-    def test_existing_release_persona(self, runner):
-        """Test that release persona still works."""
-        with patch('orchestra.cli.commands.PersonaLoader') as mock_loader_class:
-            mock_loader = Mock()
-            
-            # Mock existing release persona
-            release_spec = PersonaSpec(
-                identity=PersonaIdentity(
-                    id="release",
-                    name="Release Manager",
-                    title="Release Manager",
-                    role="Release Manager"
-                ),
-                behavioral_contract=BehavioralContract(
-                    core_principles=["Deployment safety", "Release coordination"],
-                    interaction_style="systematic"
-                ),
-                command_interface=CommandInterface(commands={}),
-                resource_dependencies=ResourceDependencies()
-            )
-            
-            mock_loader.load_persona.return_value = release_spec
-            mock_loader_class.return_value = mock_loader
-            
-            result = runner.invoke(app, ["agent", "activate", "release"])
-            
-            assert result.exit_code == 0
-            assert "release" in result.stdout.lower()
+
 
 
 class TestAuditAndSecurity:
