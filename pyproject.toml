@@ -32,6 +32,7 @@ temporalio = "^1.7.0"
 qdrant-client = "^1.7.0"
 pip-audit = "^2.7.0"
 # openai-agents removed - using universal persona model
+jinja2 = "^3.1.6"
 
 [tool.poetry.group.dev.dependencies]
 # Testing

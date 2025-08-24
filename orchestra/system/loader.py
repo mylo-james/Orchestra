@@ -5,6 +5,11 @@ from typing import Dict, List, Optional
 
 import yaml
 
+from orchestra.system.persona_overlay_merge import (
+    OverlayMergeEngine,
+    OverlayType,
+    PersonaOverlay,
+)
 from orchestra.system.specs import (
     BehavioralContract,
     CommandDefinition,
@@ -37,12 +42,17 @@ class PersonaLoader:
         self.cache_enabled = cache_enabled
         self._cache: Dict[str, PersonaSpec] = {}
         self._persona_paths: Dict[str, Path] = {}
+        self._overlay_merge_engine = OverlayMergeEngine()
 
         # Define search paths in precedence order
         self.search_paths = [
             Path("orchestra/personas"),
             Path(".bmad-core/personas"),
         ]
+
+        # Overlay search paths
+        self.team_overlay_path = Path("teams")
+        self.project_overlay_path = Path("projects")
 
     def discover_personas(self) -> Dict[str, Path]:
         """
@@ -68,23 +78,94 @@ class PersonaLoader:
         return discovered
 
     def load_persona(
-        self, persona_id: str, force_reload: bool = False
+        self,
+        persona_id: str,
+        team_id: Optional[str] = None,
+        project_id: Optional[str] = None,
+        force_reload: bool = False,
     ) -> Optional[PersonaSpec]:
         """
-        Load a persona specification by ID.
+        Load a persona specification by ID with optional team and project context.
 
         Args:
             persona_id: ID of the persona to load
+            team_id: Optional team context for overlay merging
+            project_id: Optional project context for overlay merging
             force_reload: Force reload even if cached
 
         Returns:
-            PersonaSpec if found and valid, None otherwise
+            PersonaSpec if found and valid, None otherwise (merged with overlays if context provided)
         """
+        # Generate cache key including context
+        cache_key = self._generate_cache_key(persona_id, team_id, project_id)
+
         # Check cache first
-        if self.cache_enabled and not force_reload:
-            if persona_id in self._cache:
-                logger.debug(f"Returning cached persona: {persona_id}")
-                return self._cache[persona_id]
+        if self.cache_enabled and not force_reload and cache_key in self._cache:
+            logger.debug(f"Returning cached persona: {cache_key}")
+            return self._cache[cache_key]
+
+        # Load base persona
+        base_persona = self._load_base_persona(persona_id, force_reload)
+        if not base_persona:
+            return None
+
+        # If no context, return base persona
+        if not team_id and not project_id:
+            if self.cache_enabled:
+                self._cache[cache_key] = base_persona
+            return base_persona
+
+        # Load overlays and merge
+        try:
+            team_overlay = (
+                self._load_team_overlay(persona_id, team_id) if team_id else None
+            )
+            project_overlay = (
+                self._load_project_overlay(persona_id, project_id)
+                if project_id
+                else None
+            )
+
+            # Merge with overlays
+            merge_result = self._overlay_merge_engine.merge_persona(
+                base_persona=base_persona,
+                team_overlay=team_overlay,
+                project_overlay=project_overlay,
+            )
+
+            if merge_result.success:
+                merged_persona = merge_result.merged_persona
+
+                # Log conflicts if any
+                if merge_result.conflicts:
+                    logger.info(
+                        f"Resolved {len(merge_result.conflicts)} conflicts for {persona_id}"
+                    )
+
+                # Cache merged result
+                if self.cache_enabled:
+                    self._cache[cache_key] = merged_persona
+
+                return merged_persona
+            else:
+                logger.error(
+                    f"Failed to merge persona {persona_id}: {merge_result.error_message}"
+                )
+                return base_persona
+
+        except Exception as e:
+            logger.error(f"Error loading persona with context: {e}")
+            return base_persona
+
+    def _load_base_persona(
+        self, persona_id: str, force_reload: bool = False
+    ) -> Optional[PersonaSpec]:
+        """Load base persona without overlays."""
+        # Check cache first (base persona only)
+        base_cache_key = f"base:{persona_id}"
+        if self.cache_enabled and not force_reload and base_cache_key in self._cache:
+            logger.debug(f"Returning cached base persona: {persona_id}")
+            return self._cache[base_cache_key]
 
         # Discover personas if not already done
         if not self._persona_paths:
@@ -113,9 +194,9 @@ class PersonaLoader:
                 logger.error(f"Persona validation failed for {persona_id}: {errors}")
                 return None
 
-            # Cache if enabled
+            # Cache base persona if enabled
             if self.cache_enabled:
-                self._cache[persona_id] = persona_spec
+                self._cache[base_cache_key] = persona_spec
 
             logger.info(f"Successfully loaded persona: {persona_spec.display_name}")
             return persona_spec
@@ -125,6 +206,69 @@ class PersonaLoader:
             return None
         except Exception as e:
             logger.error(f"Failed to load persona {persona_id}: {e}", exc_info=True)
+            return None
+
+    def _generate_cache_key(
+        self, persona_id: str, team_id: Optional[str], project_id: Optional[str]
+    ) -> str:
+        """Generate cache key for persona with context."""
+        return f"{persona_id}:{team_id or 'none'}:{project_id or 'none'}"
+
+    def _load_team_overlay(
+        self, persona_id: str, team_id: str
+    ) -> Optional[PersonaOverlay]:
+        """Load team overlay for persona."""
+        overlay_path = (
+            self.team_overlay_path / team_id / "personas" / f"{persona_id}.yaml"
+        )
+        return self._load_overlay(overlay_path, OverlayType.TEAM, team_id, persona_id)
+
+    def _load_project_overlay(
+        self, persona_id: str, project_id: str
+    ) -> Optional[PersonaOverlay]:
+        """Load project overlay for persona."""
+        overlay_path = (
+            self.project_overlay_path / project_id / "personas" / f"{persona_id}.yaml"
+        )
+        return self._load_overlay(
+            overlay_path, OverlayType.PROJECT, project_id, persona_id
+        )
+
+    def _load_overlay(
+        self,
+        overlay_path: Path,
+        overlay_type: OverlayType,
+        context_id: str,
+        persona_id: str,
+    ) -> Optional[PersonaOverlay]:
+        """Load overlay from file."""
+        if not overlay_path.exists():
+            logger.debug(f"Overlay not found: {overlay_path}")
+            return None
+
+        try:
+            with open(overlay_path, "r") as f:
+                data = yaml.safe_load(f)
+
+            # Extract modifications
+            modifications = data.get("modifications", {})
+
+            overlay = PersonaOverlay(
+                overlay_type=overlay_type,
+                context_id=context_id,
+                persona_id=persona_id,
+                modifications=modifications,
+                version_hash=data.get("version", "1.0.0"),
+            )
+
+            # Validate overlay
+            overlay.is_valid()
+
+            logger.debug(f"Loaded {overlay_type.value} overlay: {overlay_path}")
+            return overlay
+
+        except Exception as e:
+            logger.error(f"Failed to load overlay {overlay_path}: {e}")
             return None
 
     def _parse_persona_data(self, data: Dict, persona_id: str) -> PersonaSpec:
@@ -258,6 +402,27 @@ class PersonaLoader:
             return [f"YAML parsing error: {e}"]
         except Exception as e:
             return [f"Validation error: {e}"]
+
+    def load_persona_from_file(self, file_path: Path) -> Optional[PersonaSpec]:
+        """
+        Load a persona from a specific file path.
+
+        Args:
+            file_path: Path to the YAML file to load
+
+        Returns:
+            PersonaSpec if successful, None otherwise
+        """
+        try:
+            with open(file_path, "r") as f:
+                data = yaml.safe_load(f)
+
+            persona_id = file_path.stem
+            return self._parse_persona_data(data, persona_id)
+
+        except Exception as e:
+            logger.error(f"Failed to load persona from {file_path}: {e}")
+            return None
 
     def clear_cache(self) -> None:
         """Clear the persona cache."""

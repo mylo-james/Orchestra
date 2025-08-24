@@ -1,6 +1,6 @@
-"""Base secure agent built on OpenAI Agents SDK.
+"""Base secure agent built on OpenAI SDK.
 
-Provides Agent creation using OpenAI Agents SDK patterns with session management,
+Provides Agent creation using OpenAI SDK patterns with session management,
 tracing, and proper tool integration. All operations are async for Temporal compatibility.
 """
 
@@ -8,10 +8,8 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, TypeVar
+from typing import Any, Dict, Optional, TypeVar
 
-from agents import Agent, FunctionTool, Runner, SQLiteSession
-from agents.models.openai_chatcompletions import OpenAIChatCompletionsModel
 from openai import AsyncOpenAI
 
 from orchestra.config.settings import get_settings
@@ -20,148 +18,176 @@ from orchestra.utils.logging import get_logger, set_agent_context
 
 logger = get_logger(__name__)
 
-TContext = TypeVar("TContext")
+T = TypeVar("T")
 
 
 @dataclass
 class AgentContext:
-    """Context object passed to agent tools and operations."""
+    """Context for agent operations."""
 
-    correlation_id: Optional[str] = None
-    agent_name: Optional[str] = None
-    session_data: Optional[Dict[str, Any]] = None
+    correlation_id: str
+    agent_name: str
+    session_id: Optional[str] = None
+    metadata: Dict[str, Any] = None
 
     def __post_init__(self):
-        if self.session_data is None:
-            self.session_data = {}
-
-
-@dataclass
-class ModelConfig:
-    """Configuration for OpenAI model parameters."""
-
-    model: str
-    temperature: float
-    max_tokens: int
+        if self.metadata is None:
+            self.metadata = {}
 
 
 class SecureAgent:
-    """Base class for all agents using OpenAI Agents SDK with monitoring."""
+    """
+    Base secure agent class for Orchestra.
 
-    agent_name: str = "secure_agent"
+    Provides security validation, audit logging, and monitoring
+    without depending on external agent frameworks.
+    """
 
     def __init__(
         self,
-        settings=None,
-        model_cfg: Optional[ModelConfig] = None,
-        instructions: Optional[str] = None,
-        tools: Optional[List[FunctionTool]] = None,
+        name: str,
+        correlation_id: Optional[str] = None,
+        session_id: Optional[str] = None,
     ):
-        self.settings = settings or get_settings()
-        set_agent_context(self.agent_name)
-        self.monitor = AgentMonitor(self.agent_name)
+        """
+        Initialize the secure agent.
 
-        # Configure model with settings
-        default_cfg = ModelConfig(
-            model=self.settings.openai.model,
-            temperature=self.settings.openai.temperature,
-            max_tokens=self.settings.openai.max_tokens,
+        Args:
+            name: Agent name for identification
+            correlation_id: Correlation ID for tracing
+            session_id: Session ID for state management
+        """
+        self.name = name
+        self.correlation_id = (
+            correlation_id
+            or f"agent-{name}-{asyncio.current_task().get_name() if asyncio.current_task() else 'sync'}"
         )
-        self.model_cfg = model_cfg or default_cfg
+        self.session_id = session_id
+        self.settings = get_settings()
+        self.monitor = AgentMonitor()
+        self.client = AsyncOpenAI(api_key=self.settings.openai_api_key)
 
-        # Create OpenAI model instance for Agents SDK
-        openai_client = AsyncOpenAI(
-            api_key=self.settings.openai.api_key,
-        )
-        self.model = OpenAIChatCompletionsModel(
-            model=self.model_cfg.model,
-            openai_client=openai_client,
-        )
+        # Set logging context
+        set_agent_context(self.name, self.correlation_id)
 
-        # Create the Agent using OpenAI Agents SDK
-        self.agent = Agent[AgentContext](
-            name=self.agent_name,
-            model=self.model,
-            instructions=instructions
-            or f"You are {self.agent_name}, a helpful AI assistant.",
-            tools=tools or [],  # type: ignore[arg-type]
-        )
+        logger.info(f"Initialized SecureAgent: {name}")
 
-        # Session for conversation management
-        self.session: Optional[SQLiteSession] = None
-        self.runner = Runner()
+    async def execute_with_monitoring(
+        self, operation: str, func: callable, *args, **kwargs
+    ) -> Any:
+        """
+        Execute an operation with monitoring and error handling.
 
-    async def start(self) -> None:
-        """Initialize the agent and create a session."""
-        logger.info("agent_started", agent=self.agent_name)
+        Args:
+            operation: Name of the operation for monitoring
+            func: Function to execute
+            *args: Positional arguments for the function
+            **kwargs: Keyword arguments for the function
 
-        # Create SQLite session for conversation persistence
-        self.session = SQLiteSession(
-            session_id=f"{self.agent_name}_session",
-            db_path=f".ai/sessions/{self.agent_name}_sessions.db",
-        )
-
-    async def stop(self) -> None:
-        """Stop the agent and clean up resources."""
-        logger.info("agent_stopped", agent=self.agent_name)
-        if self.session:
-            await asyncio.get_event_loop().run_in_executor(None, self.session.close)
-
-    async def ask(
-        self, user_message: str, context: Optional[AgentContext] = None
-    ) -> str:
-        """Run a conversation using the OpenAI Agents SDK."""
-        if not self.session:
-            await self.start()
-
-        # Create or use provided context
-        if context is None:
-            context = AgentContext(
-                agent_name=self.agent_name,
-                correlation_id=f"{self.agent_name}_{asyncio.current_task()}",
+        Returns:
+            Result of the function execution
+        """
+        try:
+            # Start monitoring
+            await self.monitor.start_operation(
+                agent_name=self.name,
+                operation=operation,
+                correlation_id=self.correlation_id,
             )
 
-        async with self.monitor.time(
-            "agent_run", {"message_length": len(user_message)}
-        ):
-            try:
-                # Run the agent with the user message
-                result = await asyncio.get_event_loop().run_in_executor(
-                    None,
-                    lambda: self.runner.run_sync(
-                        starting_agent=self.agent,
-                        input=user_message,
-                        context=context,
-                        session=self.session,
-                    ),
-                )
+            logger.info(f"Starting operation: {operation}")
 
-                # Extract the final output from the result
-                if hasattr(result, "final_output") and result.final_output:
-                    response = str(result.final_output)
-                elif hasattr(result, "messages") and result.messages:
-                    # Get the last message from the agent
-                    response = (
-                        str(result.messages[-1].content)
-                        if result.messages[-1].content
-                        else ""
-                    )
-                else:
-                    response = "No response generated"
+            # Execute the function
+            if asyncio.iscoroutinefunction(func):
+                result = await func(*args, **kwargs)
+            else:
+                result = func(*args, **kwargs)
 
-                logger.info(
-                    "agent_run_success",
-                    agent=self.agent_name,
-                    input_length=len(user_message),
-                    output_length=len(response),
-                )
-                return response
+            # Record success
+            await self.monitor.record_success(
+                agent_name=self.name,
+                operation=operation,
+                correlation_id=self.correlation_id,
+            )
 
-            except Exception as e:
-                logger.error("agent_run_failure", agent=self.agent_name, error=str(e))
-                raise
+            logger.info(f"Completed operation: {operation}")
+            return result
 
-    def add_tool(self, tool: FunctionTool) -> None:
-        """Add a tool to the agent's toolkit."""
-        if tool not in self.agent.tools:
-            self.agent.tools.append(tool)
+        except Exception as e:
+            # Record failure
+            await self.monitor.record_failure(
+                agent_name=self.name,
+                operation=operation,
+                error=str(e),
+                correlation_id=self.correlation_id,
+            )
+
+            logger.error(f"Failed operation {operation}: {e}")
+            raise
+
+    async def validate_input(self, input_data: Any) -> bool:
+        """
+        Validate input data for security and correctness.
+
+        Args:
+            input_data: Data to validate
+
+        Returns:
+            True if valid, False otherwise
+        """
+        # Basic validation - can be extended
+        if input_data is None:
+            return False
+
+        # Add more validation logic as needed
+        return True
+
+    async def validate_output(self, output_data: Any) -> bool:
+        """
+        Validate output data for security and correctness.
+
+        Args:
+            output_data: Data to validate
+
+        Returns:
+            True if valid, False otherwise
+        """
+        # Basic validation - can be extended
+        if output_data is None:
+            return False
+
+        # Add more validation logic as needed
+        return True
+
+    def get_context(self) -> AgentContext:
+        """Get the current agent context."""
+        return AgentContext(
+            correlation_id=self.correlation_id,
+            agent_name=self.name,
+            session_id=self.session_id,
+        )
+
+    async def cleanup(self) -> None:
+        """Clean up agent resources."""
+        logger.info(f"Cleaning up SecureAgent: {self.name}")
+
+        # Close OpenAI client if needed
+        if hasattr(self.client, "close"):
+            await self.client.close()
+
+
+class FunctionTool:
+    """Simple function tool wrapper for compatibility."""
+
+    def __init__(self, name: str, description: str, func: callable):
+        """Initialize function tool."""
+        self.name = name
+        self.description = description
+        self.func = func
+
+    async def execute(self, *args, **kwargs) -> Any:
+        """Execute the tool function."""
+        if asyncio.iscoroutinefunction(self.func):
+            return await self.func(*args, **kwargs)
+        else:
+            return self.func(*args, **kwargs)
