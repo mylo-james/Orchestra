@@ -283,6 +283,17 @@ class BmadPersonaConverter:
             except yaml.YAMLError:
                 pass
         
+        # Extract YAML blocks from markdown code fences (BMad format)
+        yaml_block_match = re.search(r'```yaml\n(.*?)\n```', content, re.DOTALL)
+        if yaml_block_match:
+            try:
+                yaml_content = yaml_block_match.group(1)
+                yaml_metadata = yaml.safe_load(yaml_content)
+                if yaml_metadata:
+                    metadata.update(yaml_metadata)
+            except yaml.YAMLError as e:
+                logger.warning(f"Failed to parse YAML block: {e}")
+        
         # Extract persona information from content structure
         lines = content.split('\n')
         current_section = None
@@ -320,39 +331,91 @@ class BmadPersonaConverter:
         """Create Orchestra PersonaSpec from BMad persona data."""
         persona_id = bmad_persona.name.replace('.md', '').lower()
         
-        # Create identity
+        # Extract agent and persona sections from BMad YAML
+        agent_data = metadata.get('agent', {})
+        persona_data = metadata.get('persona', {})
+        
+        # Create identity from BMad agent section
         identity = PersonaIdentity(
-            name=metadata.get('name', persona_id.replace('-', ' ').title()),
-            id=persona_id,
-            title=metadata.get('title', metadata.get('role', f"{persona_id.title()} Specialist")),
-            role=metadata.get('role', f"Expert {persona_id.replace('-', ' ').title()}"),
-            icon=metadata.get('icon', '🤖'),
-            when_to_use=metadata.get('when_to_use', f"Use for {persona_id.replace('-', ' ')} related tasks"),
-            style=metadata.get('style', 'Professional and helpful'),
-            focus=metadata.get('focus', 'Task execution and problem solving')
+            name=agent_data.get('name', persona_id.replace('-', ' ').title()),
+            id=agent_data.get('id', persona_id),
+            title=agent_data.get('title', f"{persona_id.title()} Specialist"),
+            role=persona_data.get('role', f"Expert {persona_id.replace('-', ' ').title()}"),
+            icon=agent_data.get('icon', '🤖'),
+            when_to_use=agent_data.get('whenToUse', f"Use for {persona_id.replace('-', ' ')} related tasks"),
+            style=persona_data.get('style', 'Professional and helpful'),
+            focus=persona_data.get('focus', 'Task execution and problem solving')
         )
         
-        # Create behavioral contract
+        # Create behavioral contract from BMad persona section
+        # Core principles can be at root level or in persona section
+        core_principles = metadata.get('core_principles', persona_data.get('core_principles', []))
         behavioral_contract = BehavioralContract(
-            core_principles=metadata.get('core_principles', []),
-            interaction_style=metadata.get('interaction_style', 'professional'),
-            halt_conditions=metadata.get('halt_conditions', []),
-            decision_framework=metadata.get('decision_framework', 'analytical'),
-            escalation_triggers=metadata.get('escalation_triggers', [])
+            core_principles=core_principles,
+            interaction_style=persona_data.get('interaction_style', 'professional'),
+            halt_conditions=persona_data.get('halt_conditions', []),
+            decision_framework=persona_data.get('decision_framework', 'analytical'),
+            escalation_triggers=persona_data.get('escalation_triggers', [])
         )
         
-        # Create command interface
+        # Create command interface from BMad commands
         commands = {}
-        if 'commands' in metadata:
-            for cmd in metadata['commands']:
-                cmd_name = cmd.lower().replace(' ', '-')
-                commands[cmd_name] = CommandDefinition(
-                    description=f"Execute {cmd} command",
-                    execution_pattern="analyze → execute → validate",
-                    parameters={},
-                    requires_confirmation=False,
-                    timeout_seconds=120
-                )
+        bmad_commands = metadata.get('commands', [])
+        
+        if bmad_commands:
+            for cmd_entry in bmad_commands:
+                if isinstance(cmd_entry, dict):
+                    # BMad format: {command_name: description}
+                    for cmd_name, cmd_desc in cmd_entry.items():
+                        # Clean up command name
+                        clean_cmd_name = cmd_name.strip().replace(' ', '-').replace('{', '').replace('}', '')
+                        
+                        # Extract parameters from command name if present
+                        params = {}
+                        if '{' in cmd_name and '}' in cmd_name:
+                            param_matches = re.findall(r'\{(\w+)\}', cmd_name)
+                            for param in param_matches:
+                                params[param] = {
+                                    "type": "string",
+                                    "description": f"{param.replace('_', ' ').title()} parameter",
+                                    "required": True
+                                }
+                        
+                        commands[clean_cmd_name] = CommandDefinition(
+                            description=cmd_desc,
+                            execution_pattern="analyze → execute → validate",
+                            parameters=params,
+                            requires_confirmation=False,
+                            timeout_seconds=120
+                        )
+                elif isinstance(cmd_entry, str):
+                    # Parse command string format: "command-name: description"
+                    if ':' in cmd_entry:
+                        cmd_name, cmd_desc = cmd_entry.split(':', 1)
+                        cmd_name = cmd_name.strip().replace(' ', '-')
+                        cmd_desc = cmd_desc.strip()
+                    else:
+                        cmd_name = cmd_entry.strip().replace(' ', '-')
+                        cmd_desc = f"Execute {cmd_entry} command"
+                    
+                    # Extract parameters from command description if present
+                    params = {}
+                    if '{' in cmd_desc and '}' in cmd_desc:
+                        param_matches = re.findall(r'\{(\w+)\}', cmd_desc)
+                        for param in param_matches:
+                            params[param] = {
+                                "type": "string",
+                                "description": f"{param.replace('_', ' ').title()} parameter",
+                                "required": True
+                            }
+                    
+                    commands[cmd_name] = CommandDefinition(
+                        description=cmd_desc,
+                        execution_pattern="analyze → execute → validate",
+                        parameters=params,
+                        requires_confirmation=False,
+                        timeout_seconds=120
+                    )
         
         # Add default help command if no commands defined
         if not commands:
@@ -371,12 +434,13 @@ class BmadPersonaConverter:
             command_aliases={}
         )
         
-        # Create resource dependencies
+        # Create resource dependencies from BMad dependencies
+        bmad_dependencies = metadata.get('dependencies', {})
         resource_dependencies = ResourceDependencies(
-            knowledge_sources=metadata.get('knowledge_sources', []),
-            tasks=metadata.get('tasks', []),
-            tools=metadata.get('tools', []),
-            templates=metadata.get('templates', []),
+            knowledge_sources=bmad_dependencies.get('data', []),
+            tasks=bmad_dependencies.get('tasks', []),
+            tools=bmad_dependencies.get('tools', []),
+            templates=bmad_dependencies.get('templates', []),
             required_services=metadata.get('required_services', [])
         )
         
