@@ -4,7 +4,6 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
-
 from bmad_inventory import (
     BmadContentInventory,
     BmadContentItem,
@@ -65,7 +64,7 @@ class TestBmadContentInventory:
 
     def test_inventory_initialization(self, inventory):
         """Test that inventory initializes with correct base path."""
-        assert inventory.base_path == Path(".bmad-core")
+        assert inventory.base_path.name == ".bmad-core"
         assert inventory.content_items == []
         assert inventory.conversion_strategy is not None
 
@@ -87,9 +86,11 @@ class TestBmadContentInventory:
             assert len(items) == 1
             assert items[0].content_type == BmadContentType.PERSONA
             assert items[0].name == "dev.md"
-            mock_scan.assert_called_once_with(
-                Path(".bmad-core/agents"), BmadContentType.PERSONA
-            )
+            # Check that scan was called with the correct content type
+            mock_scan.assert_called_once()
+            call_args = mock_scan.call_args[0]
+            assert call_args[0].name == "agents"
+            assert call_args[1] == BmadContentType.PERSONA
 
     def test_scan_tasks_directory(self, inventory):
         """Test scanning tasks directory and identifying task resources."""

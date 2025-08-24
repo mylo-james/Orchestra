@@ -4,9 +4,9 @@ from pathlib import Path
 
 import pytest
 import yaml
-
 from bmad_inventory import BmadContentInventory
 from bmad_persona_converter import BmadPersonaConverter
+
 from orchestra.system.loader import PersonaLoader
 
 
@@ -37,7 +37,9 @@ class TestBmadPersonaConversionIntegration:
         target_personas = converter.identify_target_personas(bmad_personas)
 
         # Should have found the expected personas
-        assert len(target_personas) == 12  # We have 12 BMad personas
+        assert (
+            len(target_personas) == 10
+        )  # We have 10 target personas (excluding spec and tdd-dev)
 
         # Convert all personas
         results = converter.convert_all_personas(target_personas)

@@ -5,13 +5,13 @@ from pathlib import Path
 
 import pytest
 import yaml
-
 from bmad_inventory import BmadContentInventory
 from bmad_persona_converter import (
     BmadPersonaConverter,
     PersonaConversionResult,
     PersonaValidationError,
 )
+
 from orchestra.system.loader import PersonaLoader
 from orchestra.system.specs import PersonaSpec
 
@@ -163,16 +163,19 @@ class TestBmadPersonaConverter:
         """Test that conversion maintains backward compatibility (AC: 4)."""
         # Load existing Orchestra personas from workspace root
         import os
+
         original_cwd = os.getcwd()
         workspace_root = Path(__file__).parent.parent.parent
         os.chdir(workspace_root)
-        
+
         try:
             loader = PersonaLoader()
-            existing_personas = ["orchestrator", "dev", "master"]
+            existing_personas = [
+                "orchestrator",
+                "dev",
+            ]  # Only test personas that actually exist
 
-        for persona_id in existing_personas:
-            try:
+            for persona_id in existing_personas:
                 spec = loader.load_persona(persona_id)
                 assert (
                     spec is not None
@@ -181,11 +184,8 @@ class TestBmadPersonaConverter:
                 # Verify existing persona still validates
                 validation_result = converter.validate_persona_schema(spec)
                 assert validation_result.is_valid is True
-
-            except Exception as e:
-                # If persona doesn't exist, that's okay for this test
-                if "not found" not in str(e).lower():
-                    raise
+        finally:
+            os.chdir(original_cwd)
 
     def test_persona_load_performance(self, converter, inventory):
         """Test that personas load under 500ms performance requirement (AC: 5)."""
@@ -301,7 +301,7 @@ class TestBmadPersonaConverter:
 
     def test_error_handling_for_invalid_bmad_content(self, converter):
         """Test error handling when BMad content is invalid or corrupted."""
-        from orchestra.system.bmad_inventory import BmadContentItem, BmadContentType
+        from bmad_inventory import BmadContentItem, BmadContentType
 
         # Create an invalid BMad content item
         invalid_item = BmadContentItem(

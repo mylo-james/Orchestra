@@ -6,8 +6,8 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 import yaml
-
 from bmad_inventory import BmadContentItem, BmadContentType
+
 from orchestra.system.specs import (
     BehavioralContract,
     CommandDefinition,
@@ -97,7 +97,7 @@ class BmadPersonaConverter:
         """
         # Personas to exclude from conversion
         excluded_personas = {"spec.md", "tdd-dev.md"}
-        
+
         # Filter to only persona content types and exclude unwanted personas
         persona_items = [
             item

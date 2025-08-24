@@ -4,12 +4,7 @@ import json
 from pathlib import Path
 
 import pytest
-
-from bmad_inventory import (
-    BmadContentInventory,
-    BmadContentType,
-    ConversionStrategy,
-)
+from bmad_inventory import BmadContentInventory, BmadContentType, ConversionStrategy
 
 
 class TestBmadInventoryIntegration:
