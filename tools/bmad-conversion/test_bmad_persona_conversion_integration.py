@@ -16,7 +16,9 @@ class TestBmadPersonaConversionIntegration:
     @pytest.fixture
     def inventory(self):
         """Create inventory instance pointing to actual BMad directory."""
-        return BmadContentInventory(base_path=Path(".bmad-core"))
+        # Path relative to workspace root, not tools/bmad-conversion
+        workspace_root = Path(__file__).parent.parent.parent
+        return BmadContentInventory(base_path=workspace_root / ".bmad-core")
 
     @pytest.fixture
     def converter(self):

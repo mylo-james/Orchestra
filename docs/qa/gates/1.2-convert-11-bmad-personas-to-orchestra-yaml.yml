@@ -1,6 +1,6 @@
 schema: 1
 story: "1.2"
-story_title: "Convert 13 BMad Personas to Orchestra YAML Personas"
+story_title: "Convert 11 BMad Personas to Orchestra YAML Personas"
 gate: CONCERNS
 status_reason: "Schema validation and performance benchmarks not yet implemented."
 reviewer: "Quinn (Test Architect)"

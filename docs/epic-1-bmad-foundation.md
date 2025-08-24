@@ -5,7 +5,7 @@
 ## Stories
 
 - Story 1.1: BMad content inventory and conversion strategy
-- Story 1.2: Convert 13 BMad personas to Orchestra YAML personas
+- Story 1.2: Convert 11 BMad personas to Orchestra YAML personas
 - Story 1.3: Integrate tasks, templates, checklists as Orchestra resources
 - Story 1.4: Expand CLI persona selection; validate end-to-end execution
 - Story 1.5: Persona overlay merge engine (base → team → project precedence)

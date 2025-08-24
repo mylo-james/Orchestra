@@ -95,11 +95,15 @@ class BmadPersonaConverter:
         Returns:
             List of target personas to convert
         """
-        # Filter to only persona content types
+        # Personas to exclude from conversion
+        excluded_personas = {"spec.md", "tdd-dev.md"}
+        
+        # Filter to only persona content types and exclude unwanted personas
         persona_items = [
             item
             for item in bmad_personas
             if item.content_type == BmadContentType.PERSONA
+            and item.name not in excluded_personas
         ]
 
         # Sort by name for consistent ordering

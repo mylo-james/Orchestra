@@ -20,7 +20,9 @@ class TestBmadContentInventory:
     @pytest.fixture
     def inventory(self):
         """Create a BMad content inventory instance."""
-        return BmadContentInventory(base_path=Path(".bmad-core"))
+        # Path relative to workspace root, not tools/bmad-conversion
+        workspace_root = Path(__file__).parent.parent.parent
+        return BmadContentInventory(base_path=workspace_root / ".bmad-core")
 
     @pytest.fixture
     def mock_bmad_structure(self):
