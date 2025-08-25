@@ -105,9 +105,7 @@ class TestKnowledgeSharingActivitiesUnit:
     @pytest.mark.asyncio
     async def test_propagation_activity_business_logic(self):
         """Test propagation activity core business logic."""
-        from orchestra.temporal.activities.knowledge_sharing import (
-            propagation_activity,
-        )
+        from orchestra.temporal.activities.knowledge_sharing import propagation_activity
 
         shared_knowledge_list = [
             {
