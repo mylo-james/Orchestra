@@ -596,7 +596,7 @@ class MemoryService:
                             persona_id=metadata.get("persona_id", ""),
                             content=result.payload.get("content", ""),
                             embedding=(
-                                result.vector
+                                result.vector  # type: ignore[arg-type]
                                 if hasattr(result, "vector")
                                 and isinstance(result.vector, list)
                                 else [0.0] * 3072

@@ -303,14 +303,14 @@ class MemoryLearningIntegrationWorkflow:
                     },
                 }
 
-                store_result = await workflow.execute_child_workflow(
+                store_result = await workflow.execute_child_workflow(  # type: ignore[call-overload]
                     MemoryUpsertWorkflow.run,
                     memory_context,
                     patterns,
                     id=f"memory-store-{learning_outcome.get('outcome_id')}",
                 )
 
-                results["operations"].append(
+                results["operations"].append  # type: ignore[attr-defined](
                     {
                         "operation": "store_learning_outcome",
                         "result": store_result,
@@ -333,7 +333,7 @@ class MemoryLearningIntegrationWorkflow:
                     id=f"memory-retrieve-{learning_outcome.get('outcome_id')}",
                 )
 
-                results["operations"].append(
+                results["operations"].append  # type: ignore[attr-defined](
                     {
                         "operation": "retrieve_related_memories",
                         "result": retrieve_result,
@@ -342,7 +342,7 @@ class MemoryLearningIntegrationWorkflow:
 
             workflow.logger.info(
                 "Memory-learning integration workflow completed",
-                operations_count=len(results["operations"]),
+                operations_count=len(  # type: ignore[arg-type]results["operations"]),
             )
 
             return results
@@ -451,7 +451,7 @@ class MemoryKnowledgeSharingWorkflow:
                         },
                     }
 
-                    import_result = await workflow.execute_child_workflow(
+                    import_result = await workflow.execute_child_workflow(  # type: ignore[call-overload]
                         MemoryUpsertWorkflow.run,
                         memory_context,
                         patterns,
