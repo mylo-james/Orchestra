@@ -64,7 +64,7 @@ repos:
     hooks:
       - id: coverage-check
         name: Coverage check (minimum 90%)
-        entry: poetry run pytest --cov=orchestra --cov-fail-under=90 --cov-report=term-missing
+        entry: poetry run pytest -n auto --cov=orchestra --cov-fail-under=90 --cov-report=term-missing
         language: system
         pass_filenames: false
         files: ^(orchestra/.*\.py|tests/.*\.py)$
