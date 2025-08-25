@@ -1,6 +1,5 @@
 """Tests for UniversalAgent in system module."""
 
-import asyncio
 from unittest.mock import Mock, patch
 
 import pytest
@@ -199,6 +198,8 @@ class TestUniversalAgent:
         mock_persona_spec.get_command.return_value = mock_command
 
         # Mock the execution to timeout
+        import asyncio
+
         with patch.object(
             universal_agent, "_execute_pattern", side_effect=asyncio.TimeoutError()
         ):

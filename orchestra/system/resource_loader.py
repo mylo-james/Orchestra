@@ -215,7 +215,7 @@ class ResourceLoader:
         logger.debug(f"Validating resource: {metadata.id}")
 
         errors = []
-        warnings = []
+        warnings: list[str] = []
 
         try:
             # Basic metadata validation
@@ -280,7 +280,7 @@ class ResourceLoader:
                 ResourceType.CHECKLIST,
             ]:
                 result = self.load_resource(dep_id, resource_type)
-                if result.success:
+                if result.success and result.metadata:
                     resolved_dependencies.append(result.metadata)
                     break
             else:
@@ -428,7 +428,11 @@ class ResourceLoader:
             cached_result = self._cache[cache_key]
 
             # Check if hot-reload is enabled and file has changed
-            if self.hot_reload_enabled and cached_result.metadata:
+            if (
+                self.hot_reload_enabled
+                and cached_result.metadata
+                and cached_result.metadata.provenance
+            ):
                 file_path = Path(cached_result.metadata.provenance)
                 if file_path.exists():
                     current_mtime = file_path.stat().st_mtime
@@ -451,9 +455,8 @@ class ResourceLoader:
     ):
         """Cache a resource result."""
         with self._cache_lock:
-            cache_key = self._generate_cache_key(
-                resource_id, resource_type, result.metadata.version
-            )
+            version = result.metadata.version if result.metadata else "unknown"
+            cache_key = self._generate_cache_key(resource_id, resource_type, version)
             self._cache[cache_key] = result
 
             # Store file timestamp for hot-reload

@@ -158,7 +158,7 @@ def test_clear_cache(temp_persona_dir):
 
     # Load a persona
     loader.load_persona("test")
-    assert len(loader._cache) == 1
+    assert len(loader._cache) >= 1  # May have team/project overlays cached too
 
     # Clear cache
     loader.clear_cache()

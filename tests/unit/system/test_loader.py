@@ -174,8 +174,8 @@ class TestPersonaLoader:
         assert "code" in persona.command_interface.commands
 
         # Verify caching
-        assert "test-dev" in loader._cache
-        assert loader._cache["test-dev"] == persona
+        assert "base:test-dev" in loader._cache  # Cache keys now include context
+        assert loader._cache["base:test-dev"] == persona
 
     @patch("builtins.open", new_callable=mock_open)
     @patch("yaml.safe_load")

@@ -387,7 +387,7 @@ class OverlayMergeEngine:
         overlay_type: OverlayType,
     ) -> tuple[ResourceDependencies, List[MergeConflict]]:
         """Merge resource dependencies section."""
-        conflicts = []
+        conflicts: list[MergeConflict] = []
 
         # List fields to merge
         list_fields = [
@@ -567,8 +567,16 @@ class OverlayMergeEngine:
             team_id=team_overlay.context_id if team_overlay else None,
             project_id=project_overlay.context_id if project_overlay else None,
             base_version="v1",  # TODO: Get actual version
-            team_version=team_overlay.version_hash if team_overlay else "none",
-            project_version=project_overlay.version_hash if project_overlay else "none",
+            team_version=(
+                team_overlay.version_hash
+                if team_overlay and team_overlay.version_hash
+                else "none"
+            ),
+            project_version=(
+                project_overlay.version_hash
+                if project_overlay and project_overlay.version_hash
+                else "none"
+            ),
         )
 
     def _cache_result(self, cache_key: str, result: MergeResult):

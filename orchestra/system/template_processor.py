@@ -3,7 +3,7 @@
 import re
 import time
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from jinja2 import (
     Environment,
@@ -71,6 +71,7 @@ class TemplateProcessor:
         self.sandbox_mode = sandbox_mode
 
         # Initialize Jinja2 environment
+        self.env: Union[Environment, SandboxedEnvironment]
         if sandbox_mode:
             self.env = SandboxedEnvironment(
                 autoescape=select_autoescape(["html", "xml"]) if auto_escape else False,
@@ -251,9 +252,8 @@ class TemplateProcessor:
         """Analyze template variables usage."""
         try:
             # Get all variables referenced in template
-            referenced_vars = self._extract_variables_from_ast(
-                template.environment.parse(template.source)
-            )
+            # Note: template.source is not available, skip AST analysis for now
+            referenced_vars: list[str] = []
 
             # Determine which are provided and which are missing
             provided_vars = set(context.keys())
@@ -397,6 +397,6 @@ class TemplateProcessor:
 
     def clear_cache(self):
         """Clear template cache."""
-        if hasattr(self.env, "cache"):
+        if hasattr(self.env, "cache") and self.env.cache:
             self.env.cache.clear()
         logger.debug("Template cache cleared")

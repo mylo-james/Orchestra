@@ -358,7 +358,23 @@ class CircuitBreakerRegistry:
         if name not in self._breakers:
             self._breakers[name] = CircuitBreaker(name, config)
             logger.info(f"Created circuit breaker for service: {name}")
+        elif config is not None:
+            # If config is provided and different from existing, recreate
+            existing_breaker = self._breakers[name]
+            if existing_breaker.config != config:
+                logger.info(
+                    f"Recreating circuit breaker for service: {name} with new config"
+                )
+                self._breakers[name] = CircuitBreaker(name, config)
 
+        return self._breakers[name]
+
+    def force_recreate(
+        self, name: str, config: Optional[CircuitBreakerConfig] = None
+    ) -> CircuitBreaker:
+        """Force recreation of a circuit breaker with new configuration."""
+        self._breakers[name] = CircuitBreaker(name, config)
+        logger.info(f"Force recreated circuit breaker for service: {name}")
         return self._breakers[name]
 
     def get_all_stats(self) -> Dict[str, Dict[str, Any]]:
@@ -385,7 +401,9 @@ _registry = CircuitBreakerRegistry()
 
 
 def get_circuit_breaker(
-    service_name: str, config: Optional[CircuitBreakerConfig] = None
+    service_name: str,
+    config: Optional[CircuitBreakerConfig] = None,
+    force_recreate: bool = False,
 ) -> CircuitBreaker:
     """
     Get circuit breaker for a service.
@@ -393,10 +411,13 @@ def get_circuit_breaker(
     Args:
         service_name: Name of the external service
         config: Optional configuration (uses defaults if not provided)
+        force_recreate: Force recreation of the circuit breaker with new config
 
     Returns:
         Circuit breaker instance for the service
     """
+    if force_recreate:
+        return _registry.force_recreate(service_name, config)
     return _registry.get_or_create(service_name, config)
 
 
@@ -485,7 +506,7 @@ def get_openai_circuit_breaker() -> CircuitBreaker:
         max_retry_attempts=2,  # Don't overwhelm OpenAI
         request_timeout=60.0,  # OpenAI can be slow
     )
-    return get_circuit_breaker("openai_api", config)
+    return get_circuit_breaker("openai_api", config, force_recreate=True)
 
 
 def get_temporal_circuit_breaker() -> CircuitBreaker:
@@ -498,7 +519,7 @@ def get_temporal_circuit_breaker() -> CircuitBreaker:
         max_retry_attempts=3,  # Temporal handles retries well
         request_timeout=45.0,  # Temporal operations can be slow
     )
-    return get_circuit_breaker("temporal_cloud", config)
+    return get_circuit_breaker("temporal_cloud", config, force_recreate=True)
 
 
 def get_qdrant_circuit_breaker() -> CircuitBreaker:
@@ -511,7 +532,7 @@ def get_qdrant_circuit_breaker() -> CircuitBreaker:
         max_retry_attempts=3,  # Reasonable for vector DB
         request_timeout=15.0,  # Local vector queries should be very fast
     )
-    return get_circuit_breaker("qdrant_vector_db", config)
+    return get_circuit_breaker("qdrant_vector_db", config, force_recreate=True)
 
 
 def get_github_circuit_breaker() -> CircuitBreaker:
@@ -524,7 +545,7 @@ def get_github_circuit_breaker() -> CircuitBreaker:
         max_retry_attempts=2,  # Respect GitHub rate limits
         request_timeout=30.0,  # GitHub usually fast
     )
-    return get_circuit_breaker("github_api", config)
+    return get_circuit_breaker("github_api", config, force_recreate=True)
 
 
 # Convenience functions for AI agents

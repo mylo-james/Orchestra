@@ -1,11 +1,12 @@
 # Orchestra AI Agent System Makefile
-.PHONY: help install test lint format security ci clean docker docs test-fast test-safe test-coverage
+.PHONY: help setup install test lint format security ci clean docker docs test-fast test-safe test-coverage
 
 help:
 	@echo "Orchestra AI Agent System"
 	@echo ""
 	@echo "Available targets:"
 	@echo "  help        - Show this help message"
+	@echo "  setup       - Check and fix environment setup automatically"
 	@echo "  install     - Install dependencies"
 	@echo "  test        - Run all tests (SAFE - with timeout protection)"
 	@echo "  test-fast   - Run all tests quickly (may hang)"
@@ -22,6 +23,12 @@ help:
 	@echo "  security    - Run security checks"
 	@echo "  clean       - Clean build artifacts"
 	@echo "  ci          - Run complete CI pipeline"
+
+# Setup Check & Auto-Fix
+setup:
+	@echo "🔧 Checking and fixing Orchestra development environment..."
+	@python scripts/setup-check.py
+	@echo ""
 
 # Installation
 install:

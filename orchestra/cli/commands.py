@@ -19,8 +19,17 @@ from orchestra.system.factory import get_registry
 from orchestra.system.loader import PersonaLoader
 
 sys.path.append(str(Path(__file__).parent.parent.parent / "tools" / "bmad-conversion"))
-from bmad_inventory import BmadContentInventory
-from bmad_persona_converter import BmadPersonaConverter
+
+# BMad imports with fallbacks for missing modules
+try:
+    from bmad_inventory import BmadContentInventory  # type: ignore
+except ImportError:
+    BmadContentInventory = None  # type: ignore
+
+try:
+    from bmad_persona_converter import BmadPersonaConverter  # type: ignore
+except ImportError:
+    BmadPersonaConverter = None  # type: ignore
 
 from orchestra.system.resource_loader import ResourceLoader, ResourceType
 from orchestra.system.task_engine import TaskEngine
@@ -41,12 +50,51 @@ dev_cmd = typer.Typer(help="Development tools and utilities")
 bmad_cmd = typer.Typer(help="BMad content management commands")
 
 
+def create_basic_command_group(name: str, help_text: str) -> typer.Typer:
+    """
+    Create a basic command group for testing purposes.
+
+    Args:
+        name: Name of the command group
+        help_text: Help text for the command group
+
+    Returns:
+        Typer app instance with basic commands
+    """
+    app = typer.Typer(
+        name=name,
+        help=f"{help_text} ({name})",
+        rich_markup_mode="rich",
+        context_settings={"help_option_names": ["-h", "--help"]},
+    )
+
+    @app.command("list")
+    def list_items():
+        """List basic information for this command group."""
+        console.print(f"[green]Available commands in {name}:[/green]")
+        console.print("- list: Show this list")
+        console.print("- help: Show help information")
+        console.print(f"\n[dim]Command group: {name}[/dim]")
+        console.print(f"[dim]Description: {help_text}[/dim]")
+
+    @app.command("status")
+    def status():
+        """Show status information."""
+        console.print(f"[blue]Status for {name}:[/blue]")
+        console.print("✅ Operational")
+        console.print(f"[dim]Group: {name}[/dim]")
+
+    return app
+
+
 @agent_cmd.command("list")
 def list_agents():
     """List all available agents."""
     try:
         registry = get_registry()
-        agents = registry.list_agents()
+        agents: list = (
+            getattr(registry, "list_agents", lambda: [])() if registry else []
+        )
 
         if not agents:
             console.print(warning_panel("No agents found"))
@@ -74,7 +122,9 @@ def agent_status(name: str):
     """Get status of a specific agent."""
     try:
         registry = get_registry()
-        agent = registry.get_agent(name)
+        agent = (
+            getattr(registry, "get_agent", lambda x: None)(name) if registry else None
+        )
 
         if not agent:
             console.print(error_panel(f"Agent '{name}' not found"))
@@ -321,7 +371,11 @@ def search_personas(keyword: str):
 
                 # Check core principles
                 for principle in persona_spec.behavioral_contract.core_principles:
-                    if keyword_lower in principle.lower():
+                    # Handle both string and dict principle formats
+                    principle_text = (
+                        principle if isinstance(principle, str) else str(principle)
+                    )
+                    if keyword_lower in principle_text.lower():
                         matches.append((persona_id, persona_path, "Principle match"))
                         break
 
@@ -507,7 +561,7 @@ def list_persona_commands():
         for cmd_name, cmd_def in commands.items():
             description = (
                 cmd_def.description
-                if hasattr(cmd_def, "description")
+                if hasattr(cmd_def, "description") and cmd_def.description
                 else "No description"
             )
 
@@ -527,7 +581,12 @@ def list_persona_commands():
             else:
                 param_str = "None"
 
-            table.add_row(cmd_name, description, param_str)
+            # Ensure all values are strings
+            cmd_name_str = str(cmd_name) if cmd_name else "Unknown"
+            description_str = str(description) if description else "No description"
+            param_str = str(param_str) if param_str else "None"
+
+            table.add_row(cmd_name_str, description_str, param_str)
 
         console.print(table)
         console.print("Use 'orchestra agent exec <command>' to execute a command")
@@ -706,6 +765,9 @@ def run_persona_task(
             raise typer.Exit(1)
 
         # Execute the task
+        if result.metadata is None or result.content is None:
+            console.print(error_panel("Task metadata or content is missing"))
+            raise typer.Exit(1)
         execution_result = engine.execute_task(result.metadata, result.content, context)
 
         # Display results
@@ -804,6 +866,9 @@ def render_persona_template(
             raise typer.Exit(1)
 
         # Render the template
+        if result.metadata is None or result.content is None:
+            console.print(error_panel("Template metadata or content is missing"))
+            raise typer.Exit(1)
         render_result = processor.render_template(
             result.metadata, result.content, template_context
         )
@@ -824,12 +889,13 @@ def render_persona_template(
             # Output rendered content
             if output_file:
                 with open(output_file, "w") as f:
-                    f.write(render_result.rendered_content)
+                    content = render_result.rendered_content or ""
+                    f.write(content)
                 console.print(f"Rendered content saved to: {output_file}")
             else:
                 console.print("\n[bold]Rendered Content:[/bold]")
                 console.print(
-                    Panel(render_result.rendered_content, title="Template Output")
+                    Panel(render_result.rendered_content or "", title="Template Output")
                 )
         else:
             console.print(error_panel("Template rendering failed"))
@@ -913,6 +979,9 @@ def execute_persona_checklist(
             raise typer.Exit(1)
 
         # Execute the checklist
+        if result.metadata is None or result.content is None:
+            console.print(error_panel("Checklist metadata or content is missing"))
+            raise typer.Exit(1)
         execution_result = engine.execute_checklist(
             result.metadata, result.content, context
         )
@@ -1013,7 +1082,7 @@ def bmad_inventory(
         )
 
         # Create inventory instance
-        inventory = BmadContentInventory(base_path=Path(base_path))
+        inventory = BmadContentInventory(base_path=Path(base_path or ".bmad-core"))
 
         # Perform full scan
         inventory.scan_all()
@@ -1095,7 +1164,7 @@ def convert_persona(
         console.print(info_panel(f"Converting BMad persona: {persona_name}"))
 
         # Create inventory and scan agents
-        inventory = BmadContentInventory(base_path=Path(base_path))
+        inventory = BmadContentInventory(base_path=Path(base_path or ".bmad-core"))
         agents = inventory.scan_agents()
 
         # Find the specified persona
@@ -1185,8 +1254,10 @@ def convert_all_personas(
         )
 
         # Create inventory and converter
-        inventory = BmadContentInventory(base_path=Path(base_path))
-        converter = BmadPersonaConverter(output_directory=Path(output_dir))
+        inventory = BmadContentInventory(base_path=Path(base_path or ".bmad-core"))
+        converter = BmadPersonaConverter(
+            output_directory=Path(output_dir or "orchestra/personas")
+        )
 
         # Scan for BMad personas
         bmad_personas = inventory.scan_agents()
@@ -1215,7 +1286,7 @@ def convert_all_personas(
             return
 
         # Check if output directory exists and has files
-        output_path = Path(output_dir)
+        output_path = Path(output_dir or "orchestra/personas")
         if output_path.exists() and list(output_path.glob("*.yaml")) and not force:
             console.print(
                 warning_panel(f"Output directory {output_dir} contains YAML files")
@@ -1422,7 +1493,7 @@ def list_resources(
         console.print(info_panel(f"Listing BMad resources from {base_path}"))
 
         # Create resource loader
-        loader = ResourceLoader(base_path=Path(base_path))
+        loader = ResourceLoader(base_path=Path(base_path or ".bmad-core"))
 
         # Determine which resource types to list
         if resource_type:
@@ -1499,8 +1570,8 @@ def execute_task(
         console.print(info_panel(f"Executing task: {task_id}"))
 
         # Create resource loader and task engine
-        loader = ResourceLoader(base_path=Path(base_path))
-        engine = TaskEngine(execution_timeout=timeout)
+        loader = ResourceLoader(base_path=Path(base_path or ".bmad-core"))
+        engine = TaskEngine(execution_timeout=timeout or 30)
 
         # Load the task
         result = loader.load_resource(task_id, ResourceType.TASK)
@@ -1531,6 +1602,9 @@ def execute_task(
 
         # Execute the task
         console.print(info_panel("Starting task execution..."))
+        if result.metadata is None or result.content is None:
+            console.print(error_panel("Task metadata or content is missing"))
+            raise typer.Exit(1)
         execution_result = engine.execute_task(result.metadata, result.content, context)
 
         # Display results
@@ -1587,7 +1661,7 @@ def render_template(
         console.print(info_panel(f"Rendering template: {template_id}"))
 
         # Create resource loader and template processor
-        loader = ResourceLoader(base_path=Path(base_path))
+        loader = ResourceLoader(base_path=Path(base_path or ".bmad-core"))
         processor = TemplateProcessor()
 
         # Load the template
@@ -1615,6 +1689,9 @@ def render_template(
 
         # Render the template
         console.print(info_panel("Rendering template..."))
+        if result.metadata is None or result.content is None:
+            console.print(error_panel("Template metadata or content is missing"))
+            raise typer.Exit(1)
         render_result = processor.render_template(
             result.metadata, result.content, context
         )
@@ -1635,12 +1712,13 @@ def render_template(
             # Output rendered content
             if output_file:
                 with open(output_file, "w") as f:
-                    f.write(render_result.rendered_content)
+                    content = render_result.rendered_content or ""
+                    f.write(content)
                 console.print(f"Rendered content saved to: {output_file}")
             else:
                 console.print("\n[bold]Rendered Content:[/bold]")
                 console.print(
-                    Panel(render_result.rendered_content, title="Template Output")
+                    Panel(render_result.rendered_content or "", title="Template Output")
                 )
         else:
             console.print(error_panel("Template rendering failed"))
@@ -1678,7 +1756,7 @@ def execute_checklist(
         console.print(info_panel(f"Executing checklist: {checklist_id}"))
 
         # Create resource loader and checklist engine
-        loader = ResourceLoader(base_path=Path(base_path))
+        loader = ResourceLoader(base_path=Path(base_path or ".bmad-core"))
         engine = ChecklistEngine(auto_check_enabled=auto_check)
 
         # Load the checklist
@@ -1706,6 +1784,9 @@ def execute_checklist(
 
         # Execute the checklist
         console.print(info_panel("Executing checklist..."))
+        if result.metadata is None or result.content is None:
+            console.print(error_panel("Checklist metadata or content is missing"))
+            raise typer.Exit(1)
         execution_result = engine.execute_checklist(
             result.metadata, result.content, context
         )
@@ -1741,7 +1822,7 @@ def execute_checklist(
             else:
                 console.print("\n[bold]Checklist Report:[/bold]")
                 if report_format == "markdown":
-                    console.print(Panel(report, title="Checklist Report"))
+                    console.print(Panel(report or "", title="Checklist Report"))
                 else:
                     console.print(report)
         else:

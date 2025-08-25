@@ -133,7 +133,7 @@ class PersonaLoader:
                 project_overlay=project_overlay,
             )
 
-            if merge_result.success:
+            if merge_result.success and merge_result.merged_persona:
                 merged_persona = merge_result.merged_persona
 
                 # Log conflicts if any

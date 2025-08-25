@@ -110,7 +110,14 @@ class TaskEngine:
                     )
 
                     result.success = True
-                    result.outputs.update(execution_result.get("outputs", {}))
+
+                    # Handle outputs safely
+                    raw_outputs = execution_result.get("outputs")
+                    if raw_outputs and isinstance(raw_outputs, dict):
+                        if result.outputs is None:
+                            result.outputs = {}
+                        result.outputs.update(raw_outputs)
+
                     result.steps_completed = execution_result.get("steps_completed", 0)
 
                     if execution_result.get("warnings"):

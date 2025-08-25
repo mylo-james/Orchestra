@@ -48,8 +48,9 @@ class UniversalAgent(SecureAgent):
         self.persona_id = persona_id
 
         # Initialize base agent with persona name
-        super().__init__()
-        self.agent_name = f"universal_{persona_id}"
+        agent_name = f"universal_{persona_id}"
+        super().__init__(name=agent_name)
+        self.agent_name = agent_name
 
         # Configure agent based on persona
         self._configure_from_persona()

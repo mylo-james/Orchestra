@@ -156,7 +156,7 @@ class ChecklistEngine:
 
     def _parse_checklist_items(self, content: str) -> List[ChecklistItem]:
         """Parse checklist items from markdown content."""
-        items = []
+        items: list[ChecklistItem] = []
         current_section = None
         line_number = 0
 
@@ -294,15 +294,23 @@ class ChecklistEngine:
             elif ">" in rule:
                 left, right = rule.split(">", 1)
                 left_val = self._get_context_value(left.strip(), context)
-                right_val = float(right.strip())
-                return float(left_val) > right_val
+                try:
+                    right_num = float(right.strip())
+                    left_num = float(left_val)
+                    return left_num > right_num
+                except (ValueError, TypeError):
+                    return False
 
             # Handle less than checks
             elif "<" in rule:
                 left, right = rule.split("<", 1)
                 left_val = self._get_context_value(left.strip(), context)
-                right_val = float(right.strip())
-                return float(left_val) < right_val
+                try:
+                    right_num = float(right.strip())
+                    left_num = float(left_val)
+                    return left_num < right_num
+                except (ValueError, TypeError):
+                    return False
 
             # Handle boolean checks
             else:
@@ -324,7 +332,7 @@ class ChecklistEngine:
             # Handle nested keys like 'obj.attr'
             if "." in key:
                 keys = key.split(".")
-                value = context
+                value: Any = context
                 for k in keys:
                     if isinstance(value, dict):
                         value = value.get(k)
@@ -342,7 +350,7 @@ class ChecklistEngine:
         self, items: List[ChecklistItem], context: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Validate checklist completion against context."""
-        validation_results = {
+        validation_results: Dict[str, Any] = {
             "overall_valid": True,
             "required_items_complete": True,
             "validation_errors": [],
@@ -445,7 +453,7 @@ class ChecklistEngine:
                 lines.append("")
 
         # Group items by section
-        sections = {}
+        sections: dict[str, list[ChecklistItem]] = {}
         for item in result.items:
             section = item.section or "General"
             if section not in sections:

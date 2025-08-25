@@ -7,8 +7,8 @@ tracing, and proper tool integration. All operations are async for Temporal comp
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
-from typing import Any, Dict, Optional, TypeVar
+from dataclasses import dataclass, field
+from typing import Any, Callable, Dict, Optional, TypeVar
 
 from openai import AsyncOpenAI
 
@@ -28,11 +28,7 @@ class AgentContext:
     correlation_id: str
     agent_name: str
     session_id: Optional[str] = None
-    metadata: Dict[str, Any] = None
-
-    def __post_init__(self):
-        if self.metadata is None:
-            self.metadata = {}
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
 
 class SecureAgent:
@@ -58,22 +54,28 @@ class SecureAgent:
             session_id: Session ID for state management
         """
         self.name = name
-        self.correlation_id = (
-            correlation_id
-            or f"agent-{name}-{asyncio.current_task().get_name() if asyncio.current_task() else 'sync'}"
-        )
+        if correlation_id:
+            self.correlation_id = correlation_id
+        else:
+            try:
+                current_task = asyncio.current_task()
+                task_name = current_task.get_name() if current_task else "sync"
+            except RuntimeError:
+                # No event loop running
+                task_name = "sync"
+            self.correlation_id = f"agent-{name}-{task_name}"
         self.session_id = session_id
         self.settings = get_settings()
-        self.monitor = AgentMonitor()
-        self.client = AsyncOpenAI(api_key=self.settings.openai_api_key)
+        self.monitor = AgentMonitor(agent_name=name)
+        self.client = AsyncOpenAI(api_key=self.settings.openai.api_key)
 
         # Set logging context
-        set_agent_context(self.name, self.correlation_id)
+        set_agent_context(self.name)
 
         logger.info(f"Initialized SecureAgent: {name}")
 
     async def execute_with_monitoring(
-        self, operation: str, func: callable, *args, **kwargs
+        self, operation: str, func: Callable[..., Any], *args, **kwargs
     ) -> Any:
         """
         Execute an operation with monitoring and error handling.
@@ -87,14 +89,7 @@ class SecureAgent:
         Returns:
             Result of the function execution
         """
-        try:
-            # Start monitoring
-            await self.monitor.start_operation(
-                agent_name=self.name,
-                operation=operation,
-                correlation_id=self.correlation_id,
-            )
-
+        async with self.monitor.time(operation):
             logger.info(f"Starting operation: {operation}")
 
             # Execute the function
@@ -103,27 +98,8 @@ class SecureAgent:
             else:
                 result = func(*args, **kwargs)
 
-            # Record success
-            await self.monitor.record_success(
-                agent_name=self.name,
-                operation=operation,
-                correlation_id=self.correlation_id,
-            )
-
             logger.info(f"Completed operation: {operation}")
             return result
-
-        except Exception as e:
-            # Record failure
-            await self.monitor.record_failure(
-                agent_name=self.name,
-                operation=operation,
-                error=str(e),
-                correlation_id=self.correlation_id,
-            )
-
-            logger.error(f"Failed operation {operation}: {e}")
-            raise
 
     async def validate_input(self, input_data: Any) -> bool:
         """
@@ -179,7 +155,7 @@ class SecureAgent:
 class FunctionTool:
     """Simple function tool wrapper for compatibility."""
 
-    def __init__(self, name: str, description: str, func: callable):
+    def __init__(self, name: str, description: str, func: Callable[..., Any]):
         """Initialize function tool."""
         self.name = name
         self.description = description
