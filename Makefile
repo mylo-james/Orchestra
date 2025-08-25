@@ -27,7 +27,7 @@ help:
 # Setup Check & Auto-Fix
 setup:
 	@echo "🔧 Checking and fixing Orchestra development environment..."
-	@python scripts/setup-check.py
+	@python3 scripts/setup-check.py
 	@echo ""
 
 # Installation
