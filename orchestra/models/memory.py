@@ -187,8 +187,6 @@ class RetentionPolicy:
     def classify_memory(self, memory_record: MemoryRecord) -> Dict[str, Any]:
         """Classify memory for retention decision."""
         age_days = (datetime.utcnow() - memory_record.created_at).days
-        relevance = memory_record.relevance_score
-        usage_count = memory_record.metadata.get("usage_count", 0)
 
         # Check rules for classification
         for rule_name, rule_config in self.rules.items():

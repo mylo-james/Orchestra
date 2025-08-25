@@ -198,8 +198,6 @@ class PropagationRule:
                 f"effectiveness_score too low: {knowledge.effectiveness_score} < {min_effectiveness}"
             )
 
-        # Check transferability score threshold
-        min_transferability = self.conditions.get("min_transferability_score", 0.0)
         # Note: This would need to be calculated for specific target persona
 
         # Check source persona whitelist

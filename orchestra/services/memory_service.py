@@ -710,7 +710,7 @@ class MemoryService:
         """Perform health check on memory service."""
         try:
             # Check Qdrant connection
-            collections = self.client.get_collections()
+            self.client.get_collections()
             qdrant_healthy = True
         except Exception:
             qdrant_healthy = False
