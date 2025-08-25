@@ -53,13 +53,14 @@ class AgentMonitor:
         start = time.perf_counter()
         try:
             yield
-        except Exception:
+        except Exception as e:
             duration_ms = (time.perf_counter() - start) * 1000.0
             self.emit(
                 AgentMetric(
                     name=name, duration_ms=duration_ms, success=False, details=details
                 )
             )
+            logger.error(f"Error in monitored operation '{name}': {e}")
             raise
         else:
             duration_ms = (time.perf_counter() - start) * 1000.0

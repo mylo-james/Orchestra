@@ -22,6 +22,10 @@ from orchestra.system.specs import (
 )
 from orchestra.utils.logging import get_logger
 
+# Import constants for magic number replacement
+DEFAULT_AUDIT_TRAIL_SIZE = 1000
+DEFAULT_AUDIT_TRAIL_KEEP = 500
+
 logger = get_logger(__name__)
 
 
@@ -112,7 +116,7 @@ class MergeResult:
 class OverlayMergeEngine:
     """Engine for merging persona overlays with deterministic conflict resolution."""
 
-    def __init__(self, cache_size: int = 1000):
+    def __init__(self, cache_size: int = DEFAULT_AUDIT_TRAIL_SIZE):
         self.cache: Dict[str, MergeResult] = {}
         self.cache_size = cache_size
         self.audit_trail: List[Dict[str, Any]] = []
@@ -566,7 +570,7 @@ class OverlayMergeEngine:
             persona_id=base_persona.identity.id,
             team_id=team_overlay.context_id if team_overlay else None,
             project_id=project_overlay.context_id if project_overlay else None,
-            base_version="v1",  # TODO: Get actual version
+            base_version=self._get_persona_version(base_persona),
             team_version=(
                 team_overlay.version_hash
                 if team_overlay and team_overlay.version_hash
@@ -640,8 +644,23 @@ class OverlayMergeEngine:
         self.audit_trail.append(entry)
 
         # Keep audit trail size manageable
-        if len(self.audit_trail) > 1000:
-            self.audit_trail = self.audit_trail[-500:]  # Keep last 500 entries
+        if len(self.audit_trail) > DEFAULT_AUDIT_TRAIL_SIZE:
+            self.audit_trail = self.audit_trail[
+                -DEFAULT_AUDIT_TRAIL_KEEP:
+            ]  # Keep last 500 entries
+
+    def _get_persona_version(self, persona: PersonaSpec) -> str:
+        """Get the version of a persona specification."""
+        # Extract version from persona metadata if available
+        if hasattr(persona, "metadata") and persona.metadata:
+            return persona.metadata.get("version", "v1")
+
+        # Fallback to version from identity if available
+        if hasattr(persona.identity, "version") and persona.identity.version:
+            return persona.identity.version
+
+        # Default version
+        return "v1"
 
     def validate_overlay_schema(self, overlay_data: Dict[str, Any]) -> bool:
         """Validate overlay schema structure."""

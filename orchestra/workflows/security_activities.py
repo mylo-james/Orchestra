@@ -200,8 +200,15 @@ async def validate_agent_output_activity(params: Dict[str, Any]) -> Dict[str, An
     # In actual implementation, this would be properly instantiated
     try:
         _ = AIAgentValidator(agent_id=agent_type or "unknown")
-    except Exception:  # nosec B110
+    except (ValueError, ImportError, AttributeError):  # nosec B110
         # Fallback if validator fails to initialize - expected behavior
+        logger.debug(
+            "AIAgentValidator initialization failed, using fallback validation"
+        )
+        pass
+    except Exception as e:  # nosec B110
+        # Unexpected error in validator initialization
+        logger.warning(f"Unexpected error initializing AIAgentValidator: {e}")
         pass
 
     # Validate output structure

@@ -532,7 +532,7 @@ class TestSecureAIAgentExample:
 
         # Should generate generic code template
         assert "# Generated code for: create a function" in result
-        assert "pass  # TODO: Implement" in result
+        assert "Implementation pending - using placeholder" in result
 
     def test_generate_code_with_input_validation_failure(self, secure_agent):
         """Test generate_code blocks on input validation failure."""

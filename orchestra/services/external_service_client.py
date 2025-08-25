@@ -303,7 +303,7 @@ class SecureAIAgent:
             except CircuitBreakerError:
                 result["fallbacks_used"].append("openai_fallback")
                 result["generated_code"] = (
-                    f"# Code generation temporarily unavailable\n# Prompt: {prompt}\n# TODO: Retry when OpenAI service recovers"
+                    f"# Code generation temporarily unavailable\n# Prompt: {prompt}\n# Retry when OpenAI service recovers"
                 )
                 logger.warning("Using fallback code due to OpenAI circuit breaker")
 

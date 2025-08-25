@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional
 from temporalio import workflow
 from temporalio.common import RetryPolicy
 
+from orchestra.utils.logging import get_logger
 from orchestra.workflows.activities import (
     create_github_pr_activity,
     execute_agent_activity,
@@ -18,6 +19,8 @@ from orchestra.workflows.security_activities import (
     audit_log_activity,
     validate_security_activity,
 )
+
+logger = get_logger(__name__)
 
 
 class AgentType(str, Enum):
@@ -368,10 +371,11 @@ class DevTeamWorkflow:
         """Get current timestamp - testable helper method."""
         try:
             return workflow.now().timestamp()
-        except Exception:
+        except Exception as e:
             # Fallback for testing environments without Temporal
             import time
 
+            logger.debug(f"Using fallback timestamp due to Temporal error: {e}")
             return time.time()
 
     async def _audit_workflow_completion(self) -> None:

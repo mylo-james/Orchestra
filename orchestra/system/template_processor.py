@@ -343,7 +343,10 @@ class TemplateProcessor:
                     return obj.get(key, default)
                 else:
                     return getattr(obj, key, default)
-            except Exception:
+            except (KeyError, AttributeError, TypeError):
+                return default
+            except Exception as e:
+                logger.debug(f"Unexpected error in safe_get for key '{key}': {e}")
                 return default
 
         # Register filters

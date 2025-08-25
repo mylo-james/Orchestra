@@ -343,7 +343,10 @@ class ChecklistEngine:
                 return value
             else:
                 return context.get(key)
-        except Exception:
+        except (KeyError, AttributeError, TypeError):
+            return None
+        except Exception as e:
+            logger.debug(f"Unexpected error accessing context key '{key}': {e}")
             return None
 
     def _validate_checklist_completion(

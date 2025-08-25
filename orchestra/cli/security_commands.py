@@ -12,9 +12,11 @@ from rich.console import Console
 from rich.table import Table
 
 from orchestra.security.ai_agent_monitor import AIAgentSecurityMonitor
+from orchestra.utils.logging import get_logger
 
 # Initialize console for rich output
 console = Console()
+logger = get_logger(__name__)
 
 # Create security CLI app
 security_app = typer.Typer(
@@ -315,8 +317,16 @@ def test_security_monitoring():
         )
         console.print("• Security reporting: ✅ Working")
 
-    except Exception as e:
+    except (ValueError, OSError, PermissionError) as e:
         console.print(f"[red]❌ Security monitoring test failed: {e}[/red]")
+        raise typer.Exit(1)
+    except Exception as e:
+        console.print(
+            f"[red]❌ Unexpected error in security monitoring test: {e}[/red]"
+        )
+        logger.error(
+            f"Unexpected error in security monitoring test: {e}", exc_info=True
+        )
         raise typer.Exit(1)
 
 
@@ -349,8 +359,12 @@ def generate_security_report(
 
             console.print(json.dumps(report, indent=2, default=str))
 
-    except Exception as e:
+    except (ValueError, OSError, PermissionError) as e:
         console.print(f"[red]❌ Error generating security report: {e}[/red]")
+        raise typer.Exit(1)
+    except Exception as e:
+        console.print(f"[red]❌ Unexpected error generating security report: {e}[/red]")
+        logger.error(f"Unexpected error generating security report: {e}", exc_info=True)
         raise typer.Exit(1)
 
 
@@ -382,7 +396,10 @@ def security_health_check() -> bool:
 
         return True
 
-    except Exception:
+    except (ValueError, OSError, PermissionError):
+        return False
+    except Exception as e:
+        logger.error(f"Unexpected error in security health check: {e}", exc_info=True)
         return False
 
 

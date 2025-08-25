@@ -3,6 +3,15 @@
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+# Common timeout and limit constants
+DEFAULT_TIMEOUT_SECONDS = 300  # 5 minutes
+DEFAULT_CACHE_SIZE = 1000
+DEFAULT_CONTEXT_WINDOW_SIZE = 4096
+DEFAULT_MAX_TOKENS = 2000
+DEFAULT_EMBEDDING_DIMENSION = 3072
+DEFAULT_AUDIT_TRAIL_SIZE = 1000
+DEFAULT_AUDIT_TRAIL_KEEP = 500
+
 
 class DatabaseSettings(BaseSettings):
     """Database configuration settings."""
@@ -45,7 +54,9 @@ class OpenAISettings(BaseSettings):
     embedding_model: str = Field(
         default="text-embedding-3-large", description="Embedding model"
     )
-    max_tokens: int = Field(default=4096, description="Maximum tokens per request")
+    max_tokens: int = Field(
+        default=DEFAULT_CONTEXT_WINDOW_SIZE, description="Maximum tokens per request"
+    )
     temperature: float = Field(default=0.1, description="Model temperature")
 
     model_config = SettingsConfigDict(env_prefix="OPENAI_")
@@ -69,7 +80,8 @@ class QdrantSettings(BaseSettings):
         default="orchestra-knowledge", description="Collection name"
     )
     dimension: int = Field(
-        default=3072, description="Vector dimension for text-embedding-3-large"
+        default=DEFAULT_EMBEDDING_DIMENSION,
+        description="Vector dimension for text-embedding-3-large",
     )
     prefer_grpc: bool = Field(default=False, description="Prefer gRPC over HTTP")
 

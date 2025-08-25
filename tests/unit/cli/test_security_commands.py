@@ -361,10 +361,11 @@ class TestTestSecurityMonitoring:
         with pytest.raises(click.exceptions.Exit):
             test_security_monitoring()
 
-        # Verify error message
+        # Verify error message - should be logged and printed
         printed_calls = mock_console.print.call_args_list
         assert any(
-            "Security monitoring test failed" in str(call) for call in printed_calls
+            "Unexpected error in security monitoring test" in str(call)
+            for call in printed_calls
         )
 
 
@@ -433,10 +434,11 @@ class TestGenerateSecurityReport:
         with pytest.raises(click.exceptions.Exit):
             generate_security_report(output_file=None)
 
-        # Verify error message
+        # Verify error message - should be logged and printed
         printed_calls = mock_console.print.call_args_list
         assert any(
-            "Error generating security report" in str(call) for call in printed_calls
+            "Unexpected error generating security report" in str(call)
+            for call in printed_calls
         )
 
 

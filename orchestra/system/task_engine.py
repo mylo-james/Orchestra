@@ -11,6 +11,9 @@ from typing import Any, Dict, List, Optional
 from orchestra.system.resource_loader import ResourceMetadata
 from orchestra.utils.logging import get_logger
 
+# Import constants for magic number replacement
+DEFAULT_TIMEOUT_SECONDS = 300
+
 logger = get_logger(__name__)
 
 
@@ -44,7 +47,9 @@ class TaskExecutionError(Exception):
 class TaskEngine:
     """Engine for executing Orchestra tasks."""
 
-    def __init__(self, execution_timeout: int = 300, max_retries: int = 3):
+    def __init__(
+        self, execution_timeout: int = DEFAULT_TIMEOUT_SECONDS, max_retries: int = 3
+    ):
         """
         Initialize the task engine.
 
