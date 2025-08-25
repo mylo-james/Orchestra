@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 import pytest
 
 from orchestra.models.shared_knowledge import (
+    CrossPersonaLearningSession,
+    KnowledgeSharingRequest,
     PatternMapping,
     PropagationRule,
     SharedKnowledge,
@@ -178,6 +180,37 @@ class TestSharedKnowledge:
         assert pm_transferability["score"] == 0.65
         assert pm_transferability["adaptation"] == "significant"
 
+    def test_shared_knowledge_get_sharing_summary(self):
+        """Test SharedKnowledge provides sharing summary for decisions."""
+        knowledge = SharedKnowledge(
+            knowledge_id="sk-summary-test",
+            source_persona_id="dev",
+            source_project_id="project-a",
+            pattern_id="summary-pattern",
+            knowledge_type="success_pattern",
+            title="Test Sharing Summary",
+            description="Knowledge for testing sharing summaries",
+            content={},
+            transferability_metadata={
+                "applicable_personas": ["dev", "qa", "architect"],
+            },
+            effectiveness_score=0.88,
+            usage_count=15,
+            success_rate=0.92,
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
+        )
+
+        summary = knowledge.get_sharing_summary()
+        assert summary["knowledge_id"] == "sk-summary-test"
+        assert summary["source_persona"] == "dev"
+        assert summary["knowledge_type"] == "success_pattern"
+        assert summary["title"] == "Test Sharing Summary"
+        assert summary["effectiveness_score"] == 0.88
+        assert summary["success_rate"] == 0.92
+        assert summary["usage_count"] == 15
+        assert summary["applicable_personas"] == ["dev", "qa", "architect"]
+
     def test_shared_knowledge_usage_tracking(self):
         """Test SharedKnowledge tracks usage and success metrics."""
         knowledge = SharedKnowledge(
@@ -216,6 +249,170 @@ class TestSharedKnowledge:
 
 class TestPatternMapping:
     """Test PatternMapping data model for cross-persona pattern relationships (AC: 2, 7)."""
+
+    def test_pattern_mapping_get_adaptation_strategy(self):
+        """Test PatternMapping determines adaptation strategy based on transferability."""
+        # High transferability - direct transfer
+        high_transferability_mapping = PatternMapping(
+            mapping_id="high-transfer-mapping",
+            source_pattern_id="source-pattern",
+            target_pattern_id="target-pattern",
+            source_persona_id="dev",
+            target_persona_id="qa",
+            project_id="test-project",
+            similarity_score=0.95,
+            transferability_score=0.92,  # > 0.9
+            mapping_type="equivalent",
+            context_mapping={},
+            confidence_score=0.90,
+        )
+
+        strategy_high = high_transferability_mapping.get_adaptation_strategy()
+        assert strategy_high["strategy"] == "direct_transfer"
+        assert strategy_high["adaptation_required"] == "minimal"
+
+        # Medium transferability - minor adaptation
+        medium_transferability_mapping = PatternMapping(
+            mapping_id="medium-transfer-mapping",
+            source_pattern_id="source-pattern",
+            target_pattern_id="target-pattern",
+            source_persona_id="dev",
+            target_persona_id="architect",
+            project_id="test-project",
+            similarity_score=0.85,
+            transferability_score=0.85,  # 0.8 < x <= 0.9
+            mapping_type="derivative",
+            context_mapping={},
+            confidence_score=0.82,
+        )
+
+        strategy_medium = medium_transferability_mapping.get_adaptation_strategy()
+        assert strategy_medium["strategy"] == "minor_adaptation"
+        assert strategy_medium["adaptation_required"] == "moderate"
+
+        # Low transferability - significant adaptation
+        low_transferability_mapping = PatternMapping(
+            mapping_id="low-transfer-mapping",
+            source_pattern_id="source-pattern",
+            target_pattern_id="target-pattern",
+            source_persona_id="dev",
+            target_persona_id="pm",
+            project_id="test-project",
+            similarity_score=0.70,
+            transferability_score=0.78,  # <= 0.8
+            mapping_type="complementary",
+            context_mapping={},
+            confidence_score=0.75,
+        )
+
+        strategy_low = low_transferability_mapping.get_adaptation_strategy()
+        assert strategy_low["strategy"] == "significant_adaptation"
+        assert strategy_low["adaptation_required"] == "major"
+
+    def test_pattern_mapping_validate_mapping(self):
+        """Test PatternMapping validates mapping quality."""
+        # Valid mapping
+        valid_mapping = PatternMapping(
+            mapping_id="valid-mapping",
+            source_pattern_id="source-pattern",
+            target_pattern_id="target-pattern",
+            source_persona_id="dev",
+            target_persona_id="qa",
+            project_id="test-project",
+            similarity_score=0.88,
+            transferability_score=0.82,  # > 0.75
+            mapping_type="complementary",
+            context_mapping={},
+            confidence_score=0.85,  # >= 0.7
+            ai_analysis={
+                "analysis_confidence": 0.85,  # >= 0.8
+                "pattern_similarity": 0.88,
+            },
+        )
+
+        assert valid_mapping.validate_mapping() is True
+        assert valid_mapping.validated is True
+
+        # Invalid mapping - low transferability (should fail during creation)
+        with pytest.raises(ValueError, match="transferability_score must be > 0.75"):
+            PatternMapping(
+                mapping_id="invalid-transfer",
+                source_pattern_id="source-pattern",
+                target_pattern_id="target-pattern",
+                source_persona_id="dev",
+                target_persona_id="qa",
+                project_id="test-project",
+                similarity_score=0.85,
+                transferability_score=0.70,  # <= 0.75
+                mapping_type="complementary",
+                context_mapping={},
+                confidence_score=0.80,
+            )
+
+        # Invalid mapping - low confidence
+        invalid_confidence = PatternMapping(
+            mapping_id="invalid-confidence",
+            source_pattern_id="source-pattern",
+            target_pattern_id="target-pattern",
+            source_persona_id="dev",
+            target_persona_id="qa",
+            project_id="test-project",
+            similarity_score=0.85,
+            transferability_score=0.80,
+            mapping_type="complementary",
+            context_mapping={},
+            confidence_score=0.65,  # < 0.7
+        )
+
+        assert invalid_confidence.validate_mapping() is False
+
+        # Invalid mapping - low AI analysis confidence
+        invalid_ai_confidence = PatternMapping(
+            mapping_id="invalid-ai-confidence",
+            source_pattern_id="source-pattern",
+            target_pattern_id="target-pattern",
+            source_persona_id="dev",
+            target_persona_id="qa",
+            project_id="test-project",
+            similarity_score=0.85,
+            transferability_score=0.80,
+            mapping_type="complementary",
+            context_mapping={},
+            confidence_score=0.80,
+            ai_analysis={
+                "analysis_confidence": 0.75,  # < 0.8
+            },
+        )
+
+        assert invalid_ai_confidence.validate_mapping() is False
+
+    def test_pattern_mapping_get_mapping_summary(self):
+        """Test PatternMapping provides mapping summary for propagation."""
+        mapping = PatternMapping(
+            mapping_id="summary-mapping",
+            source_pattern_id="source-pattern",
+            target_pattern_id="target-pattern",
+            source_persona_id="dev",
+            target_persona_id="qa",
+            project_id="test-project",
+            similarity_score=0.88,
+            transferability_score=0.82,
+            mapping_type="complementary",
+            context_mapping={},
+            confidence_score=0.85,
+            validated=True,
+        )
+
+        summary = mapping.get_mapping_summary()
+        assert summary["mapping_id"] == "summary-mapping"
+        assert summary["source_persona"] == "dev"
+        assert summary["target_persona"] == "qa"
+        assert summary["mapping_type"] == "complementary"
+        assert summary["transferability_score"] == 0.82
+        assert summary["similarity_score"] == 0.88
+        assert summary["validated"] is True
+        assert "adaptation_strategy" in summary
+        assert summary["adaptation_strategy"]["strategy"] == "minor_adaptation"
 
     def test_pattern_mapping_creation(self):
         """Test PatternMapping creation for similar patterns across personas."""
@@ -402,6 +599,54 @@ class TestPatternMapping:
 class TestPropagationRule:
     """Test PropagationRule data model for knowledge distribution governance (AC: 3)."""
 
+    def test_propagation_rule_get_approval_workflow(self):
+        """Test PropagationRule provides approval workflow configuration."""
+        rule = PropagationRule(
+            rule_id="approval-workflow-test",
+            rule_name="Approval Workflow Test Rule",
+            project_id="test-project",
+            rule_type="manual",
+            conditions={
+                "min_effectiveness_score": 0.80,
+                "auto_approve_threshold": 0.92,
+            },
+            actions={
+                "approval_required": True,
+                "approvers": ["team_lead", "senior_architect"],
+                "approval_timeout_hours": 48,
+            },
+            priority="high",
+            active=True,
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
+        )
+
+        workflow = rule.get_approval_workflow()
+        assert workflow["approval_required"] is True
+        assert workflow["approvers"] == ["team_lead", "senior_architect"]
+        assert workflow["approval_timeout_hours"] == 48
+        assert workflow["auto_approve_threshold"] == 0.92
+
+        # Test default values
+        rule_defaults = PropagationRule(
+            rule_id="defaults-test",
+            rule_name="Defaults Test Rule",
+            project_id="test-project",
+            rule_type="automatic",
+            conditions={},
+            actions={},
+            priority="medium",
+            active=True,
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
+        )
+
+        workflow_defaults = rule_defaults.get_approval_workflow()
+        assert workflow_defaults["approval_required"] is True
+        assert workflow_defaults["approvers"] == ["team_lead"]
+        assert workflow_defaults["approval_timeout_hours"] == 72
+        assert workflow_defaults["auto_approve_threshold"] == 0.95
+
     def test_propagation_rule_creation(self):
         """Test PropagationRule creation for automatic vs manual sharing decisions."""
         rule = PropagationRule(
@@ -551,6 +796,95 @@ class TestPropagationRule:
 
 class TestTargetingTag:
     """Test TargetingTag data model for Epic 1 integration (AC: 5)."""
+
+    def test_targeting_tag_matches_persona(self):
+        """Test TargetingTag checks persona matching."""
+        tag = TargetingTag(
+            tag_id="matches-test-tag",
+            tag_name="Test Persona Matching",
+            tag_type="technology",
+            tag_value="python",
+            project_id="test-project",
+            target_criteria={"technology_stack": ["python"]},
+            matched_personas=["dev-python-1", "dev-python-2", "backend-dev-1"],
+            hierarchical_tags={},
+            active=True,
+        )
+
+        assert tag.matches_persona("dev-python-1") is True
+        assert tag.matches_persona("dev-python-2") is True
+        assert tag.matches_persona("backend-dev-1") is True
+        assert tag.matches_persona("frontend-dev-1") is False
+        assert tag.matches_persona("nonexistent-dev") is False
+
+    def test_targeting_tag_update_matches(self):
+        """Test TargetingTag updates matched personas."""
+        tag = TargetingTag(
+            tag_id="update-matches-test",
+            tag_name="Update Matches Test",
+            tag_type="role",
+            tag_value="qa",
+            project_id="test-project",
+            target_criteria={"persona_roles": ["qa"]},
+            matched_personas=["qa-1", "qa-2"],
+            hierarchical_tags={},
+            active=True,
+        )
+
+        old_updated_at = tag.updated_at
+        new_personas = ["qa-1", "qa-2", "qa-3", "test-engineer-1"]
+
+        tag.update_matches(new_personas)
+
+        assert tag.matched_personas == new_personas
+        assert tag.updated_at > old_updated_at
+
+    def test_targeting_tag_get_targeting_summary(self):
+        """Test TargetingTag provides targeting summary for broadcasts."""
+        tag = TargetingTag(
+            tag_id="summary-test-tag",
+            tag_name="Summary Test Tag",
+            tag_type="domain",
+            tag_value="fintech",
+            project_id="test-project",
+            target_criteria={"domains": ["fintech", "payments"]},
+            matched_personas=["fintech-dev-1", "payments-architect-1", "banking-qa-1"],
+            hierarchical_tags={},
+            active=True,
+            epic1_integration={
+                "broadcast_compatible": True,
+                "targeting_service_id": "epic1-targeting",
+            },
+        )
+
+        summary = tag.get_targeting_summary()
+        assert summary["tag_id"] == "summary-test-tag"
+        assert summary["tag_name"] == "Summary Test Tag"
+        assert summary["tag_type"] == "domain"
+        assert summary["tag_value"] == "fintech"
+        assert summary["matched_personas"] == [
+            "fintech-dev-1",
+            "payments-architect-1",
+            "banking-qa-1",
+        ]
+        assert summary["target_count"] == 3
+        assert summary["epic1_compatible"] is True
+
+        # Test without Epic 1 integration
+        tag_no_epic1 = TargetingTag(
+            tag_id="no-epic1-tag",
+            tag_name="No Epic 1 Tag",
+            tag_type="technology",
+            tag_value="react",
+            project_id="test-project",
+            target_criteria={"technology_stack": ["react"]},
+            matched_personas=["frontend-dev-1"],
+            hierarchical_tags={},
+            active=True,
+        )
+
+        summary_no_epic1 = tag_no_epic1.get_targeting_summary()
+        assert summary_no_epic1["epic1_compatible"] is False
 
     def test_targeting_tag_creation(self):
         """Test TargetingTag creation for tag-based persona targeting."""
@@ -708,6 +1042,142 @@ class TestTargetingTag:
 
 class TestValidationMetric:
     """Test ValidationMetric data model for shared pattern quality control (AC: 4, 10)."""
+
+    def test_validation_metric_calculate_improvement_metrics(self):
+        """Test ValidationMetric calculates detailed improvement metrics."""
+        metric = ValidationMetric(
+            metric_id="calc-improvement-test",
+            shared_knowledge_id="sk-test",
+            target_persona_id="dev",
+            project_id="test-project",
+            validation_type="effectiveness_measurement",
+            pre_sharing_metrics={
+                "success_rate": 0.70,
+                "completion_time": 120.0,
+                "error_rate": 0.15,
+                "quality_score": 0.75,
+            },
+            post_sharing_metrics={
+                "success_rate": 0.85,
+                "completion_time": 90.0,
+                "error_rate": 0.08,
+                "quality_score": 0.88,
+            },
+            improvement_analysis={},
+            effectiveness_threshold=0.50,
+            validation_status="under_review",
+        )
+
+        improvements = metric.calculate_improvement_metrics()
+
+        # Calculate expected improvements
+        success_improvement = (0.85 - 0.70) / 0.70  # ≈ 0.214
+        time_improvement = (90.0 - 120.0) / 120.0  # = -0.25 (negative = improvement)
+        error_improvement = (0.08 - 0.15) / 0.15  # ≈ -0.467 (negative = improvement)
+        quality_improvement = (0.88 - 0.75) / 0.75  # ≈ 0.173
+
+        assert "success_rate_improvement" in improvements
+        assert "completion_time_improvement" in improvements
+        assert "error_rate_improvement" in improvements
+        assert "quality_score_improvement" in improvements
+        assert "overall_effectiveness" in improvements
+
+        assert (
+            abs(improvements["success_rate_improvement"] - success_improvement) < 0.001
+        )
+        assert improvements["completion_time_improvement"] == time_improvement
+        assert abs(improvements["error_rate_improvement"] - error_improvement) < 0.001
+        assert (
+            abs(improvements["quality_score_improvement"] - quality_improvement) < 0.001
+        )
+
+        # Test that improvement_analysis is updated
+        assert metric.improvement_analysis == improvements
+
+    def test_validation_metric_trigger_rollback(self):
+        """Test ValidationMetric triggers rollback for unsuccessful patterns."""
+        metric = ValidationMetric(
+            metric_id="rollback-test",
+            shared_knowledge_id="sk-rollback",
+            target_persona_id="qa",
+            project_id="test-project",
+            validation_type="effectiveness_measurement",
+            pre_sharing_metrics={"success_rate": 0.85},
+            post_sharing_metrics={"success_rate": 0.60},
+            improvement_analysis={"overall_effectiveness": 0.25},
+            effectiveness_threshold=0.50,
+            validation_status="beneficial",  # Will be changed to harmful
+            rollback_required=False,
+        )
+
+        rollback_plan = metric.trigger_rollback(
+            "Pattern caused performance degradation"
+        )
+
+        assert metric.rollback_required is True
+        assert metric.validation_status == "harmful"
+        assert rollback_plan["rollback_triggered"] is True
+        assert (
+            rollback_plan["rollback_reason"] == "Pattern caused performance degradation"
+        )
+        assert "rollback_actions" in rollback_plan
+        assert "remove_shared_pattern" in rollback_plan["rollback_actions"]
+        assert rollback_plan["rollback_completed"] is False
+        assert metric.rollback_data == rollback_plan
+
+    def test_validation_metric_complete_rollback(self):
+        """Test ValidationMetric completes rollback process."""
+        metric = ValidationMetric(
+            metric_id="complete-rollback-test",
+            shared_knowledge_id="sk-complete-rollback",
+            target_persona_id="dev",
+            project_id="test-project",
+            validation_type="effectiveness_measurement",
+            pre_sharing_metrics={"success_rate": 0.80},
+            post_sharing_metrics={"success_rate": 0.65},
+            improvement_analysis={"overall_effectiveness": 0.30},
+            effectiveness_threshold=0.50,
+            validation_status="harmful",
+            rollback_required=True,
+            rollback_data={
+                "rollback_triggered": True,
+                "rollback_reason": "Low effectiveness",
+                "rollback_completed": False,
+            },
+        )
+
+        metric.complete_rollback()
+
+        assert metric.rollback_data["rollback_completed"] is True
+        assert "completion_timestamp" in metric.rollback_data
+
+    def test_validation_metric_get_validation_summary(self):
+        """Test ValidationMetric provides validation summary for reporting."""
+        metric = ValidationMetric(
+            metric_id="summary-test",
+            shared_knowledge_id="sk-summary",
+            target_persona_id="qa",
+            project_id="test-project",
+            validation_type="effectiveness_measurement",
+            pre_sharing_metrics={"success_rate": 0.75},
+            post_sharing_metrics={"success_rate": 0.88},
+            improvement_analysis={"overall_effectiveness": 0.65},
+            effectiveness_threshold=0.60,
+            validation_status="beneficial",
+            rollback_required=False,
+            measurement_period_days=14,
+        )
+
+        summary = metric.get_validation_summary()
+        assert summary["metric_id"] == "summary-test"
+        assert summary["shared_knowledge_id"] == "sk-summary"
+        assert summary["target_persona"] == "qa"
+        assert summary["validation_status"] == "beneficial"
+        assert summary["effectiveness_threshold"] == 0.60
+        assert summary["should_allow_propagation"] is True  # 0.65 > 0.60
+        assert summary["rollback_required"] is False
+        assert summary["improvement_analysis"] == {"overall_effectiveness": 0.65}
+        assert summary["measurement_period_days"] == 14
 
     def test_validation_metric_creation(self):
         """Test ValidationMetric creation for effectiveness measurement."""
@@ -1056,3 +1526,177 @@ class TestSharedKnowledgeModelIntegration:
         # Test cross-system compatibility
         assert knowledge.source_project_id == tag.project_id
         assert len(tag.matched_personas) == 2  # Multiple personas targeted
+
+
+class TestKnowledgeSharingRequest:
+    """Test KnowledgeSharingRequest data model for cross-persona sharing requests."""
+
+    def test_knowledge_sharing_request_creation(self):
+        """Test KnowledgeSharingRequest creation for sharing workflow."""
+        request = KnowledgeSharingRequest(
+            request_id="ksr-test-1",
+            source_persona_id="dev",
+            target_personas=["qa", "architect"],
+            knowledge_ids=["sk-pattern-1", "sk-pattern-2"],
+            sharing_mode="manual",
+            priority="high",
+            requester="dev-lead",
+            justification="High-value patterns with proven success rates",
+        )
+
+        assert request.request_id == "ksr-test-1"
+        assert request.source_persona_id == "dev"
+        assert request.target_personas == ["qa", "architect"]
+        assert request.knowledge_ids == ["sk-pattern-1", "sk-pattern-2"]
+        assert request.sharing_mode == "manual"
+        assert request.priority == "high"
+        assert request.requester == "dev-lead"
+        assert request.status == "pending"  # Default status
+
+    def test_knowledge_sharing_request_approve_request(self):
+        """Test KnowledgeSharingRequest approval process."""
+        request = KnowledgeSharingRequest(
+            request_id="ksr-approve-test",
+            source_persona_id="dev",
+            target_personas=["qa"],
+            knowledge_ids=["sk-pattern-1"],
+            sharing_mode="manual",
+            priority="medium",
+            requester="dev-team",
+            justification="Test approval process",
+        )
+
+        assert request.status == "pending"
+
+        request.approve_request("team-lead")
+
+        assert request.status == "approved"
+        assert request.approver == "team-lead"
+        assert hasattr(request, "approved_at")
+
+    def test_knowledge_sharing_request_reject_request(self):
+        """Test KnowledgeSharingRequest rejection process."""
+        request = KnowledgeSharingRequest(
+            request_id="ksr-reject-test",
+            source_persona_id="dev",
+            target_personas=["pm"],
+            knowledge_ids=["sk-technical-pattern"],
+            sharing_mode="automatic",
+            priority="low",
+            requester="dev-team",
+            justification="Technical pattern sharing",
+        )
+
+        assert request.status == "pending"
+
+        request.reject_request(
+            "senior-architect", "Pattern not suitable for PM persona"
+        )
+
+        assert request.status == "rejected"
+        assert request.rejector == "senior-architect"
+        assert request.rejection_reason == "Pattern not suitable for PM persona"
+        assert hasattr(request, "rejected_at")
+
+
+class TestCrossPersonaLearningSession:
+    """Test CrossPersonaLearningSession data model for collaborative learning sessions."""
+
+    def test_cross_persona_learning_session_creation(self):
+        """Test CrossPersonaLearningSession creation for collaborative learning."""
+        session = CrossPersonaLearningSession(
+            session_id="cpls-test-1",
+            participating_personas=["dev", "qa", "architect"],
+            project_id="collaborative-project",
+            session_type="knowledge_sharing",
+            knowledge_items=["sk-auth-pattern", "sk-testing-pattern"],
+            session_data={
+                "focus_area": "authentication_security",
+                "learning_objectives": ["cross_validation", "security_patterns"],
+            },
+            started_at=datetime.utcnow(),
+        )
+
+        assert session.session_id == "cpls-test-1"
+        assert session.participating_personas == ["dev", "qa", "architect"]
+        assert session.project_id == "collaborative-project"
+        assert session.session_type == "knowledge_sharing"
+        assert session.knowledge_items == ["sk-auth-pattern", "sk-testing-pattern"]
+        assert session.status == "active"  # Default status
+        assert session.ended_at is None
+
+    def test_cross_persona_learning_session_add_knowledge_item(self):
+        """Test CrossPersonaLearningSession adds knowledge items."""
+        session = CrossPersonaLearningSession(
+            session_id="cpls-add-test",
+            participating_personas=["dev", "qa"],
+            project_id="test-project",
+            session_type="pattern_matching",
+            knowledge_items=["sk-initial-pattern"],
+            session_data={},
+            started_at=datetime.utcnow(),
+        )
+
+        assert len(session.knowledge_items) == 1
+
+        # Add new knowledge item
+        session.add_knowledge_item("sk-new-pattern")
+        assert len(session.knowledge_items) == 2
+        assert "sk-new-pattern" in session.knowledge_items
+
+        # Try to add duplicate - should not be added again
+        session.add_knowledge_item("sk-initial-pattern")
+        assert len(session.knowledge_items) == 2  # Still 2, no duplicate
+
+    def test_cross_persona_learning_session_complete_session(self):
+        """Test CrossPersonaLearningSession completion process."""
+        session = CrossPersonaLearningSession(
+            session_id="cpls-complete-test",
+            participating_personas=["dev", "architect"],
+            project_id="test-project",
+            session_type="collaborative_learning",
+            knowledge_items=["sk-pattern-1", "sk-pattern-2"],
+            session_data={},
+            started_at=datetime.utcnow() - timedelta(hours=2),
+        )
+
+        outcomes = {
+            "patterns_transferred": 2,
+            "successful_applications": 1,
+            "follow_up_sessions_needed": True,
+            "key_insights": ["Cross-persona validation improves pattern quality"],
+        }
+
+        assert session.status == "active"
+        assert session.ended_at is None
+
+        session.complete_session(outcomes)
+
+        assert session.status == "completed"
+        assert session.ended_at is not None
+        assert session.outcomes == outcomes
+
+    def test_cross_persona_learning_session_get_session_summary(self):
+        """Test CrossPersonaLearningSession provides session summary."""
+        session = CrossPersonaLearningSession(
+            session_id="cpls-summary-test",
+            participating_personas=["dev", "qa", "pm"],
+            project_id="summary-project",
+            session_type="knowledge_sharing",
+            knowledge_items=["sk-1", "sk-2", "sk-3"],
+            session_data={},
+            started_at=datetime.utcnow() - timedelta(hours=1),
+        )
+
+        # Complete session to test duration calculation
+        session.complete_session({"successful_transfers": 3})
+
+        summary = session.get_session_summary()
+        assert summary["session_id"] == "cpls-summary-test"
+        assert summary["participating_personas"] == ["dev", "qa", "pm"]
+        assert summary["session_type"] == "knowledge_sharing"
+        assert summary["knowledge_items_count"] == 3
+        assert summary["status"] == "completed"
+        assert summary["outcomes"] == {"successful_transfers": 3}
+        assert summary["duration_seconds"] is not None
+        assert summary["duration_seconds"] > 0

@@ -63,7 +63,6 @@ jobs:
 
       - name: Type check
         run: poetry run mypy orchestra/
-        continue-on-error: true
 
       - name: Pre-commit (style only)
         env:

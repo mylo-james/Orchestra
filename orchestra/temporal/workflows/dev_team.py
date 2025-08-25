@@ -9,16 +9,16 @@ from typing import Any, Dict, List, Optional
 from temporalio import workflow
 from temporalio.common import RetryPolicy
 
-from orchestra.utils.logging import get_logger
-from orchestra.workflows.activities import (
+from orchestra.temporal.activities.base import (
     create_github_pr_activity,
     execute_agent_activity,
     validate_context_activity,
 )
-from orchestra.workflows.security_activities import (
+from orchestra.temporal.activities.security import (
     audit_log_activity,
     validate_security_activity,
 )
+from orchestra.utils.logging import get_logger
 
 logger = get_logger(__name__)
 

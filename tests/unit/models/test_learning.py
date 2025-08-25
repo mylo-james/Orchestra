@@ -16,6 +16,85 @@ from orchestra.models.learning import (
 class TestOutcomeEvent:
     """Test OutcomeEvent data model for success/failure tracking (AC: 1)."""
 
+    def test_outcome_event_success_indicators(self):
+        """Test OutcomeEvent extracts success indicators correctly."""
+        outcome = OutcomeEvent(
+            outcome_id="test-success-indicators",
+            persona_id="dev",
+            project_id="test-project",
+            session_id="session-test",
+            command="implement-story",
+            result={
+                "success": True,
+                "tests_passed": 15,
+                "coverage": 0.92,
+                "quality_score": 0.85,
+                "security_validated": True,
+            },
+            classification="success",
+            confidence_score=0.95,
+            timestamp=datetime.utcnow(),
+            duration_seconds=45.0,
+        )
+
+        indicators = outcome.get_success_indicators()
+        assert "tests_passed" in indicators
+        assert "high_coverage" in indicators
+        assert "high_quality" in indicators
+        assert "security_validated" in indicators
+
+    def test_outcome_event_failure_indicators(self):
+        """Test OutcomeEvent extracts failure indicators correctly."""
+        outcome = OutcomeEvent(
+            outcome_id="test-failure-indicators",
+            persona_id="dev",
+            project_id="test-project",
+            session_id="session-test",
+            command="implement-story",
+            result={
+                "success": False,
+                "error": "Compilation failed due to syntax errors",
+                "failed_tests": 3,
+                "coverage": 0.45,
+            },
+            classification="failure",
+            confidence_score=0.90,
+            timestamp=datetime.utcnow(),
+            duration_seconds=120.0,
+        )
+
+        indicators = outcome.get_failure_indicators()
+        assert "error_occurred" in indicators
+        assert "failed_tests" in indicators
+        assert "low_coverage" in indicators
+
+    def test_outcome_event_to_analysis_data(self):
+        """Test OutcomeEvent converts to AI analysis format."""
+        outcome = OutcomeEvent(
+            outcome_id="test-analysis-data",
+            persona_id="dev",
+            project_id="test-project",
+            session_id="session-test",
+            command="implement-story",
+            result={"success": True, "coverage": 0.90},
+            classification="success",
+            confidence_score=0.88,
+            timestamp=datetime.utcnow(),
+            duration_seconds=60.0,
+            metadata={"domain": "authentication"},
+        )
+
+        analysis_data = outcome.to_analysis_data()
+        assert analysis_data["outcome_id"] == "test-analysis-data"
+        assert analysis_data["persona_id"] == "dev"
+        assert analysis_data["command"] == "implement-story"
+        assert analysis_data["classification"] == "success"
+        assert analysis_data["confidence_score"] == 0.88
+        assert analysis_data["duration_seconds"] == 60.0
+        assert "success_indicators" in analysis_data
+        assert "failure_indicators" in analysis_data
+        assert analysis_data["context"] == {"domain": "authentication"}
+
     def test_outcome_event_success_creation(self):
         """Test OutcomeEvent creation for successful persona interactions."""
         outcome = OutcomeEvent(
@@ -160,6 +239,91 @@ class TestOutcomeEvent:
 
 class TestLearningPattern:
     """Test LearningPattern data model for identified patterns (AC: 2, 7)."""
+
+    def test_learning_pattern_apply_pattern(self):
+        """Test LearningPattern apply_pattern method updates usage tracking."""
+        pattern = LearningPattern(
+            pattern_id="apply-test-pattern",
+            project_id="test-project",
+            persona_id="dev",
+            pattern_type="success_pattern",
+            description="Test pattern application",
+            pattern_data={},
+            confidence_score=0.90,
+            effectiveness_score=0.85,
+            accuracy_score=0.88,
+            usage_count=5,
+            last_applied=datetime.utcnow() - timedelta(hours=1),
+            created_at=datetime.utcnow() - timedelta(days=1),
+        )
+
+        old_usage_count = pattern.usage_count
+        old_last_applied = pattern.last_applied
+
+        pattern.apply_pattern()
+
+        assert pattern.usage_count == old_usage_count + 1
+        assert pattern.last_applied > old_last_applied
+
+    def test_learning_pattern_get_transferability_score(self):
+        """Test LearningPattern calculates transferability for different personas."""
+        pattern = LearningPattern(
+            pattern_id="transferability-test",
+            project_id="test-project",
+            persona_id="dev",
+            pattern_type="success_pattern",
+            description="Test transferability calculation",
+            pattern_data={},
+            confidence_score=0.90,
+            effectiveness_score=0.80,
+            accuracy_score=0.88,
+            usage_count=10,
+            last_applied=datetime.utcnow(),
+            created_at=datetime.utcnow(),
+        )
+
+        # Test high compatibility (dev -> qa)
+        dev_to_qa_score = pattern.get_transferability_score("qa")
+        assert 0.5 < dev_to_qa_score <= 1.0
+
+        # Test medium compatibility (dev -> architect)
+        dev_to_architect_score = pattern.get_transferability_score("architect")
+        assert 0.5 < dev_to_architect_score <= 1.0
+
+        # Test lower compatibility (unknown persona)
+        unknown_score = pattern.get_transferability_score("unknown_persona")
+        assert unknown_score == 0.4  # 0.8 * 0.5 (base compatibility)
+
+    def test_learning_pattern_to_recommendation(self):
+        """Test LearningPattern converts to AI recommendation format."""
+        pattern = LearningPattern(
+            pattern_id="recommendation-test",
+            project_id="test-project",
+            persona_id="dev",
+            pattern_type="success_pattern",
+            description="Test pattern for recommendations",
+            pattern_data={"test_condition": "high_coverage"},
+            confidence_score=0.92,
+            effectiveness_score=0.85,
+            accuracy_score=0.89,
+            usage_count=8,
+            last_applied=datetime.utcnow(),
+            created_at=datetime.utcnow(),
+            ai_model="gpt-4",
+            ai_confidence=0.94,
+        )
+
+        recommendation = pattern.to_recommendation()
+        assert recommendation["recommendation_id"] == "rec-recommendation-test"
+        assert recommendation["pattern_id"] == "recommendation-test"
+        assert recommendation["type"] == "behavior_modification"
+        assert recommendation["description"] == "Test pattern for recommendations"
+        assert recommendation["confidence"] == 0.92
+        assert recommendation["expected_improvement"] == 0.85
+        assert recommendation["pattern_data"] == {"test_condition": "high_coverage"}
+        assert recommendation["ai_analysis"]["model"] == "gpt-4"
+        assert recommendation["ai_analysis"]["confidence"] == 0.94
+        assert recommendation["ai_analysis"]["accuracy"] == 0.89
 
     def test_learning_pattern_creation(self):
         """Test LearningPattern creation with AI-identified patterns."""
@@ -313,6 +477,96 @@ class TestLearningPattern:
 class TestAdaptationRule:
     """Test AdaptationRule data model for behavior modification (AC: 3, 8)."""
 
+    def test_adaptation_rule_apply_rule(self):
+        """Test AdaptationRule apply_rule method updates status and timing."""
+        rule = AdaptationRule(
+            rule_id="apply-rule-test",
+            persona_id="dev",
+            project_id="test-project",
+            rule_type="behavior_modification",
+            description="Test rule application",
+            condition="test_condition",
+            action="test_action",
+            priority="medium",
+            confidence_score=0.85,
+            expected_improvement=0.75,
+            active=False,
+            created_at=datetime.utcnow(),
+        )
+
+        assert rule.active is False
+        assert rule.applied_at is None
+
+        rule.apply_rule()
+
+        assert rule.active is True
+        assert rule.applied_at is not None
+
+    def test_adaptation_rule_evaluate_condition(self):
+        """Test AdaptationRule evaluates conditions correctly."""
+        rule = AdaptationRule(
+            rule_id="condition-eval-test",
+            persona_id="dev",
+            project_id="test-project",
+            rule_type="behavior_modification",
+            description="Test condition evaluation",
+            condition="coverage >= 0.90",
+            action="test_action",
+            priority="medium",
+            confidence_score=0.85,
+            expected_improvement=0.75,
+            active=True,
+            created_at=datetime.utcnow(),
+        )
+
+        # Test condition that should pass
+        context_pass = {"coverage": "0.95"}
+        assert rule.evaluate_condition(context_pass) is True
+
+        # Test condition that should fail
+        context_fail = {"coverage": "0.75"}
+        assert rule.evaluate_condition(context_fail) is False  # 0.75 >= 0.90 is False
+
+        # Test equality condition
+        rule.condition = "domain == 'authentication'"
+        context_eq = {"domain": "authentication"}
+        assert rule.evaluate_condition(context_eq) is True
+
+        # Test exception handling
+        rule.condition = "invalid_condition"
+        assert rule.evaluate_condition({}) is False
+
+    def test_adaptation_rule_get_rollback_plan(self):
+        """Test AdaptationRule generates rollback plans."""
+        rule = AdaptationRule(
+            rule_id="rollback-plan-test",
+            persona_id="dev",
+            project_id="test-project",
+            rule_type="behavior_modification",
+            description="Test rollback plan generation",
+            condition="test_condition",
+            action="test_action",
+            priority="high",
+            confidence_score=0.90,
+            expected_improvement=0.80,
+            active=True,
+            created_at=datetime.utcnow(),
+            rollback_data={"original_behavior": "original_test_action"},
+        )
+
+        rollback_plan = rule.get_rollback_plan()
+        assert rollback_plan["rule_id"] == "rollback-plan-test"
+        assert rollback_plan["original_behavior"] == "original_test_action"
+        assert "rollback_actions" in rollback_plan
+        assert "deactivate_rule" in rollback_plan["rollback_actions"]
+        assert "rollback_conditions" in rollback_plan
+        assert "performance_degradation > 0.1" in rollback_plan["rollback_conditions"]
+
+        # Test without rollback data
+        rule.rollback_data = None
+        rollback_plan_none = rule.get_rollback_plan()
+        assert rollback_plan_none["original_behavior"] is None
+
     def test_adaptation_rule_creation(self):
         """Test AdaptationRule creation for persona behavior modification."""
         rule = AdaptationRule(
@@ -459,6 +713,174 @@ class TestAdaptationRule:
 
 class TestPerformanceMetric:
     """Test PerformanceMetric data model for effectiveness tracking (AC: 4)."""
+
+    def test_performance_metric_calculate_improvement(self):
+        """Test PerformanceMetric calculates improvement percentage correctly."""
+        metric = PerformanceMetric(
+            metric_id="calc-improvement-test",
+            persona_id="dev",
+            project_id="test-project",
+            metric_type="learning_effectiveness",
+            metric_name="Test Calculation",
+            baseline_value=0.75,
+            current_value=0.90,
+            improvement_percentage=0,  # Will be calculated
+            measurement_period_days=30,
+            measurement_start=datetime.utcnow() - timedelta(days=30),
+            measurement_end=datetime.utcnow(),
+            trend="improving",
+        )
+
+        improvement = metric.calculate_improvement()
+        expected_improvement = ((0.90 - 0.75) / 0.75) * 100  # 20%
+        assert improvement == expected_improvement
+        assert metric.improvement_percentage == expected_improvement
+
+        # Test zero baseline
+        metric.baseline_value = 0
+        improvement_zero = metric.calculate_improvement()
+        assert improvement_zero == 0.0
+
+    def test_performance_metric_update_trend(self):
+        """Test PerformanceMetric updates trend analysis."""
+        metric = PerformanceMetric(
+            metric_id="trend-test",
+            persona_id="dev",
+            project_id="test-project",
+            metric_type="learning_effectiveness",
+            metric_name="Test Trend Analysis",
+            baseline_value=0.70,
+            current_value=0.85,
+            improvement_percentage=21.43,
+            measurement_period_days=30,
+            measurement_start=datetime.utcnow() - timedelta(days=30),
+            measurement_end=datetime.utcnow(),
+            trend="stable",
+        )
+
+        # Test improving trend
+        improving_values = [0.70, 0.72, 0.75, 0.80, 0.85, 0.88]
+        metric.update_trend(improving_values)
+        assert metric.trend == "improving"
+
+        # Test declining trend
+        declining_values = [0.90, 0.88, 0.85, 0.80, 0.75, 0.70]
+        metric.update_trend(declining_values)
+        assert metric.trend == "declining"
+
+        # Test stable trend
+        stable_values = [0.80, 0.81, 0.80, 0.82, 0.81]
+        metric.update_trend(stable_values)
+        assert metric.trend == "stable"
+
+        # Test insufficient data
+        short_values = [0.80, 0.85]
+        metric.update_trend(short_values)
+        assert metric.trend == "stable"
+
+    def test_performance_metric_generate_forecast(self):
+        """Test PerformanceMetric generates forecasting data."""
+        metric = PerformanceMetric(
+            metric_id="forecast-test",
+            persona_id="dev",
+            project_id="test-project",
+            metric_type="learning_effectiveness",
+            metric_name="Test Forecasting",
+            baseline_value=0.75,
+            current_value=0.85,
+            improvement_percentage=20.0,  # 20% improvement over 30 days
+            measurement_period_days=30,
+            measurement_start=datetime.utcnow() - timedelta(days=30),
+            measurement_end=datetime.utcnow(),
+            trend="improving",
+        )
+
+        forecast = metric.generate_forecast(forecast_days=30)
+        assert forecast["forecast_period_days"] == 30
+        assert "projected_value" in forecast
+        assert "confidence_interval" in forecast
+        assert len(forecast["confidence_interval"]) == 2
+        assert forecast["projection_confidence"] > 0.5
+
+        # Check that forecast data is stored
+        assert metric.forecast_data is not None
+        assert metric.forecast_data["forecast_period_days"] == 30
+
+    def test_performance_metric_is_improving(self):
+        """Test PerformanceMetric identifies improvement status."""
+        # Improving metric
+        improving_metric = PerformanceMetric(
+            metric_id="improving-test",
+            persona_id="dev",
+            project_id="test-project",
+            metric_type="learning_effectiveness",
+            metric_name="Improving Test",
+            baseline_value=0.70,
+            current_value=0.80,
+            improvement_percentage=14.29,  # > 5%
+            measurement_period_days=30,
+            measurement_start=datetime.utcnow() - timedelta(days=30),
+            measurement_end=datetime.utcnow(),
+            trend="improving",
+        )
+        assert improving_metric.is_improving() is True
+
+        # Not improving metric (low improvement)
+        low_improvement_metric = PerformanceMetric(
+            metric_id="low-improvement-test",
+            persona_id="dev",
+            project_id="test-project",
+            metric_type="learning_effectiveness",
+            metric_name="Low Improvement Test",
+            baseline_value=0.80,
+            current_value=0.82,
+            improvement_percentage=2.5,  # < 5%
+            measurement_period_days=30,
+            measurement_start=datetime.utcnow() - timedelta(days=30),
+            measurement_end=datetime.utcnow(),
+            trend="improving",
+        )
+        assert low_improvement_metric.is_improving() is False
+
+        # Not improving metric (declining trend)
+        declining_metric = PerformanceMetric(
+            metric_id="declining-test",
+            persona_id="dev",
+            project_id="test-project",
+            metric_type="learning_effectiveness",
+            metric_name="Declining Test",
+            baseline_value=0.80,
+            current_value=0.90,
+            improvement_percentage=12.5,  # > 5%
+            measurement_period_days=30,
+            measurement_start=datetime.utcnow() - timedelta(days=30),
+            measurement_end=datetime.utcnow(),
+            trend="declining",
+        )
+        assert declining_metric.is_improving() is False
+
+    def test_performance_metric_meets_effectiveness_threshold(self):
+        """Test PerformanceMetric checks effectiveness thresholds."""
+        metric = PerformanceMetric(
+            metric_id="threshold-test",
+            persona_id="dev",
+            project_id="test-project",
+            metric_type="learning_effectiveness",
+            metric_name="Threshold Test",
+            baseline_value=0.60,
+            current_value=0.90,
+            improvement_percentage=50.0,  # 50% improvement = 0.5 ratio
+            measurement_period_days=30,
+            measurement_start=datetime.utcnow() - timedelta(days=30),
+            measurement_end=datetime.utcnow(),
+            trend="improving",
+        )
+
+        # Test default threshold (0.6)
+        assert metric.meets_effectiveness_threshold() is False  # 0.5 < 0.6
+
+        # Test custom threshold (0.4)
+        assert metric.meets_effectiveness_threshold(threshold=0.4) is True  # 0.5 > 0.4
 
     def test_performance_metric_creation(self):
         """Test PerformanceMetric creation for learning effectiveness tracking."""
@@ -640,6 +1062,165 @@ class TestPerformanceMetric:
 
 class TestConfidenceScore:
     """Test ConfidenceScore data model for weighting decisions (AC: 5)."""
+
+    def test_confidence_score_calculate_weighted_confidence(self):
+        """Test ConfidenceScore calculates weighted confidence using different algorithms."""
+        # Simple average algorithm
+        confidence_simple = ConfidenceScore(
+            score_id="simple-calc-test",
+            persona_id="dev",
+            project_id="test-project",
+            recommendation_id="rec-simple",
+            ai_confidence=0.90,
+            base_behavior_confidence=0.80,
+            weighted_confidence=0.0,  # Will be calculated
+            weighting_algorithm="simple_average",
+            factors={},
+            threshold_met=False,
+            confidence_threshold=0.85,
+        )
+
+        weighted = confidence_simple.calculate_weighted_confidence()
+        assert abs(weighted - 0.85) < 0.001  # (0.90 + 0.80) / 2
+        assert abs(confidence_simple.weighted_confidence - 0.85) < 0.001
+
+        # AI weighted average
+        confidence_ai_weighted = ConfidenceScore(
+            score_id="ai-weighted-calc-test",
+            persona_id="dev",
+            project_id="test-project",
+            recommendation_id="rec-ai-weighted",
+            ai_confidence=0.95,
+            base_behavior_confidence=0.70,
+            weighted_confidence=0.0,
+            weighting_algorithm="ai_weighted_average",
+            factors={"ai_weight": 0.7, "base_weight": 0.3},
+            threshold_met=False,
+            confidence_threshold=0.80,
+        )
+
+        weighted = confidence_ai_weighted.calculate_weighted_confidence()
+        expected = 0.95 * 0.7 + 0.70 * 0.3  # 0.665 + 0.21 = 0.875
+        assert weighted == expected
+
+        # Conservative minimum
+        confidence_conservative = ConfidenceScore(
+            score_id="conservative-calc-test",
+            persona_id="dev",
+            project_id="test-project",
+            recommendation_id="rec-conservative",
+            ai_confidence=0.95,
+            base_behavior_confidence=0.75,
+            weighted_confidence=0.0,
+            weighting_algorithm="conservative_minimum",
+            factors={},
+            threshold_met=False,
+            confidence_threshold=0.80,
+        )
+
+        weighted = confidence_conservative.calculate_weighted_confidence()
+        assert weighted == 0.75  # min(0.95, 0.75)
+
+    def test_confidence_score_get_effective_threshold(self):
+        """Test ConfidenceScore handles dynamic threshold calculations."""
+        # Without dynamic threshold data
+        confidence = ConfidenceScore(
+            score_id="threshold-test",
+            persona_id="dev",
+            project_id="test-project",
+            recommendation_id="rec-threshold",
+            ai_confidence=0.90,
+            base_behavior_confidence=0.80,
+            weighted_confidence=0.85,
+            weighting_algorithm="simple_average",
+            factors={},
+            threshold_met=True,
+            confidence_threshold=0.80,
+        )
+
+        assert confidence.get_effective_threshold() == 0.80
+
+        # With dynamic threshold data
+        confidence.dynamic_threshold_data = {"final_threshold": 0.75}
+        assert confidence.get_effective_threshold() == 0.75
+
+    def test_confidence_score_should_apply_recommendation(self):
+        """Test ConfidenceScore recommendation application logic."""
+        confidence = ConfidenceScore(
+            score_id="apply-test",
+            persona_id="dev",
+            project_id="test-project",
+            recommendation_id="rec-apply",
+            ai_confidence=0.92,
+            base_behavior_confidence=0.88,
+            weighted_confidence=0.90,
+            weighting_algorithm="simple_average",
+            factors={},
+            threshold_met=True,
+            confidence_threshold=0.85,
+        )
+
+        assert confidence.should_apply_recommendation() is True
+
+        confidence.threshold_met = False
+        assert confidence.should_apply_recommendation() is False
+
+    def test_confidence_score_update_factors(self):
+        """Test ConfidenceScore updates factors and recalculates confidence."""
+        confidence = ConfidenceScore(
+            score_id="update-factors-test",
+            persona_id="dev",
+            project_id="test-project",
+            recommendation_id="rec-update",
+            ai_confidence=0.90,
+            base_behavior_confidence=0.80,
+            weighted_confidence=0.85,
+            weighting_algorithm="ai_weighted_average",
+            factors={"ai_weight": 0.7, "base_weight": 0.3},
+            threshold_met=True,
+            confidence_threshold=0.80,
+        )
+
+        old_weighted = confidence.weighted_confidence
+
+        # Update factors
+        new_factors = {"ai_weight": 0.5, "base_weight": 0.5}
+        confidence.update_factors(new_factors)
+
+        # Should recalculate weighted confidence
+        assert confidence.factors["ai_weight"] == 0.5
+        assert confidence.factors["base_weight"] == 0.5
+        assert confidence.weighted_confidence != old_weighted
+
+    def test_confidence_score_get_confidence_breakdown(self):
+        """Test ConfidenceScore provides detailed confidence breakdown."""
+        confidence = ConfidenceScore(
+            score_id="breakdown-test",
+            persona_id="dev",
+            project_id="test-project",
+            recommendation_id="rec-breakdown",
+            ai_confidence=0.92,
+            base_behavior_confidence=0.85,
+            weighted_confidence=0.88,
+            weighting_algorithm="adaptive_weighted_average",
+            factors={"ai_model_accuracy": 0.90},
+            threshold_met=True,
+            confidence_threshold=0.80,
+        )
+
+        breakdown = confidence.get_confidence_breakdown()
+        assert breakdown["ai_confidence"] == 0.92
+        assert breakdown["base_behavior_confidence"] == 0.85
+        assert breakdown["weighted_confidence"] == 0.88
+        assert breakdown["weighting_algorithm"] == "adaptive_weighted_average"
+        assert breakdown["factors"] == {"ai_model_accuracy": 0.90}
+        assert breakdown["threshold"] == 0.80
+        assert breakdown["threshold_met"] is True
+        assert breakdown["recommendation"] == "apply"
+
+        confidence.threshold_met = False
+        breakdown_reject = confidence.get_confidence_breakdown()
+        assert breakdown_reject["recommendation"] == "reject"
 
     def test_confidence_score_creation(self):
         """Test ConfidenceScore creation for AI recommendation weighting."""

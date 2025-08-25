@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from orchestra.system.agent import UniversalAgent
-from orchestra.workflows.activities import (
+from orchestra.temporal.activities.base import (
     _determine_next_action,
     _execute_with_universal_agent,
     create_github_pr_activity,
@@ -18,7 +18,7 @@ class TestExecuteAgentActivity:
     """Test main agent execution activity."""
 
     @pytest.mark.asyncio
-    @patch("orchestra.workflows.activities.get_registry")
+    @patch("orchestra.temporal.activities.base.get_registry")
     async def test_execute_agent_activity_with_universal_agent(self, mock_get_registry):
         """Test agent execution with UniversalAgent."""
         # Mock registry and agent
@@ -61,7 +61,7 @@ class TestExecuteAgentActivity:
         )
 
     @pytest.mark.asyncio
-    @patch("orchestra.workflows.activities.get_registry")
+    @patch("orchestra.temporal.activities.base.get_registry")
     async def test_execute_agent_activity_with_non_universal_agent(
         self, mock_get_registry
     ):
@@ -86,7 +86,7 @@ class TestExecuteAgentActivity:
             await execute_agent_activity(params)
 
     @pytest.mark.asyncio
-    @patch("orchestra.workflows.activities.get_registry")
+    @patch("orchestra.temporal.activities.base.get_registry")
     async def test_execute_agent_activity_persona_mapping(self, mock_get_registry):
         """Test persona mapping for different agent types."""
         mock_registry = Mock()
@@ -120,7 +120,7 @@ class TestExecuteAgentActivity:
         mock_registry.create.assert_called_with("custom_agent")
 
     @pytest.mark.asyncio
-    @patch("orchestra.workflows.activities.get_registry")
+    @patch("orchestra.temporal.activities.base.get_registry")
     async def test_execute_agent_activity_unknown_operation(self, mock_get_registry):
         """Test agent execution with unknown operation uses operation as command."""
         mock_registry = Mock()
@@ -154,7 +154,7 @@ class TestExecuteAgentActivity:
         )
 
     @pytest.mark.asyncio
-    @patch("orchestra.workflows.activities.get_registry")
+    @patch("orchestra.temporal.activities.base.get_registry")
     async def test_execute_agent_activity_exception_handling(self, mock_get_registry):
         """Test agent execution with exception handling."""
         mock_registry = Mock()
@@ -436,7 +436,7 @@ class TestCreateGitHubPRActivity:
 
         # Patch asyncio.sleep to raise an exception
         with patch(
-            "orchestra.workflows.activities.asyncio.sleep",
+            "orchestra.temporal.activities.base.asyncio.sleep",
             side_effect=Exception("GitHub API Error"),
         ):
             with pytest.raises(Exception, match="GitHub API Error"):
@@ -447,7 +447,7 @@ class TestWorkflowActivitiesIntegration:
     """Test integration scenarios for workflow activities."""
 
     @pytest.mark.asyncio
-    @patch("orchestra.workflows.activities.get_registry")
+    @patch("orchestra.temporal.activities.base.get_registry")
     async def test_complete_workflow_sequence(self, mock_get_registry):
         """Test complete workflow sequence: plan -> implement -> release."""
         mock_registry = Mock()

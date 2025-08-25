@@ -2,6 +2,10 @@
 
 **Epic Goal:** Automatically compose optimal persona teams and generate resources for any project.
 
+## Implementation Status: 📋 **PLANNED**
+
+Epic 5 is in the early planning stage with story outlines defined.
+
 ## Stories
 
 - Story 5.1: Project analysis and AI team composition

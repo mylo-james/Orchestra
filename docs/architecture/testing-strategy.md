@@ -64,6 +64,21 @@ asyncio_mode = "auto"
 - `security` - Security-focused tests
 - `slow` - Long-running tests (excluded in fast runs)
 
+### Coverage Execution Modes
+
+Use these Make targets to balance speed and determinism when generating coverage:
+
+```bash
+# Parallel full coverage (default for local runs)
+make coverage
+
+# Serial full coverage (no parallelism)
+make coverage-full
+
+# Incremental coverage using pytest-testmon (fast dev loop)
+make coverage-incremental
+```
+
 ### Testing Workflow [[memory:6992838]]
 
 For systematic test coverage improvement:

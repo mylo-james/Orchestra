@@ -1,5 +1,5 @@
 # Orchestra AI Agent System Makefile
-.PHONY: help setup install test lint format security ci clean docker docs test-fast test-safe test-coverage
+.PHONY: help setup install test lint format security ci clean docker docs test-fast test-safe test-coverage testmon testmon-clean testmon-parallel
 
 help:
 	@echo "Orchestra AI Agent System"
@@ -14,7 +14,11 @@ help:
 	@echo "  test-unit   - Run unit tests only"
 	@echo "  test-int    - Run integration tests only"
 	@echo "  test-sec    - Run security tests only"
-	@echo "  coverage    - Run tests with coverage report"
+	@echo "  coverage    - Run full tests with coverage report (parallel)"
+	@echo "  coverage-incremental - Run incremental tests with coverage (testmon)"
+	@echo "  coverage-full - Run full tests with coverage report"
+	@echo "  testmon     - Incremental tests with pytest-testmon"
+	@echo "  testmon-parallel - Incremental tests in parallel (xdist)"
 	@echo "  lint        - Run code linting"
 	@echo "  format      - Format code"
 	@echo "  type-check  - Run static type checks"
@@ -78,8 +82,31 @@ test-sec:
 	poetry run pytest tests/security/ -v
 
 coverage:
-	@echo "📊 Running tests with coverage..."
+	@echo "📊 Running full tests with coverage in parallel..."
+	poetry run pytest -n auto tests/ --cov=orchestra --cov-fail-under=90 --cov-report=html --cov-report=term-missing --cov-report=json
+
+coverage-incremental:
+	@echo "📊 Running incremental tests with coverage (pytest-testmon)..."
+	poetry run pytest tests/ --testmon --cov=orchestra --cov-fail-under=0 --cov-report=html --cov-report=term-missing --cov-report=json
+
+
+coverage-full:
+	@echo "📊 Running full tests with coverage..."
 	poetry run pytest tests/ --cov=orchestra --cov-fail-under=90 --cov-report=html --cov-report=term-missing --cov-report=json
+
+# Incremental testing with pytest-testmon
+testmon:
+	@echo "⚡ Running incremental tests with pytest-testmon..."
+	poetry run pytest --testmon --cov=orchestra --cov-report=term
+
+testmon-clean:
+	@echo "🧹 Removing testmon cache..."
+	rm -f .testmondata
+
+# Parallel incremental testing (requires pytest-xdist installed)
+testmon-parallel:
+	@echo "⚡ Running incremental tests in parallel with pytest-testmon + xdist..."
+	poetry run pytest -n auto --testmon --cov=orchestra --cov-report=term
 
 # Code quality
 lint:

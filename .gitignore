@@ -105,6 +105,7 @@ cython_debug/
 .pytest_cache/
 .coverage
 htmlcov/
+.testmondata
 .tox/
 .nox/
 coverage.xml

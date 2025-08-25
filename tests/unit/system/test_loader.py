@@ -866,3 +866,178 @@ class TestPersonaLoaderEdgeCases:
         assert persona.identity.name == "Développeur Français"
         assert persona.identity.icon == "🇫🇷"
         assert "Code propre" in persona.behavioral_contract.core_principles
+
+
+class TestOverlayAndFileLoadingCoverage:
+    """Additional tests to raise coverage for `orchestra/system/loader.py`."""
+
+    def _write_yaml(self, path: Path, data: dict) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with open(path, "w") as f:
+            yaml.dump(data, f)
+
+    def _base_persona(self) -> dict:
+        return {
+            "identity": {
+                "name": "Dev",
+                "id": "dev",
+                "title": "Developer",
+                "role": "developer",
+            },
+            "behavioral_contract": {
+                "core_principles": ["Base"],
+                "interaction_style": "base_style",
+            },
+        }
+
+    def test_load_persona_with_team_and_project_overlays_conflicts_and_cache(
+        self, tmp_path: Path
+    ):
+        base_file = tmp_path / "orchestra" / "personas" / "dev.yaml"
+        self._write_yaml(base_file, self._base_persona())
+
+        # Team overlay (adds list item and sets a scalar to produce conflict)
+        team_overlay = {
+            "version": "1.0.0",
+            "modifications": {
+                "behavioral_contract": {
+                    "core_principles": ["Team"],
+                    "interaction_style": "team_style",
+                },
+                "identity": {"style": "team"},
+            },
+        }
+
+        # Project overlay (wins on conflicts)
+        project_overlay = {
+            "version": "2.0.0",
+            "modifications": {
+                "behavioral_contract": {
+                    "core_principles": ["Project"],
+                    "interaction_style": "project_style",
+                },
+                "identity": {"style": "project"},
+            },
+        }
+
+        team_path = tmp_path / "teams" / "teamA" / "personas" / "dev.yaml"
+        proj_path = tmp_path / "projects" / "projA" / "personas" / "dev.yaml"
+        self._write_yaml(team_path, team_overlay)
+        self._write_yaml(proj_path, project_overlay)
+
+        loader = PersonaLoader()
+        # Point default search paths to our temp persona
+        loader.search_paths = [base_file.parent]
+        # Point overlay roots
+        loader.team_overlay_path = tmp_path / "teams"
+        loader.project_overlay_path = tmp_path / "projects"
+
+        # First load base persona to populate base cache
+        base_spec = loader.load_persona("dev")
+        assert base_spec is not None
+        # Now load with context, exercising base cache path and overlay merge
+        merged = loader.load_persona("dev", team_id="teamA", project_id="projA")
+
+        assert merged is not None
+        # Lists merged and deduplicated
+        assert "Base" in merged.behavioral_contract.core_principles
+        assert "Team" in merged.behavioral_contract.core_principles
+        assert "Project" in merged.behavioral_contract.core_principles
+        # Scalar conflict resolved by project overlay
+        assert merged.behavioral_contract.interaction_style == "project_style"
+        # Identity allowed fields updated; project wins
+        assert merged.identity.style == "project"
+
+    def test_load_persona_merge_failure_returns_base(self, tmp_path: Path):
+        from orchestra.system.persona_overlay_merge import MergeResult
+
+        base_file = tmp_path / "personas" / "dev.yaml"
+        self._write_yaml(base_file, self._base_persona())
+
+        loader = PersonaLoader()
+        loader.search_paths = [base_file.parent]
+
+        # Prime base cache
+        base_spec = loader.load_persona("dev")
+        assert base_spec is not None
+
+        # Force merge failure
+        def _fail_merge(*_args, **_kwargs):
+            return MergeResult(success=False, error_message="fail")
+
+        loader._overlay_merge_engine.merge_persona = _fail_merge  # type: ignore[attr-defined]
+
+        # Even with context, should fall back to base persona
+        result = loader.load_persona("dev", team_id="t", project_id="p")
+        assert result is not None
+        assert result.identity.id == "dev"
+        # Ensure scalar from base preserved (project/team not applied)
+        assert result.behavioral_contract.interaction_style == "base_style"
+
+    def test_load_persona_overlay_loading_exception_handled(self, tmp_path: Path):
+        base_file = tmp_path / "personas" / "dev.yaml"
+        self._write_yaml(base_file, self._base_persona())
+
+        loader = PersonaLoader()
+        loader.search_paths = [base_file.parent]
+
+        # Prime base cache
+        base_spec = loader.load_persona("dev")
+        assert base_spec is not None
+
+        # Make overlay loader raise
+        def _boom(*_args, **_kwargs):
+            raise RuntimeError("boom")
+
+        loader._load_team_overlay = _boom  # type: ignore[assignment]
+
+        result = loader.load_persona("dev", team_id="any-team")
+        assert result is not None  # Falls back to base on exception
+        assert result.identity.name == "Dev"
+
+    def test_load_overlay_success_and_invalid(self, tmp_path: Path):
+        from orchestra.system.persona_overlay_merge import (
+            OverlayType,
+            OverlayValidationError,
+        )
+
+        overlay_ok = {
+            "version": "1.0.1",
+            "modifications": {"behavioral_contract": {"core_principles": ["A"]}},
+        }
+        path_ok = tmp_path / "teams" / "t1" / "personas" / "dev.yaml"
+        self._write_yaml(path_ok, overlay_ok)
+
+        loader = PersonaLoader()
+        overlay = loader._load_overlay(path_ok, OverlayType.TEAM, "t1", "dev")
+
+        assert overlay is not None
+        assert overlay.overlay_type == OverlayType.TEAM
+        assert overlay.context_id == "t1"
+        assert overlay.persona_id == "dev"
+        assert overlay.modifications["behavioral_contract"]["core_principles"] == ["A"]
+
+        # Now force validation error
+        from unittest.mock import patch
+
+        with patch(
+            "orchestra.system.persona_overlay_merge.PersonaOverlay.is_valid",
+            side_effect=OverlayValidationError("bad"),
+        ):
+            invalid = loader._load_overlay(path_ok, OverlayType.TEAM, "t1", "dev")
+            assert invalid is None
+
+    def test_load_persona_from_file_success_and_error(self, tmp_path: Path):
+        loader = PersonaLoader()
+
+        good_path = tmp_path / "dev.yaml"
+        self._write_yaml(good_path, self._base_persona())
+
+        spec = loader.load_persona_from_file(good_path)
+        assert spec is not None
+        assert spec.identity.id == "dev"
+
+        # Non-existent file should be handled gracefully
+        bad_path = tmp_path / "missing.yaml"
+        spec2 = loader.load_persona_from_file(bad_path)
+        assert spec2 is None

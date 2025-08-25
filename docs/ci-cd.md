@@ -84,9 +84,11 @@ make quality        # All quality checks
 make fix            # Auto-fix issues
 
 # Testing
-make test           # All tests
-make test-unit      # Unit tests only
-make coverage       # Tests with coverage
+make test                  # All tests
+make test-unit             # Unit tests only
+make coverage              # Full coverage in parallel (default)
+make coverage-full         # Full coverage (serial)
+make coverage-incremental  # Incremental coverage (pytest-testmon)
 
 # Security
 make security       # Security scans

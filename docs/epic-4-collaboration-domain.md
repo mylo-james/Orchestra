@@ -2,6 +2,10 @@
 
 **Epic Goal:** Enable sophisticated inter-persona collaboration and domain-specific expertise.
 
+## Implementation Status: 📋 **PLANNED**
+
+Epic 4 is in the early planning stage with story outlines defined.
+
 ## Stories
 
 - Story 4.1: Inter-persona collaboration framework (protocols, handoffs, consensus)

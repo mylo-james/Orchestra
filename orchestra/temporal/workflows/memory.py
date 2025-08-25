@@ -6,7 +6,7 @@ from typing import Any, Dict
 from temporalio import workflow
 from temporalio.common import RetryPolicy
 
-from orchestra.workflows.memory_activities import (
+from orchestra.temporal.activities.memory import (
     memory_management_activity,
     memory_retrieval_activity,
     memory_upsert_activity,

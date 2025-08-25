@@ -1,4 +1,4 @@
-# Epic 1: BMad Foundation & Resource Infrastructure
+# Epic 1: BMad Foundation & Resource Infrastructure ✅ **COMPLETED**
 
 **Epic Goal:** Build Orchestra's resource-driven persona infrastructure using BMad’s content library as foundation, and enable multi-team/project overlays and context namespacing.
 

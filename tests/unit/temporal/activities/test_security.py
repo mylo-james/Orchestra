@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
-from orchestra.workflows.security_activities import (
+from orchestra.temporal.activities.security import (
     audit_log_activity,
     check_rate_limits_activity,
     validate_agent_output_activity,
@@ -523,7 +523,7 @@ class TestSecurityActivitiesIntegration:
         assert end_time - start_time < 1.0
 
     @pytest.mark.asyncio
-    @patch("orchestra.workflows.security_activities.AIAgentValidator")
+    @patch("orchestra.temporal.activities.security.AIAgentValidator")
     async def test_agent_output_validator_exception_handling(self, mock_validator):
         """Test exception handling in agent output validator initialization."""
         # Make validator initialization raise an exception
