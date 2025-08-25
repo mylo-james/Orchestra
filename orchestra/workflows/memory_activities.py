@@ -7,11 +7,7 @@ from typing import Any, Dict, List
 
 from temporalio import activity
 
-from orchestra.models.memory import (
-    ContextPattern,
-    MemoryRecord,
-    RetentionPolicy,
-)
+from orchestra.models.memory import ContextPattern, MemoryRecord, RetentionPolicy
 from orchestra.services.memory_service import MemoryService
 from orchestra.utils.logging import get_logger
 

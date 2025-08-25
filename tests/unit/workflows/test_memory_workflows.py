@@ -5,9 +5,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from orchestra.workflows.memory_activities import (
-    memory_upsert_activity,
-)
+from orchestra.workflows.memory_activities import memory_upsert_activity
 
 
 class TestMemoryUpsertActivity:

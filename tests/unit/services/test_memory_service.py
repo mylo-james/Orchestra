@@ -6,10 +6,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from orchestra.models.memory import (
-    MemoryRecord,
-    RetentionPolicy,
-)
+from orchestra.models.memory import MemoryRecord, RetentionPolicy
 from orchestra.services.memory_service import MemoryService
 
 

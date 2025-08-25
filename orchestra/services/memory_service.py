@@ -16,11 +16,7 @@ from qdrant_client.models import (
     VectorParams,
 )
 
-from orchestra.models.memory import (
-    ContextPattern,
-    MemoryRecord,
-    RetentionPolicy,
-)
+from orchestra.models.memory import ContextPattern, MemoryRecord, RetentionPolicy
 from orchestra.services.embedding_service import EmbeddingService
 from orchestra.utils.circuit_breaker import CircuitBreaker
 from orchestra.utils.logging import get_logger
@@ -153,11 +149,11 @@ class MemoryService:
             )
 
             # Upsert to Qdrant with circuit breaker
-            with self.circuit_breaker:
-                self.client.upsert(
-                    collection_name=collection_name,
-                    points=[point],
-                )
+            self.circuit_breaker.call(
+                self.client.upsert,
+                collection_name=collection_name,
+                points=[point],
+            )
 
             # Update cache
             cache_key = f"{memory_record.project_id}:{memory_record.memory_id}"
@@ -262,31 +258,37 @@ class MemoryService:
             # Create filter
             search_filter = None
             if filter_conditions:
-                search_filter = Filter(must=filter_conditions)
+                from typing import cast
+
+                from qdrant_client.models import Filter as QdrantFilter
+
+                search_filter = QdrantFilter(must=cast(list, filter_conditions))
 
             # Search in Qdrant
             max_results = query_context.get("max_results", 10)
 
-            with self.circuit_breaker:
-                search_results = self.client.search(
-                    collection_name=collection_name,
-                    query_vector=query_embedding,
-                    query_filter=search_filter,
-                    limit=max_results,
-                )
+            search_results = self.circuit_breaker.call(
+                self.client.search,
+                collection_name=collection_name,
+                query_vector=query_embedding,
+                query_filter=search_filter,
+                limit=max_results,
+            )
 
             # Convert results to memory format
             memories = []
             for result in search_results:
-                memory_data = {
-                    "memory_id": result.payload["metadata"]["memory_id"],
-                    "content": result.payload["content"],
-                    "relevance_score": result.payload["metadata"]["relevance_score"],
-                    "similarity_score": result.score,
-                    "metadata": result.payload["metadata"],
-                    "created_at": result.payload["metadata"]["created_at"],
-                }
-                memories.append(memory_data)
+                if result.payload is not None:
+                    metadata = result.payload.get("metadata", {})
+                    memory_data = {
+                        "memory_id": metadata.get("memory_id"),
+                        "content": result.payload.get("content"),
+                        "relevance_score": metadata.get("relevance_score"),
+                        "similarity_score": result.score,
+                        "metadata": metadata,
+                        "created_at": metadata.get("created_at"),
+                    }
+                    memories.append(memory_data)
 
             retrieval_time_ms = (time.time() - start_time) * 1000
 
@@ -371,20 +373,22 @@ class MemoryService:
         try:
             collection_name = f"{self.collection_name}_{project_id}"
 
-            with self.circuit_breaker:
-                results = self.client.retrieve(
-                    collection_name=collection_name,
-                    ids=[memory_id],
-                )
+            results = self.circuit_breaker.call(
+                self.client.retrieve,
+                collection_name=collection_name,
+                ids=[memory_id],
+            )
 
             if results:
                 result = results[0]
-                memory_data = {
-                    "memory_id": result.payload["metadata"]["memory_id"],
-                    "content": result.payload["content"],
-                    "metadata": result.payload["metadata"],
-                    "embedding": result.vector if hasattr(result, "vector") else [],
-                }
+                if result.payload is not None:
+                    metadata = result.payload.get("metadata", {})
+                    memory_data = {
+                        "memory_id": metadata.get("memory_id"),
+                        "content": result.payload.get("content"),
+                        "metadata": metadata,
+                        "embedding": result.vector if hasattr(result, "vector") else [],
+                    }
 
                 return {
                     "success": True,
@@ -570,37 +574,47 @@ class MemoryService:
             batch_size = 100
 
             while True:
-                with self.circuit_breaker:
-                    results = self.client.scroll(
-                        collection_name=collection_name,
-                        limit=batch_size,
-                        offset=offset,
-                    )[
-                        0
-                    ]  # Get points from scroll result
+                results = self.circuit_breaker.call(
+                    self.client.scroll,
+                    collection_name=collection_name,
+                    limit=batch_size,
+                    offset=offset,
+                )[
+                    0
+                ]  # Get points from scroll result
 
                 if not results:
                     break
 
                 for result in results:
-                    # Convert to MemoryRecord (simplified)
-                    memory_record = MemoryRecord(
-                        memory_id=result.payload["metadata"]["memory_id"],
-                        project_id=result.payload["metadata"]["project_id"],
-                        persona_id=result.payload["metadata"]["persona_id"],
-                        content=result.payload["content"],
-                        embedding=result.vector if hasattr(result, "vector") else [],
-                        confidence_score=result.payload["metadata"]["confidence_score"],
-                        relevance_score=result.payload["metadata"]["relevance_score"],
-                        created_at=datetime.fromisoformat(
-                            result.payload["metadata"]["created_at"]
-                        ),
-                        updated_at=datetime.fromisoformat(
-                            result.payload["metadata"]["updated_at"]
-                        ),
-                        metadata=result.payload["metadata"],
-                    )
-                    all_memories.append(memory_record)
+                    if result.payload is not None:
+                        metadata = result.payload.get("metadata", {})
+                        # Convert to MemoryRecord (simplified)
+                        memory_record = MemoryRecord(
+                            memory_id=metadata.get("memory_id", ""),
+                            project_id=metadata.get("project_id", project_id),
+                            persona_id=metadata.get("persona_id", ""),
+                            content=result.payload.get("content", ""),
+                            embedding=(
+                                result.vector
+                                if hasattr(result, "vector")
+                                else [0.0] * 3072
+                            ),
+                            confidence_score=metadata.get("confidence_score", 0.0),
+                            relevance_score=metadata.get("relevance_score", 0.0),
+                            created_at=datetime.fromisoformat(
+                                metadata.get(
+                                    "created_at", datetime.utcnow().isoformat()
+                                )
+                            ),
+                            updated_at=datetime.fromisoformat(
+                                metadata.get(
+                                    "updated_at", datetime.utcnow().isoformat()
+                                )
+                            ),
+                            metadata=metadata,
+                        )
+                        all_memories.append(memory_record)
 
                 offset += batch_size
 
