@@ -50,7 +50,7 @@ def _configure_agents_tracing():
     closes logging streams before the SDK's atexit handlers run.
     """
     try:
-        import agents.tracing
+        import agents.tracing  # type: ignore[import-not-found]
 
         # Disable tracing globally first
         agents.tracing.set_tracing_disabled(True)

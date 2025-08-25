@@ -47,10 +47,9 @@ class MemoryUpsertWorkflow:
             # Execute memory upsert activity
             result = await workflow.execute_activity(
                 memory_upsert_activity,
-                execution_context,
-                patterns,
+                args=[execution_context, patterns],
                 start_to_close_timeout=timedelta(seconds=30),
-                retry_policy=workflow.common.RetryPolicy(
+                retry_policy=RetryPolicy(
                     initial_interval=timedelta(seconds=1),
                     maximum_interval=timedelta(seconds=10),
                     maximum_attempts=3,
@@ -107,11 +106,11 @@ class MemoryRetrievalWorkflow:
             # Execute memory retrieval activity
             result = await workflow.execute_activity(
                 memory_retrieval_activity,
-                query_context,
+                args=[query_context],
                 start_to_close_timeout=timedelta(
                     milliseconds=200
                 ),  # AC: 8 - <200ms response time
-                retry_policy=workflow.common.RetryPolicy(
+                retry_policy=RetryPolicy(
                     initial_interval=timedelta(milliseconds=50),
                     maximum_interval=timedelta(milliseconds=100),
                     maximum_attempts=2,
@@ -180,11 +179,11 @@ class MemoryManagementWorkflow:
             # Execute memory management activity
             result = await workflow.execute_activity(
                 memory_management_activity,
-                management_context,
+                args=[management_context],
                 start_to_close_timeout=timedelta(
                     minutes=5
                 ),  # Longer timeout for cleanup operations
-                retry_policy=workflow.common.RetryPolicy(
+                retry_policy=RetryPolicy(
                     initial_interval=timedelta(seconds=2),
                     maximum_interval=timedelta(seconds=30),
                     maximum_attempts=3,

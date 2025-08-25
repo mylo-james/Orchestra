@@ -296,7 +296,7 @@ class MemoryService:
             self._performance_metrics["total_operations"] += 1
             self._update_average_retrieval_time(retrieval_time_ms)
 
-            result = {
+            result: Dict[str, Any] = {
                 "success": True,
                 "memories": memories,
                 "retrieval_time_ms": retrieval_time_ms,
@@ -596,8 +596,8 @@ class MemoryService:
                             persona_id=metadata.get("persona_id", ""),
                             content=result.payload.get("content", ""),
                             embedding=(
-                                result.vector
-                                if hasattr(result, "vector")
+                                list(result.vector)
+                                if hasattr(result, "vector") and result.vector
                                 else [0.0] * 3072
                             ),
                             confidence_score=metadata.get("confidence_score", 0.0),
@@ -702,7 +702,7 @@ class MemoryService:
         """Get circuit breaker status."""
         return {
             "state": self.circuit_breaker.state.name,
-            "failure_count": self.circuit_breaker.failure_count,
+            "failure_count": self.circuit_breaker.consecutive_failures,
             "last_failure_time": self.circuit_breaker.last_failure_time,
         }
 

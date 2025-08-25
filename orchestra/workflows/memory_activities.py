@@ -474,9 +474,10 @@ async def _enforce_retention_policy(
     retention_days = management_context.get("retention_days", 90)
 
     # Create default retention policy
+    project_id_str = str(project_id) if project_id else "unknown"
     retention_policy = RetentionPolicy(
-        policy_id=f"retention-{project_id}",
-        project_id=project_id,
+        policy_id=f"retention-{project_id_str}",
+        project_id=project_id_str,
         policy_name="Standard Retention Policy",
         retention_days=retention_days,
         archive_after_days=retention_days,
@@ -497,7 +498,7 @@ async def _enforce_retention_policy(
     )
 
     # Get memories for the project
-    memories = await memory_service.get_project_memories(project_id)
+    memories = await memory_service.get_project_memories(project_id_str)
 
     # Enforce retention policy
     enforcement_result = await memory_service.enforce_retention_policy(
@@ -588,7 +589,7 @@ async def _scheduled_cleanup(
     )
 
     # 3. Index optimization
-    index_result = await memory_service.optimize_indexes(project_id)
+    index_result = await memory_service.optimize_indexes(project_id_str)
     cleanup_operations.append(
         {
             "operation": "index_optimization",
