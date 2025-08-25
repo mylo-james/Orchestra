@@ -274,7 +274,7 @@ class MemoryLearningIntegrationWorkflow:
             integration_mode=integration_mode,
         )
 
-        results = {"success": True, "operations": []}
+        results: Dict[str, Any] = {"success": True, "operations": []}
 
         try:
             # Store learning outcome as memory if requested
@@ -303,14 +303,13 @@ class MemoryLearningIntegrationWorkflow:
                     },
                 }
 
-                store_result = await workflow.execute_child_workflow(  # type: ignore[call-overload]
+                store_result = await workflow.execute_child_workflow(
                     MemoryUpsertWorkflow.run,
-                    memory_context,
-                    patterns,
+                    args=[memory_context, patterns],
                     id=f"memory-store-{learning_outcome.get('outcome_id')}",
                 )
 
-                results["operations"].append  # type: ignore[attr-defined](
+                results["operations"].append(
                     {
                         "operation": "store_learning_outcome",
                         "result": store_result,
@@ -333,7 +332,7 @@ class MemoryLearningIntegrationWorkflow:
                     id=f"memory-retrieve-{learning_outcome.get('outcome_id')}",
                 )
 
-                results["operations"].append  # type: ignore[attr-defined](
+                results["operations"].append(
                     {
                         "operation": "retrieve_related_memories",
                         "result": retrieve_result,
@@ -342,7 +341,7 @@ class MemoryLearningIntegrationWorkflow:
 
             workflow.logger.info(
                 "Memory-learning integration workflow completed",
-                operations_count=len(  # type: ignore[arg-type]results["operations"]),
+                operations_count=len(results["operations"]),
             )
 
             return results
@@ -451,10 +450,9 @@ class MemoryKnowledgeSharingWorkflow:
                         },
                     }
 
-                    import_result = await workflow.execute_child_workflow(  # type: ignore[call-overload]
+                    import_result = await workflow.execute_child_workflow(
                         MemoryUpsertWorkflow.run,
-                        memory_context,
-                        patterns,
+                        args=[memory_context, patterns],
                         id=f"import-knowledge-{knowledge.get('knowledge_id')}",
                     )
 
