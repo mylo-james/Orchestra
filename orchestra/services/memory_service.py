@@ -277,14 +277,14 @@ class MemoryService:
 
             # Convert results to memory format
             memories = []
-            for result in search_results:
-                if result.payload is not None:
-                    metadata = result.payload.get("metadata", {})
+            for search_result in search_results:
+                if search_result.payload is not None:
+                    metadata = search_result.payload.get("metadata", {})
                     memory_data = {
                         "memory_id": metadata.get("memory_id"),
-                        "content": result.payload.get("content"),
+                        "content": search_result.payload.get("content"),
                         "relevance_score": metadata.get("relevance_score"),
-                        "similarity_score": result.score,
+                        "similarity_score": search_result.score,
                         "metadata": metadata,
                         "created_at": metadata.get("created_at"),
                     }
@@ -596,8 +596,9 @@ class MemoryService:
                             persona_id=metadata.get("persona_id", ""),
                             content=result.payload.get("content", ""),
                             embedding=(
-                                list(result.vector)
-                                if hasattr(result, "vector") and result.vector
+                                result.vector
+                                if hasattr(result, "vector")
+                                and isinstance(result.vector, list)
                                 else [0.0] * 3072
                             ),
                             confidence_score=metadata.get("confidence_score", 0.0),

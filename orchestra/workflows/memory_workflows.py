@@ -4,6 +4,7 @@ from datetime import timedelta
 from typing import Any, Dict
 
 from temporalio import workflow
+from temporalio.common import RetryPolicy
 
 from orchestra.workflows.memory_activities import (
     memory_management_activity,
@@ -228,7 +229,9 @@ class MemoryManagementWorkflow:
             next_execution = workflow.now() + timedelta(days=1)  # Default to daily
 
         # Sleep until next execution time
-        await workflow.sleep_until(next_execution)
+        sleep_duration = (next_execution - workflow.now()).total_seconds()
+        if sleep_duration > 0:
+            await workflow.sleep(timedelta(seconds=sleep_duration))
 
         # Execute next scheduled run
         next_context = management_context.copy()
@@ -580,7 +583,9 @@ class ScheduledMemoryMaintenanceWorkflow:
                 )
 
                 # Sleep until next execution
-                await workflow.sleep_until(next_execution)
+                sleep_duration = (next_execution - workflow.now()).total_seconds()
+                if sleep_duration > 0:
+                    await workflow.sleep(timedelta(seconds=sleep_duration))
 
         except Exception as e:
             workflow.logger.error(

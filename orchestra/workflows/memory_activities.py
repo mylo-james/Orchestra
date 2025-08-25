@@ -563,6 +563,7 @@ async def _scheduled_cleanup(
 ) -> Dict[str, Any]:
     """Execute scheduled cleanup operations."""
     project_id = management_context.get("project_id")
+    project_id_str = str(project_id) if project_id else "unknown"
     schedule = management_context.get("schedule", "daily")
 
     # Execute comprehensive cleanup
