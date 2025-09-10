@@ -27,7 +27,7 @@ jobs:
           echo "Creating release for: $VERSION"
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
