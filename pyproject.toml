@@ -44,7 +44,7 @@ pytest-xdist = "^3.6.1"
 # Code Quality
 black = "^25.1.0"
 isort = "^5.13.0"
-ruff = "^0.8.0"
+ruff = "^0.14.0"
 mypy = "^1.13.0"
 # Development tools
 bandit = "^1.8.0"
