@@ -23,7 +23,7 @@ httpx = "^0.28.1"
 # Configuration and Logging
 structlog = "^24.4.0"
 # Security Framework
-cryptography = "^45.0.6"
+cryptography = "^46.0.3"
 # Database
 aiosqlite = "^0.20.0"
 # Temporal SDK (placeholder - actual SDK TBD)
