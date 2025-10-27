@@ -11,7 +11,7 @@ python = "^3.13.0"
 # Build tools (security update)
 setuptools = "^78.1.1"
 # CLI Framework
-typer = "^0.16.0"
+typer = "^0.20.0"
 rich = "^14.1.0"
 # Agent Framework
 openai = "^1.100.0"
